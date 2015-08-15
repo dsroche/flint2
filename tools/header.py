@@ -10,81 +10,114 @@ import re
 import collections
 import json
 
-class Func:
-    fpat = re.compile(r"""
-        \b
-        (?P<PREFIX> FLINT_DLL | ([A-Z0-9_]+)_INLINE)
-        \s+
-        (?P<FRTYPE> [^(){};]+ )
-        \s+
-        (?P<FNAME> \w+ )
-        \s*
-        \(
-        (?P<ARGS> [^)]*)
-        \)
-    """, re.VERBOSE | re.DOTALL)
+function_pattern = re.compile(r"""
+    \b
+    (?P<PREFIX> FLINT_DLL | ([A-Z0-9_]+)_INLINE)
+    \s+
+    (?P<FRTYPE> [\w\s*]+ )
+    \b
+    (?P<FNAME> \w+ )
+    \s*
+    \(
+    (?P<ARGS> [\w\s*,]*)
+    \)
+""", re.VERBOSE | re.DOTALL)
 
-    argpat = re.compile(r"""
-        \s*
-        (?P<ATYPE> [^(){};,]+ )
-        \s+
-        (?P<ANAME> \w+ )
-        \s*
-        (, | $)
-    """, re.VERBOSE | re.DOTALL)
+argument_pattern = re.compile(r"""
+    \s*
+    (?P<ATYPE> [\w\s*]+ )
+    \b
+    (?P<ANAME> \w+ )
+    \s*
+""", re.VERBOSE | re.DOTALL)
 
-    Arg = collections.namedtuple('Arg', ['type', 'name'])
+type_component_pattern = re.compile(r"""
+    \s*
+    (?P<TCOMP>
+        (\w+\b)
+        |
+        ([*])
+    )
+    \s*
+""", re.VERBOSE | re.DOTALL)
 
-    def get_dict(self):
-        res = {
-            'prefix': self.prefix,
-            'rtype': self.rtype,
-            'name': self.name,
-            'args': self.args,
-            }
-        return res
-
-    def __init__(self, s, cname=""):
-        if type(s) is dict:
-            self.prefix = s['prefix']
-            self.rtype = s['rtype']
-            self.name = s['name']
-            self.args = [self.Arg(t,n) for (t,n) in s['args']]
-            return
-
-        self.cname = cname
-        m = self.fpat.match(s)
-        if m is None or m.end() != len(s):
-            raise ValueError("invalid function string")
-        self.prefix = m.group('PREFIX')
-        self.rtype = re.sub(r'\s+', ' ', m.group('FRTYPE'))
-        self.name = m.group('FNAME')
-        argstr = m.group('ARGS')
-        pos = 0
-        self.args = []
-        while pos < len(argstr):
-            am = self.argpat.match(argstr, pos)
-            if am is None:
+def parse_type(st):
+    """Extracts type components from the given string.
+    The type is returned as a single space-separated string.
+    """
+    global type_component_pattern
+    res = []
+    pos = 0
+    while pos < len(st):
+        m = type_component_pattern.match(st, pos)
+        if m is None:
+            if st[pos:].isspace():
                 break
-            self.args.append(
-                self.Arg(re.sub(r'\s+',' ',am.group('ATYPE')), am.group('ANAME')))
-            pos = am.end()
+            else:
+                raise ValueError("invalid type component")
+        res.append(m.group('TCOMP'))
+        pos = m.end()
+    return ' '.join(res)
+
+def parse_args(st):
+    """Extracts a list of arguments from the given string."""
+    global argument_pattern
+    res = []
+    for argst in st.split(','):
+        m = argument_pattern.match(argst)
+        if m is None or m.end() != len(argst):
+            raise ValueError("invalid argument string")
+        atype = parse_type(m.group('ATYPE'))
+        aname = m.group('ANAME')
+        res.append(Arg(atype, aname))
+    return res
+
+def parse_func(st, cname=""):
+    """Extracts a function from the given string."""
+    global function_pattern
+    m = function_pattern.match(st)
+    if m is None or m.end() != len(st):
+        raise ValueError("invalid function string")
+    rtype = parse_type(m.group('FRTYPE'))
+    args = parse_args(m.group('ARGS'))
+    return Func(cname, m.group('FNAME'), rtype, args, m.group('PREFIX'))
+
+def type_re(typestr):
+    res = ''
+    for comp in typestr.split():
+        if comp == '*':
+            res += r'[*]\s*'
+        else:
+            res += r'\b' + comp + r'\b\s*'
+    return res
+
+def func_re(fun):
+    """Returns a regular expression matching the given function."""
+    rawpat = (
+        type_re(fun.rtype)
+        + r'\b' + fun.name
+        + r'\s*\(\s*'
+        + r',\s*'.join(type_re(a.type) + r'\b' + a.name + r'\s*'
+                       for a in fun.args)
+        + r'\)\s*\{'
+        )
+    # print("RAWPAT for", str(fun))
+    # print(rawpat)
+    return re.compile(rawpat, re.DOTALL)
+
+Arg = collections.namedtuple('Arg', ['type', 'name'])
+
+class Func:
+    def __init__(self, cname, name, rtype, args, prefix=""):
+        self.cname = cname
+        self.name = name
+        self.rtype = rtype
+        self.args = args
+        self.prefix = prefix
 
     def find_code(self, s):
         """Searches for the code for this function in the given string."""
-        rawpat = (
-            r'\s+'.join(self.rtype.split()).replace('*',r'[*]')
-            + r'\s+' + self.name
-            + r'\s*\(\s*'
-            + r',\s*'.join(r'\s+'.join(a.type.split()).replace('*',r'[*]') 
-                           + r'\s+' + a.name + r'\s*'
-                           for a in self.args)
-            + r'\)\s*\{'
-            )
-        print("RAWPAT for", str(self))
-        print(rawpat)
-        codepat = re.compile(rawpat, re.DOTALL)
-        return codepat.match(s)
+        return func_re(self).search(s)
 
     def is_hidden(self):
         return self.name.startswith('_')
@@ -109,8 +142,11 @@ class Func:
             + ', '.join(t + ' ' + n for t,n in self.args) + ')'
             )
 
-def json_default(obj):
-    return obj.get_dict()
+    def __eq__(self, other):
+        return type(other) is Func and self.__dict__ == other.__dict__
+
+    def __ne__(self, other):
+        return not (self == other)
 
 def get_funcs(fn, cname):
     """Extracts all function signatures from the given file.
@@ -118,11 +154,12 @@ def get_funcs(fn, cname):
     Returns a list of all function names (in declaration order),
     and a dictionary mapping the names to their signature.
     """
+    global function_pattern
     with open(fn) as fin:
         orig = fin.read()
     fnames, fsigs = [], {}
-    for m in Func.fpat.finditer(orig):
-        f = Func(m.group(0), cname)
+    for m in function_pattern.finditer(orig):
+        f = parse_func(m.group(0), cname)
         fnames.append(f.short_name())
         fsigs[f.short_name()] = f
     return fnames, fsigs
@@ -176,6 +213,25 @@ def open_db():
         print("WARNING: {} unreadable; loading empty database".format(db_file))
     except ValueError:
         print("WARNING: {} badly formatted; loading empty database".format(db_file))
+    for cname in db:
+        sigs = db[cname]['signatures']
+        for fname in sigs:
+            orig = sigs[fname]
+            sigs[fname] = Func(
+                cname,
+                orig['name'],
+                orig['rtype'],
+                [Arg(t,n) for (t,n) in orig['args']],
+                orig['prefix']
+            )
+
+def json_default(obj):
+    if type(obj) is Func:
+        res = dict(obj.__dict__)
+        del res['cname']
+        return res
+    else:
+        return obj
 
 def save_db():
     global db_file, db, backup_db
@@ -271,6 +327,8 @@ if __name__ == '__main__':
         headers = list(db)
 
     for hf in headers:
+        if not hf.endswith('.h'):
+            hf = hf + '.h'
         cname = get_cname(hf)
         print('Running', command, 'on', cname, '...')
         if command == 'check':
@@ -278,7 +336,7 @@ if __name__ == '__main__':
                 print("MISSING class name", cname)
                 print()
                 continue
-            dbc = db['cname']
+            dbc = db[cname]
 
             fnames, fsigs = get_funcs(hf, cname)
             list_diffs("Header function names", dbc['functions'], fnames)
