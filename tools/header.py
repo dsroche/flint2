@@ -10,6 +10,8 @@ import re
 import collections
 import json
 
+#### Globally defined regular expressions ####
+
 function_pattern = re.compile(r"""
     \b
     (?P<PREFIX> FLINT_DLL | ([A-Z0-9_]+)_INLINE)
@@ -40,6 +42,62 @@ type_component_pattern = re.compile(r"""
     )
     \s*
 """, re.VERBOSE | re.DOTALL)
+
+#### Class definitions ####
+
+Arg = collections.namedtuple('Arg', ['type', 'name'])
+
+class Func:
+    def __init__(self, cname, name, rtype, args, prefix=""):
+        self.cname = cname
+        self.name = name
+        self.rtype = rtype
+        self.args = args
+        self.prefix = prefix
+
+    def find_code(self, s):
+        """Searches for the code for this function in the given string."""
+        return func_re(self).search(s)
+
+    def is_hidden(self):
+        return self.name.startswith('_')
+
+    def short_name(self):
+        """Returns a UNIQUE short version.
+        e.g. _fmpz_poly_add becomes add_"""
+        ret = self.name
+        if self.is_hidden():
+            ret = ret.lstrip('_') + '_';
+        if ret.startswith(self.cname):
+            ret = ret[len(self.cname):]
+        return ret.lstrip('_')
+    
+    def shorter_name(self):
+        """Returns a NON-UNIQUE short version.
+        e.g. _fmpz_poly_add becomes add"""
+        return self.short_name().rstrip('_')
+
+    def is_inline(self):
+        if self.prefix.endswith('_INLINE'):
+            return True
+        elif self.prefix == 'FLINT_DLL':
+            return False
+        else:
+            raise ValueError("invalid prefix: {}".format(self.prefix))
+
+    def __str__(self):
+        return (
+            self.prefix + ' ' + self.rtype + ' ' + self.name + '('
+            + ', '.join(t + ' ' + n for t,n in self.args) + ')'
+            )
+
+    def __eq__(self, other):
+        return type(other) is Func and self.__dict__ == other.__dict__
+
+    def __ne__(self, other):
+        return not (self == other)
+
+#### PARSING FUNCTIONS ####
 
 def parse_type(st):
     """Extracts type components from the given string.
@@ -83,6 +141,7 @@ def parse_func(st, cname=""):
     return Func(cname, m.group('FNAME'), rtype, args, m.group('PREFIX'))
 
 def type_re(typestr):
+    """Generates a regular expression to search for the given type name."""
     res = ''
     for comp in typestr.split():
         if comp == '*':
@@ -105,49 +164,6 @@ def func_re(fun):
     # print(rawpat)
     return re.compile(rawpat, re.DOTALL)
 
-Arg = collections.namedtuple('Arg', ['type', 'name'])
-
-class Func:
-    def __init__(self, cname, name, rtype, args, prefix=""):
-        self.cname = cname
-        self.name = name
-        self.rtype = rtype
-        self.args = args
-        self.prefix = prefix
-
-    def find_code(self, s):
-        """Searches for the code for this function in the given string."""
-        return func_re(self).search(s)
-
-    def is_hidden(self):
-        return self.name.startswith('_')
-
-    def short_name(self):
-        ret = self.name.lstrip('_')
-        if ret.startswith(self.cname):
-            ret = ret[len(self.cname):]
-        return ret.lstrip('_')
-
-    def is_inline(self):
-        if self.prefix.endswith('_INLINE'):
-            return True
-        elif self.prefix == 'FLINT_DLL':
-            return False
-        else:
-            raise ValueError("invalid prefix: {}".format(self.prefix))
-
-    def __str__(self):
-        return (
-            self.prefix + ' ' + self.rtype + ' ' + self.name + '('
-            + ', '.join(t + ' ' + n for t,n in self.args) + ')'
-            )
-
-    def __eq__(self, other):
-        return type(other) is Func and self.__dict__ == other.__dict__
-
-    def __ne__(self, other):
-        return not (self == other)
-
 def get_funcs(fn, cname):
     """Extracts all function signatures from the given file.
 
@@ -163,6 +179,8 @@ def get_funcs(fn, cname):
         fnames.append(f.short_name())
         fsigs[f.short_name()] = f
     return fnames, fsigs
+
+#### FILE SEARCHING FUNCTIONS ####
 
 def get_code(cname):
     """Goes through all .c files in specified dir and finds what functions
@@ -181,8 +199,8 @@ def get_tests(cname):
     """Finds test files in specified dir."""
     res = []
     tdir = os.path.join(cname, 'test')
-    if not os.path.isdir(cname):
-        print("ERROR: no directory", cname)
+    if not os.path.isdir(tdir):
+        print("ERROR: no directory", tdir)
     else:
         for filename in os.listdir(tdir):
             if filename.startswith('t-') and filename.endswith('.c'):
@@ -197,8 +215,27 @@ def get_cname(fn):
     else:
         return fbn
 
+#### PERSISTENT DATABASE MANIPULATION ####
+
+banner = None
+def get_banner():
+    """Loads the banner text from banner.txt."""
+    global db_dir, banner
+    if banner is None:
+        banfile = os.path.join(db_dir, 'banner.txt')
+        with open(banfile) as banin:
+            banner = banin.read()
+        authfile = os.path.join(db_dir, 'author.txt')
+        if os.path.exists(authfile):
+            with open(authfile) as authin:
+                banner += authin.read()
+        else:
+            print("WARNING: no author file", authfile)
+    return banner
+
 def set_default_db(dbdir):
-    global db_file
+    global db_dir, db_file
+    db_dir = dbdir
     db_file = os.path.join(dbdir, 'fun_db.json')
 
 def open_db():
@@ -240,15 +277,19 @@ def save_db():
     with open(db_file,'w') as dbout:
         json.dump(db, dbout, indent=4, sort_keys=True, default=json_default)
 
+#### HELPER FUNCTIONS FOR CHECK ####
+
 def list_diffs(title, stored, found):
     stset = set(stored)
     fset = set(found)
     if stset == fset:
         if stored != found:
+            print()
             print(title)
             print("INCONSISTENT: same entries, different order")
             print()
     else:
+        print()
         print(title)
         for x in stored:
             if x not in fset:
@@ -260,6 +301,7 @@ def list_diffs(title, stored, found):
 
 def dict_diffs(title, stored, found):
     if stored != found:
+        print()
         print(title)
         for x in stored:
             if x not in found:
@@ -331,6 +373,8 @@ if __name__ == '__main__':
             hf = hf + '.h'
         cname = get_cname(hf)
         print('Running', command, 'on', cname, '...')
+
+        ##### CHECK COMMAND #####
         if command == 'check':
             if cname not in db:
                 print("MISSING class name", cname)
@@ -344,7 +388,9 @@ if __name__ == '__main__':
 
             codefs = get_code(cname)
             list_diffs("Code files", sorted(dbc['code']), sorted(codefs))
+            coded = set()
             for codef, flist in dbc['code'].items():
+                coded.update(flist)
                 if codef == 'inlines':
                     continue
                 cfn = os.path.join(cname, codef+'.c')
@@ -358,6 +404,9 @@ if __name__ == '__main__':
                                 .format(fname, codef))
                 else:
                     print("CODE FILE NOT FOUND:", codef)
+                if not flist:
+                    print("WARNING: No coded functions listed for file ", codef)
+            list_diffs("Coded functions", sorted(dbc['functions']), sorted(coded))
 
             ft = get_tests(cname)
             list_diffs("Test names", sorted(dbc['tests']), sorted(ft))
@@ -368,9 +417,14 @@ if __name__ == '__main__':
                     print("TEST FILE NOT FOUND:", tname)
                 tested.update(flist)
             list_diffs("Tested functions", sorted(dbc['functions']), sorted(tested))
+            for tfile, tnames in dbc['tests'].items():
+                if not tnames:
+                    print("WARNING: No tests listed for file", tfile)
 
+        ##### UPDATE COMMAND #########
         elif command == 'update':
             if cname not in db:
+                print("Creating new database entry for", cname)
                 db[cname] = {'code':{}, 'tests':{}}
             dbc = db[cname]
             
@@ -382,6 +436,7 @@ if __name__ == '__main__':
             oldcode = dbc['code']
             dbc['code'] = {}
             for codef in codefs:
+                hcodef = codef+'_'
                 cfn = os.path.join(cname, codef+'.c')
                 flist = []
                 with open(cfn) as cfin:
@@ -392,9 +447,11 @@ if __name__ == '__main__':
                             f = fsigs[fname]
                             if not f.is_inline() and f.find_code(cf_all):
                                 flist.append(fname)
-                elif codef in fsigs:
-                    if fsigs[codef].find_code(cf_all):
+                elif codef in fsigs or hcodef in fsigs:
+                    if codef in fsigs and fsigs[codef].find_code(cf_all):
                         flist.append(codef)
+                    if hcodef in fsigs and fsigs[hcodef].find_code(cf_all):
+                        flist.append(hcodef)
                 if codef == 'inlines':
                     for fname, f in fsigs.items():
                         if f.is_inline():
@@ -416,8 +473,13 @@ if __name__ == '__main__':
 
             for tname in get_tests(cname):
                 if tname not in dbc['tests']:
-                    if tname in fsigs:
-                        dbc['tests'][tname] = [tname]
+                    htname = tname+'_'
+                    if tname in fsigs or htname in fsigs:
+                        dbc['tests'][tname] = []
+                        if tname in fsigs:
+                            dbc['tests'][tname].append(tname)
+                        if htname in fsigs:
+                            dbc['tests'][tname].append(htname)
                     else:
                         if ask:
                             while True:
@@ -433,13 +495,22 @@ if __name__ == '__main__':
                             funcs = []
                         dbc['tests'][tname] = sorted(funcs)
 
+        ##### CODE_POP COMMAND #####
         elif command == 'code_pop':
+            coded = set(itertools.chain(*dbc['code'].values()))
             for fname, f in dbc['signatures'].items():
-                if fname not in dbc['code']:
+                if fname not in coded:
                     if f.is_inline():
-                        dbc['code'][fname] = 'inlines'
+                        if 'inlines' not in dbc['code']:
+                            dbc['code']['inlines'] = []
+                        dbc['code']['inlines'].append(fname)
+                        print("Populated inline list with", fname)
                     else:
-                        dbc['code'][fname] = fname
+                        sname = f.shorter_name()
+                        if sname not in dbc['code']:
+                            dbc['code'][sname] = []
+                        dbc['code'][sname].append(fname)
+                        print("Populated", sname, "list with", fname)
                 
         elif command == 'code_gen':
             raise NotImplementedError(command)
