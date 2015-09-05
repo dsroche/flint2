@@ -9,6 +9,8 @@ import argparse
 import re
 import collections
 import json
+import copy
+import itertools
 
 #### Globally defined regular expressions ####
 
@@ -85,6 +87,16 @@ class Func:
         else:
             raise ValueError("invalid prefix: {}".format(self.prefix))
 
+    def write_impl(self, outfile):
+        print(self.rtype.strip(), ' ', self.name.strip(), '(', 
+              file=outfile, sep='', end='')
+        print(', '.join(t.strip()+' '+n.strip() for (t,n) in self.args), 
+              file=outfile, end='')
+        print(")\n{\n    /* TODO */", file=outfile);
+        if self.rtype != 'void':
+            print("    return 0; /* FIXME dummy return value */", file=outfile)
+        print("}", file=outfile)
+
     def __str__(self):
         return (
             self.prefix + ' ' + self.rtype + ' ' + self.name + '('
@@ -160,8 +172,6 @@ def func_re(fun):
                        for a in fun.args)
         + r'\)\s*\{'
         )
-    # print("RAWPAT for", str(fun))
-    # print(rawpat)
     return re.compile(rawpat, re.DOTALL)
 
 def get_funcs(fn, cname):
@@ -215,7 +225,7 @@ def get_cname(fn):
     else:
         return fbn
 
-#### PERSISTENT DATABASE MANIPULATION ####
+#### OTHER FILE STUFF ####
 
 banner = None
 def get_banner():
@@ -232,6 +242,11 @@ def get_banner():
         else:
             print("WARNING: no author file", authfile)
     return banner
+
+def code_file(cname, short_name):
+    return os.path.join(cname, short_name + '.c')
+
+#### PERSISTENT DATABASE MANIPULATION ####
 
 def set_default_db(dbdir):
     global db_dir, db_file
@@ -313,6 +328,48 @@ def dict_diffs(title, stored, found):
                 print("MISSING:", x)
         print()
 
+##### OTHER HELPER FUNCS #####
+
+last_confirm = None
+
+def confirm(text, level=2, remember=False):
+    global ask_level, last_confirm
+    if ask_level < level or (remember and last_confirm):
+        print(text+"...")
+        return True
+    elif remember and (last_confirm is False):
+        print(text + "? N")
+        return False
+    elif ask_level >= level:
+        question = text + "? [y/n"
+        if remember:
+            question += "/Y/N"
+        question += "] "
+        while True:
+            yn = input(question).strip()
+            if not remember:
+                yn = yn.lower()
+            if yn == 'n':
+                return False
+            elif yn == 'y':
+                return True
+            elif yn == 'N':
+                last_confirm = False
+                return False
+            elif yn == 'Y':
+                last_confirm = True
+                return True
+
+def forget_confirm():
+    global last_confirm
+    last_confirm = None
+
+def trim_list(lst, trimto):
+    return [x for x in trimto if x in lst]
+
+def trim_dict(dic, trimto):
+    return {x:dic[x] for x in trimto if x in dic}
+
 
 if __name__ == '__main__':
     commands = {'check', 'update', 'code_pop', 'code_gen', 'tests_pop', 'tests_gen'}
@@ -331,7 +388,12 @@ if __name__ == '__main__':
     parser.add_argument('header_file', 
         help="The header file to get signatures from (default: all files)",
         nargs='?',
-        )
+    )
+
+    parser.add_argument('functions',
+        help="Function(s) to perform the operation on (default: all in header).",
+        nargs='*',
+    )
 
     parser.add_argument('--database', '-d',
         help="Database file to use (default {})".format(db_file),
@@ -346,9 +408,9 @@ if __name__ == '__main__':
         action='store_const', dest='backup', const=None,
         )
 
-    parser.add_argument('--quick', '-q',
-        help="Don't ask any questions",
-        action='store_const', const=True, # FIXME better way?
+    parser.add_argument('--confirm', '-c',
+        help="Confirmation level. 0=no questions, default=1",
+        type=int, default=1
         )
 
     args = parser.parse_args()
@@ -358,9 +420,11 @@ if __name__ == '__main__':
         db_file = args.database
     backup_db = args.backup
 
-    ask = not args.quick
+    ask_level = args.confirm
 
     open_db()
+    db_orig = copy.deepcopy(db)
+
     if one_file:
         os.chdir(os.path.dirname(os.path.abspath(args.header_file)))
         headers = [os.path.basename(args.header_file)]
@@ -368,11 +432,19 @@ if __name__ == '__main__':
         os.chdir(os.path.dirname(os.path.dirname(db_file)))
         headers = list(db)
 
+    if args.functions:
+        all_funcs = False
+        do_funcs = args.functions
+    else:
+        all_funcs = True
+
     for hf in headers:
         if not hf.endswith('.h'):
             hf = hf + '.h'
         cname = get_cname(hf)
         print('Running', command, 'on', cname, '...')
+        if not all_funcs:
+            print("Only considering functions", ", ".join(do_funcs))
 
         ##### CHECK COMMAND #####
         if command == 'check':
@@ -383,13 +455,29 @@ if __name__ == '__main__':
             dbc = db[cname]
 
             fnames, fsigs = get_funcs(hf, cname)
-            list_diffs("Header function names", dbc['functions'], fnames)
-            dict_diffs("Header function signatures", dbc['signatures'], fsigs)
+            funlist = dbc['functions']
+            sigdict = dbc['signatures']
+            if not all_funcs:
+                fnames = trim_list(fnames, do_funcs)
+                fsigs = trim_dict(fsigs, do_funcs)
+                funlist = trim_list(funlist, do_funcs)
+                sigdict = trim_dict(sigdict, do_funcs)
+
+            list_diffs("Header function names", funlist, fnames)
+            dict_diffs("Header function signatures", sigdict, fsigs)
 
             codefs = get_code(cname)
-            list_diffs("Code files", sorted(dbc['code']), sorted(codefs))
+            stored_code = dbc['code']
+            if all_funcs:
+                list_diffs("Code files", sorted(stored_code), sorted(codefs))
+            else:
+                stored_code = {f:L for (f,L) in stored_code.items() 
+                               if any(x in L for x in do_funcs)}
+                for codef in stored_code:
+                    if codef not in codefs:
+                        print("Code file missing:", codef)
             coded = set()
-            for codef, flist in dbc['code'].items():
+            for codef, flist in stored_code.items():
                 coded.update(flist)
                 if codef == 'inlines':
                     continue
@@ -406,18 +494,36 @@ if __name__ == '__main__':
                     print("CODE FILE NOT FOUND:", codef)
                 if not flist:
                     print("WARNING: No coded functions listed for file ", codef)
-            list_diffs("Coded functions", sorted(dbc['functions']), sorted(coded))
+            if all_funcs:
+                list_diffs("Coded functions", sorted(dbc['functions']), sorted(coded))
+            else:
+                for fun in do_funcs:
+                    if fun not in coded:
+                        print("FUNCTION NOT CODED:", fun)
 
             ft = get_tests(cname)
-            list_diffs("Test names", sorted(dbc['tests']), sorted(ft))
+            stored_tests = dbc['tests']
+            if all_funcs:
+                list_diffs("Test names", sorted(stored_tests), sorted(ft))
+            else:
+                stored_tests = {f:L for (f,L) in stored_tests.items()
+                                if any(x in L for x in do_funcs)}
+                for testf in stored_tests:
+                    if testf not in ft:
+                        print("Test file missing:", testf)
             tested = set()
-            for tname, flist in dbc['tests'].items():
+            for tname, flist in stored_tests.items():
                 if not os.path.exists(
                         os.path.join(cname, 'test', 't-'+tname+'.c')):
                     print("TEST FILE NOT FOUND:", tname)
                 tested.update(flist)
-            list_diffs("Tested functions", sorted(dbc['functions']), sorted(tested))
-            for tfile, tnames in dbc['tests'].items():
+            if all_funcs:
+                list_diffs("Tested functions", sorted(dbc['functions']), sorted(tested))
+            else:
+                for fun in do_funcs:
+                    if fun not in tested:
+                        print("FUNCTION NOT TESTED:", fun)
+            for tfile, tnames in stored_tests.items():
                 if not tnames:
                     print("WARNING: No tests listed for file", tfile)
 
@@ -429,15 +535,43 @@ if __name__ == '__main__':
             dbc = db[cname]
             
             fnames, fsigs = get_funcs(hf, cname)
+            oldfuncs, oldsigs = dbc['functions'], dbc['signatures']
             dbc['functions'] = fnames
             dbc['signatures'] = fsigs
+
+            if not all_funcs:
+                fnames = trim_list(fnames, do_funcs)
+                fsigs = trim_dict(fsigs, do_funcs)
+            
+            for fun in fnames:
+                if fun not in dbc['functions']:
+                    if confirm("Add function " + fun, remember=True):
+                        dbc['functions'].append(fun)
+            for fun, sig in fsigs.items():
+                if fun not in dbc['signatures'] or sig != dbc['signatures'][fun]:
+                    if confirm("Update signature for " + fun, remember=True):
+                        dbc['signatures'][fun] = sig
+            forget_confirm()
+
+            if all_funcs:
+                for fun in dbc['functions']:
+                    if (fun not in fnames 
+                        and confirm('Remove function ' + fun, remember=True)
+                       ):
+                        dbc['functions'].remove(fun)
+                for fun in dbc['signatures']:
+                    if (fun not in fsigs 
+                        and confirm('Remove signature for ' + fun, remember=True)
+                       ):
+                        del dbc['signatures'][fun]
+            forget_confirm()
 
             codefs = get_code(cname)
             oldcode = dbc['code']
             dbc['code'] = {}
             for codef in codefs:
                 hcodef = codef+'_'
-                cfn = os.path.join(cname, codef+'.c')
+                cfn = code_file(cname, codef)
                 flist = []
                 with open(cfn) as cfin:
                     cf_all = cfin.read()
@@ -452,69 +586,135 @@ if __name__ == '__main__':
                         flist.append(codef)
                     if hcodef in fsigs and fsigs[hcodef].find_code(cf_all):
                         flist.append(hcodef)
+                if not all_funcs and not any(fun in flist for fun in do_funcs):
+                    if codef in oldcode:
+                        dbc['code'][codef] = oldcode[codef]
+                    continue
                 if codef == 'inlines':
                     for fname, f in fsigs.items():
                         if f.is_inline():
                             flist.append(fname)
                 elif not flist:
-                    if ask:
+                    if ask_level:
                         while True:
                             funcs = set( 
                                 input("What functions are coded in {}? " 
                                       .format(codef))
                                 .split())
-                            if all(f in fsigs for f in funcs):
+                            if all(f in dbc['signatures'] for f in funcs):
                                 flist = sorted(funcs)
                                 break
                             print("ERROR: invalid function name(s) given.")
                     else:
                         print("WARNING: empty flist for", codef)
-                dbc['code'][codef] = flist
+                if ((codef not in oldcode 
+                     or sorted(oldcode[codef]) != sorted(flist))
+                    and confirm("Update code file "+codef, remember=True)
+                   ):
+                    dbc['code'][codef] = flist
+                elif codef in oldcode:
+                    dbc['code'][codef] = oldcode[codef]
+            for codef in oldcode:
+                if (codef not in dbc['code'] 
+                    and not confirm("Remove code for "+codef,remember=True)
+                   ):
+                    dbc['code'][codef] = oldcode[codef]
+            forget_confirm()
 
             for tname in get_tests(cname):
                 if tname not in dbc['tests']:
                     htname = tname+'_'
                     if tname in fsigs or htname in fsigs:
-                        dbc['tests'][tname] = []
-                        if tname in fsigs:
-                            dbc['tests'][tname].append(tname)
-                        if htname in fsigs:
-                            dbc['tests'][tname].append(htname)
+                        if confirm("Add tested functions to "+tname, remember=True):
+                            dbc['tests'][tname] = []
+                            if tname in fsigs:
+                                dbc['tests'][tname].append(tname)
+                            if htname in fsigs:
+                                dbc['tests'][tname].append(htname)
                     else:
-                        if ask:
+                        if ask_level:
                             while True:
                                 funcs = set( 
                                     input("What functions are tested in {}? " 
                                           .format(tname))
                                     .split())
-                                if all(f in fsigs for f in funcs):
+                                if all(f in dbc['signatures'] for f in funcs):
                                     break
                                 print("ERROR: invalid function name(s) given.")
                         else:
                             print("WARNING: don't know what's tested in", tname)
                             funcs = []
-                        dbc['tests'][tname] = sorted(funcs)
+                        if funcs or confirm("Add empty test list to "+tname, 
+                                            remember=True):
+                            dbc['tests'][tname] = sorted(funcs)
+            forget_confirm()
 
         ##### CODE_POP COMMAND #####
         elif command == 'code_pop':
+            if cname not in db:
+                print("MISSING class name", cname)
+                print()
+                continue
+            dbc = db[cname]
+
             coded = set(itertools.chain(*dbc['code'].values()))
             for fname, f in dbc['signatures'].items():
-                if fname not in coded:
+                if (fname not in coded 
+                    and (all_funcs or fname in do_funcs)
+                   ):
                     if f.is_inline():
-                        if 'inlines' not in dbc['code']:
-                            dbc['code']['inlines'] = []
-                        dbc['code']['inlines'].append(fname)
-                        print("Populated inline list with", fname)
+                        if confirm("Populate inline code for " + fname, remember=True):
+                            if 'inlines' not in dbc['code']:
+                                dbc['code']['inlines'] = []
+                            dbc['code']['inlines'].append(fname)
                     else:
-                        sname = f.shorter_name()
-                        if sname not in dbc['code']:
-                            dbc['code'][sname] = []
-                        dbc['code'][sname].append(fname)
-                        print("Populated", sname, "list with", fname)
-                
+                        if confirm("Populate code for " + fname, remember=True):
+                            sname = f.shorter_name()
+                            if sname not in dbc['code']:
+                                dbc['code'][sname] = []
+                            dbc['code'][sname].append(fname)
+            forget_confirm()
+            
+        ##### CODE GEN COMMAND #####
         elif command == 'code_gen':
-            raise NotImplementedError(command)
-            pass #TODO
+            if cname not in db:
+                print("MISSING class name", cname)
+                print()
+                continue
+            dbc = db[cname]
+
+            for codef, funcs in dbc['code'].items():
+                if not any(fun in do_funcs for fun in funcs):
+                    continue
+                cfn = code_file(cname, codef)
+                write_fun = set(funcs)
+                if os.path.exists(cfn):
+                    with open(cfn) as cfin:
+                        cf_all = cfin.read()
+                    for fname in funcs:
+                        sig = dbc['signatures'][fname]
+                        if not sig.is_inline() and sig.find_code(cf_all):
+                            write_fun.discard(fname)
+                else:
+                    if confirm("Create file " + cfn, remember=True):
+                        banner = get_banner()
+                        with open(cfn,'w') as cfout:
+                            cfout.write(banner)
+                            print("", file=cfout)
+                            print('#include "{}.h"'.format(cname), file=cfout)
+                    else:
+                        continue
+                if (write_fun and 
+                    confirm("Write functions " + str(write_fun) + " to " + codef,
+                            remember=True)
+                   ):
+                    with open(cfn,'a') as cfout:
+                        for fname in sorted(write_fun):
+                            print("", file=cfout)
+                            sig = dbc['signatures'][fname]
+                            sig.write_impl(cfout)
+            forget_confirm()
+
         elif command == 'tests_pop':
             raise NotImplementedError(command)
             pass #TODO
@@ -525,4 +725,6 @@ if __name__ == '__main__':
             raise ValueError("Command {} not supported".format(command))
         print()
 
-    save_db()
+    if db != db_orig:
+        if confirm("Save modified database"):
+            save_db()

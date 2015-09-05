@@ -8579,7 +8579,45 @@
     },
     "fmpz_sparse": {
         "code": {
-            "init": ["init"],
+            "add": [
+                "add"
+            ],
+            "append": [
+                "append_"
+            ],
+            "append_si": [
+                "append_si_"
+            ],
+            "clear": [
+                "clear"
+            ],
+            "fprint": [
+                "fprint"
+            ],
+            "fprint_pretty": [
+                "fprint_pretty"
+            ],
+            "fread": [
+                "fread"
+            ],
+            "get_coeff": [
+                "get_coeff"
+            ],
+            "get_fmpz_poly": [
+                "get_fmpz_poly"
+            ],
+            "get_str": [
+                "get_str"
+            ],
+            "get_str_pretty": [
+                "get_str_pretty"
+            ],
+            "index": [
+                "index_"
+            ],
+            "init": [
+                "init"
+            ],
             "inlines": [
                 "get_term_expon",
                 "max_ebits",
@@ -8626,6 +8664,39 @@
                 "read",
                 "div",
                 "divides_dense"
+            ],
+            "mul_classical": [
+                "mul_classical"
+            ],
+            "neg": [
+                "neg"
+            ],
+            "normalise": [
+                "normalise_"
+            ],
+            "randtest": [
+                "randtest"
+            ],
+            "reserve": [
+                "reserve_"
+            ],
+            "set": [
+                "set"
+            ],
+            "set_coeff": [
+                "set_coeff"
+            ],
+            "set_str": [
+                "set_str"
+            ],
+            "sub": [
+                "sub"
+            ],
+            "vec_shift": [
+                "vec_shift_"
+            ],
+            "zero": [
+                "zero"
             ]
         },
         "functions": [
