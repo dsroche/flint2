@@ -2,6 +2,32 @@
 
 #include "fmpz_sparse.h"
 
+void nmod_poly_rem_cyc(nmod_poly_t res, const nmod_poly_t f, ulong e)
+{
+  slong i;
+  ulong rese=0;
+  ulong q = nmod_poly_modulus(f);
+  FLINT_ASSERT (nmod_poly_modulus(res) == nmod_poly_modulus(f));
+
+  if (res != f) { /* set low-order coeffs of res to those of f */
+    nmod_poly_truncate(res, e);
+    for (i=e-1; i>=0; --i) {
+      nmod_poly_set_coeff_ui(res, i, nmod_poly_get_coeff_ui(f, i));
+    }
+  }
+
+  for (i=e; i<nmod_poly_length(f); ++i) {
+    nmod_poly_set_coeff_ui(res, rese, n_addmod(
+      nmod_poly_get_coeff_ui(res, rese), nmod_poly_get_coeff_ui(f, i), q
+    ));
+    if (++rese == e) rese = 0;
+  }
+
+  if (res == f) { /* aliasing; time to truncate the high-order coeffs */
+    nmod_poly_truncate(res, e);
+  }
+}
+
 int main(void) {
   int retval = 0;
 
@@ -47,17 +73,17 @@ int main(void) {
     fmpz_sparse_print_pretty(h, "x");
     printf("\n\n");
 
-    fmpz_sparse_rem_cyc(hmod, h, e);
+    fmpz_sparse_rem_cyc_dense(hmod, h, e);
     printf("f*g mod (x^%ld - 1) = ", e);
     fmpz_poly_print_pretty(hmod, "x");
     printf("\n\n");
 
-    fmpz_sparse_rem_cyc_coeffs(hmodq, h, e, q);
+    fmpz_sparse_rem_cyc_nmod(hmodq, h, e, q);
     printf("f*g mod (x^%ld - 1) mod %ld = ", e, q);
     nmod_poly_print_pretty(hmodq, "x");
     printf("\n\n");
 
-    fmpz_sparse_rem_cyc_coeffs_diverse(hdiverse, h, 2, e, q);
+    fmpz_sparse_rem_cyc_mod_diverse(hdiverse, h, 2, e, q);
     printf("f*g(2x) mod (x^%ld - 1) mod %ld = ", e, q);
     nmod_poly_print_pretty(hdiverse, "x");
     printf("\n\n");
@@ -67,12 +93,12 @@ int main(void) {
       fmpz_poly_t shift;
       fmpz_poly_init(hdense);
       fmpz_poly_init(shift);
-      fmpz_sparse_get_dense(hdense, h);
+      fmpz_sparse_get_fmpz_poly(hdense, h);
       fmpz_poly_set_coeff_ui(shift, 1, 2);
       printf("shift = "); fmpz_poly_print_pretty(shift, "x"); printf("\n");
       fmpz_poly_compose(hdense, hdense, shift);
-      fmpz_sparse_set_dense(h, hdense);
-      fmpz_sparse_rem_cyc_coeffs(hmodq, h, e, q);
+      fmpz_sparse_set_fmpz_poly(h, hdense);
+      fmpz_sparse_rem_cyc_nmod(hmodq, h, e, q);
       printf("check: "); nmod_poly_print_pretty(hmodq, "x");
       printf("\n\n");
       fmpz_poly_clear(hdense);
@@ -123,7 +149,7 @@ int main(void) {
       /* g = random polynomial */
       fmpz_sparse_randtest(g, rs, t, dz, logH);
       fmpz_sparse_mul(prod0, prod0, g);
-      fmpz_sparse_rem_cyc_coeffs(temp, g, e, q);
+      fmpz_sparse_rem_cyc_nmod(temp, g, e, q);
       nmod_poly_mul(temp, prod2, temp);
       nmod_poly_rem_cyc(prod2, temp, e);
     }
@@ -132,7 +158,7 @@ int main(void) {
     fmpz_sparse_print_pretty(prod0, "x");
     printf("\n\n");
 
-    fmpz_sparse_rem_cyc(prod1, prod0, e);
+    fmpz_sparse_rem_cyc_dense(prod1, prod0, e);
     printf("Mod (x^%lu - 1) it equals: ", e);
     fmpz_poly_print_pretty(prod1, "x");
     printf("\n\n");
@@ -141,7 +167,7 @@ int main(void) {
     nmod_poly_print_pretty(prod2, "x");
     printf("\n\n");
 
-    fmpz_sparse_rem_cyc_coeffs(temp, prod0, e, q);
+    fmpz_sparse_rem_cyc_nmod(temp, prod0, e, q);
     if (nmod_poly_equal(temp, prod2)) {
       printf("Mod check passed!\n\n");
     }
@@ -165,10 +191,10 @@ int main(void) {
     /* and I/O routines */
 
     slong i;
-    const int NPOLY=4;
+#define NPOLY (4)
     fmpz_t deg;
     fmpz_t tempz;
-    fmpz_sparse sparse[NPOLY];
+    fmpz_sparse_struct sparse[NPOLY];
     fmpz_poly_struct dense[NPOLY];
     const char* var = "variableName";
     char* ts1;
@@ -190,7 +216,7 @@ int main(void) {
       fmpz_sparse_init(sparse+i);
       fmpz_sparse_randtest(sparse+i, rs, 10, deg, 10);
       fmpz_poly_init(dense+i);
-      fmpz_sparse_get_dense(dense+i, sparse+i);
+      fmpz_sparse_get_fmpz_poly(dense+i, sparse+i);
     }
 
     /* last polys are random dense */
@@ -200,7 +226,7 @@ int main(void) {
     fmpz_poly_randtest_not_zero(dense+3, rs, 30, 20); /* unlucky */
     fmpz_poly_randtest_not_zero(dense+3, rs, 30, 20);
 
-    fmpz_sparse_set_dense(sparse+3, dense+3);
+    fmpz_sparse_set_fmpz_poly(sparse+3, dense+3);
 
     /* p[0] = p[1] * p[2] */
     fmpz_sparse_mul(sparse+0, sparse+1, sparse+2);
@@ -210,8 +236,8 @@ int main(void) {
     fmpz_sparse_sub(sparse+0, sparse+0, sparse+3);
     fmpz_poly_sub(dense+0, dense+0, dense+3);
 
-    fmpz_sparse_set_dense(sparse+1, dense+0);
-    fmpz_sparse_get_dense(dense+1, sparse+0);
+    fmpz_sparse_set_fmpz_poly(sparse+1, dense+0);
+    fmpz_sparse_get_fmpz_poly(dense+1, sparse+0);
 
     if (fmpz_sparse_equal(sparse+0, sparse+1) 
         && fmpz_poly_equal(dense+0, dense+1)) {
@@ -273,14 +299,14 @@ int main(void) {
     fmpz_set_si(tempz, 1985);
     fmpz_sparse_set_coeff(sparse+3, deg, tempz);
     fmpz_poly_set_coeff_fmpz(dense+3, dtest, tempz);
-    fmpz_sparse_set_dense(sparse+2, dense+3);
+    fmpz_sparse_set_fmpz_poly(sparse+2, dense+3);
 
     fmpz_sparse_set(sparse+1, sparse+3);
     fmpz_poly_set(dense+1, dense+3);
     fmpz_zero(tempz);
     fmpz_sparse_set_coeff(sparse+1, deg, tempz);
     fmpz_poly_set_coeff_ui(dense+1, dtest, 0);
-    fmpz_sparse_set_dense(sparse+0, dense+1);
+    fmpz_sparse_set_fmpz_poly(sparse+0, dense+1);
 
     if (fmpz_sparse_equal(sparse+3,sparse+2) && fmpz_sparse_equal(sparse+1,sparse+0)) {
       printf("set coeff checks passed\n");
