@@ -141,6 +141,16 @@ int fmpz_sparse_is_poly(const fmpz_sparse_t poly)
 
 FLINT_DLL void fmpz_sparse_zero(fmpz_sparse_t poly);
 
+FMPZ_SPARSE_INLINE
+void fmpz_sparse_one(fmpz_sparse_t poly)
+{
+    fmpz_sparse_zero(poly);
+    FLINT_ASSERT(poly->alloc >= 1);
+    fmpz_init_set_si(poly->coeffs + 0, 1);
+    fmpz_init_set_si(poly->expons + 0, 0);
+    poly->length = 1;
+}
+
 FLINT_DLL void fmpz_sparse_set(fmpz_sparse_t poly1, 
     const fmpz_sparse_t poly2);
 
@@ -718,15 +728,12 @@ FLINT_DLL void fmpz_sparse_rem_dense(fmpz_poly_t R, fmpz_sparse_t A, fmpz_poly_t
 FLINT_DLL void fmpz_sparse_rem_cyc(fmpz_sparse_t res,
     const fmpz_sparse_t poly, const fmpz_t e);
 
-/* FIXME rename */
 FLINT_DLL void fmpz_sparse_rem_cyc_dense(fmpz_poly_t res,
     const fmpz_sparse_t poly, ulong e);
 
-/* FIXME rename */
 FLINT_DLL void fmpz_sparse_rem_cyc_nmod(nmod_poly_t res,
     const fmpz_sparse_t poly, ulong e, ulong q);
 
-/* FIXME rename */
 FLINT_DLL void fmpz_sparse_rem_cyc_mod_diverse(nmod_poly_t res,
     const fmpz_sparse_t poly, ulong a, ulong e, ulong q);
 
