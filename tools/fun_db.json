@@ -8616,57 +8616,58 @@
                 "init"
             ],
             "inlines": [
-                "mul",
-                "divrem_dense",
-                "is_poly",
-                "is_term_si_si",
-                "is_term_si_fmpz",
-                "read",
-                "equal_fmpz",
-                "divides_dense",
-                "gcd",
-                "max_ebits",
+                "lcm",
                 "equal",
+                "max_elimbs",
+                "print_pretty",
+                "max_ebits",
+                "set_fmpz_fmpz",
+                "shift_left",
+                "is_term_fmpz_si",
+                "lowdeg",
+                "max_limbs",
+                "equal_fmpz",
+                "divrem",
+                "gcd",
+                "get_term_coeff",
+                "set_fmpz_si",
+                "read_pretty",
+                "sqr",
+                "mul",
+                "lowdeg_si",
+                "one",
+                "print",
+                "read",
+                "div",
+                "degree",
+                "divides",
+                "divides_dense",
+                "is_poly",
+                "terms",
+                "divrem_dense",
+                "degree_si",
+                "fread_pretty",
+                "debug",
+                "mul_heaps",
+                "get_term",
+                "is_unit",
+                "height",
+                "is_zero",
+                "get_term_expon_si",
+                "rem",
+                "swap",
+                "xgcd",
+                "is_term_si_fmpz",
                 "div_dense",
                 "max_bits",
-                "read_pretty",
-                "print",
-                "div",
-                "get_term_expon",
-                "divides",
-                "get_term_coeff_si",
-                "max_elimbs",
-                "lowdeg_si",
-                "fread_pretty",
-                "set_fmpz_si",
-                "is_term_fmpz_si",
-                "swap",
-                "max_limbs",
-                "set_si_si",
-                "set_fmpz_fmpz",
-                "get_term",
-                "rem",
-                "mul_heaps",
-                "is_unit",
-                "get_term_expon_si",
-                "degree_si",
-                "degree",
-                "get_term_coeff",
-                "lowdeg",
-                "sqr",
-                "terms",
-                "is_zero",
-                "get_term_expon_ptr",
-                "divrem",
-                "set_si_fmpz",
-                "lcm",
-                "height",
                 "get_term_coeff_ptr",
-                "xgcd",
                 "is_term",
-                "debug",
-                "shift_left",
-                "print_pretty"
+                "set_si_fmpz",
+                "get_term_coeff_si",
+                "is_term_si_si",
+                "get_term_expon",
+                "set_si_si",
+                "get_term_expon_ptr"
             ],
             "mul_classical": [
                 "mul_classical"
@@ -8698,6 +8699,9 @@
             "set_coeff": [
                 "set_coeff"
             ],
+            "set_fmpz_poly": [
+                "set_fmpz_poly"
+            ],
             "set_str": [
                 "set_str"
             ],
@@ -8723,6 +8727,7 @@
             "lowdeg_si",
             "is_poly",
             "zero",
+            "one",
             "set",
             "set_fmpz_fmpz",
             "set_fmpz_si",
@@ -10308,6 +10313,17 @@
                 "prefix": "FLINT_DLL",
                 "rtype": "void"
             },
+            "one": {
+                "args": [
+                    [
+                        "fmpz_sparse_t",
+                        "poly"
+                    ]
+                ],
+                "name": "fmpz_sparse_one",
+                "prefix": "FMPZ_SPARSE_INLINE",
+                "rtype": "void"
+            },
             "pow": {
                 "args": [
                     [
@@ -11531,6 +11547,10 @@
                 "rtype": "void"
             }
         },
-        "tests": {}
+        "tests": {
+            "toomuch": [
+                "rem_cyc"
+            ]
+        }
     }
 }
