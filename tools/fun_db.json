@@ -8609,9 +8609,6 @@
             "get_str": [
                 "get_str"
             ],
-            "get_str_pretty": [
-                "get_str_pretty"
-            ],
             "index": [
                 "index_"
             ],
@@ -8619,51 +8616,57 @@
                 "init"
             ],
             "inlines": [
-                "get_term_expon",
-                "max_ebits",
-                "sqr",
-                "get_term_coeff_ptr",
-                "get_term_expon_si",
-                "set_fmpz_fmpz",
-                "is_poly",
-                "is_unit",
-                "is_term",
-                "is_term_fmpz_si",
-                "get_term_coeff",
-                "max_elimbs",
-                "swap",
-                "lowdeg",
-                "gcd",
-                "get_term",
-                "degree",
-                "set_si_si",
-                "lowdeg_si",
-                "print",
-                "max_limbs",
-                "equal",
-                "get_term_expon_ptr",
-                "debug",
-                "rem",
-                "div_dense",
-                "is_term_si_si",
-                "degree_si",
-                "set_fmpz_si",
-                "max_bits",
-                "get_term_coeff_si",
-                "terms",
-                "set_si_fmpz",
-                "print_pretty",
-                "divides",
-                "equal_fmpz",
                 "mul",
-                "read_pretty",
-                "height",
-                "is_zero",
-                "shift_left",
+                "divrem_dense",
+                "is_poly",
+                "is_term_si_si",
                 "is_term_si_fmpz",
                 "read",
+                "equal_fmpz",
+                "divides_dense",
+                "gcd",
+                "max_ebits",
+                "equal",
+                "div_dense",
+                "max_bits",
+                "read_pretty",
+                "print",
                 "div",
-                "divides_dense"
+                "get_term_expon",
+                "divides",
+                "get_term_coeff_si",
+                "max_elimbs",
+                "lowdeg_si",
+                "fread_pretty",
+                "set_fmpz_si",
+                "is_term_fmpz_si",
+                "swap",
+                "max_limbs",
+                "set_si_si",
+                "set_fmpz_fmpz",
+                "get_term",
+                "rem",
+                "mul_heaps",
+                "is_unit",
+                "get_term_expon_si",
+                "degree_si",
+                "degree",
+                "get_term_coeff",
+                "lowdeg",
+                "sqr",
+                "terms",
+                "is_zero",
+                "get_term_expon_ptr",
+                "divrem",
+                "set_si_fmpz",
+                "lcm",
+                "height",
+                "get_term_coeff_ptr",
+                "xgcd",
+                "is_term",
+                "debug",
+                "shift_left",
+                "print_pretty"
             ],
             "mul_classical": [
                 "mul_classical"
@@ -8676,6 +8679,15 @@
             ],
             "randtest": [
                 "randtest"
+            ],
+            "rem_cyc_dense": [
+                "rem_cyc_dense"
+            ],
+            "rem_cyc_mod_diverse": [
+                "rem_cyc_mod_diverse"
+            ],
+            "rem_cyc_nmod": [
+                "rem_cyc_nmod"
             ],
             "reserve": [
                 "reserve_"
@@ -9296,7 +9308,7 @@
                     ]
                 ],
                 "name": "fmpz_sparse_divrem",
-                "prefix": "FLINT_DLL",
+                "prefix": "FMPZ_SPARSE_INLINE",
                 "rtype": "void"
             },
             "divrem_dense": {
@@ -9319,7 +9331,7 @@
                     ]
                 ],
                 "name": "fmpz_sparse_divrem_dense",
-                "prefix": "FLINT_DLL",
+                "prefix": "FMPZ_SPARSE_INLINE",
                 "rtype": "void"
             },
             "equal": {
@@ -9489,7 +9501,7 @@
                     ]
                 ],
                 "name": "fmpz_sparse_fread_pretty",
-                "prefix": "FLINT_DLL",
+                "prefix": "FMPZ_SPARSE_INLINE",
                 "rtype": "int"
             },
             "gcd": {
@@ -9937,7 +9949,7 @@
                     ]
                 ],
                 "name": "fmpz_sparse_lcm",
-                "prefix": "FLINT_DLL",
+                "prefix": "FMPZ_SPARSE_INLINE",
                 "rtype": "void"
             },
             "lowdeg": {
@@ -10248,7 +10260,7 @@
                     ]
                 ],
                 "name": "fmpz_sparse_mul_heaps",
-                "prefix": "FLINT_DLL",
+                "prefix": "FMPZ_SPARSE_INLINE",
                 "rtype": "void"
             },
             "mul_interp": {
@@ -11504,7 +11516,7 @@
                     ]
                 ],
                 "name": "fmpz_sparse_xgcd",
-                "prefix": "FLINT_DLL",
+                "prefix": "FMPZ_SPARSE_INLINE",
                 "rtype": "void"
             },
             "zero": {
