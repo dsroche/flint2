@@ -25,15 +25,18 @@
 
 #include "fmpz_sparse.h"
 
-int fmpz_sparse_fprint(FILE * file, const fmpz_sparse_t poly)
+void fmpz_sparse_set_fmpz_poly(fmpz_sparse_t poly1, const fmpz_poly_t poly2)
 {
     slong i;
-    if (flint_fprintf(file, "%wd ", poly->length) <= 0) return -1;
-    for (i=0; i<poly->length; ++i) {
-        fputc(' ', file);
-        if (fmpz_fprint(file, poly->coeffs+i) <= 0) return -1;
-        fputc(' ', file);
-        if (fmpz_fprint(file, poly->expons+i) <= 0) return -1;
+    fmpz_t c, e;
+    fmpz_init(c);
+    fmpz_init(e);
+    fmpz_sparse_zero(poly1);
+    for (i = fmpz_poly_degree(poly2); i>=0; --i) {
+        fmpz_poly_get_coeff_fmpz(c, poly2, i);
+        if (!fmpz_is_zero(c)) {
+            fmpz_set_si(e, i);
+            fmpz_sparse_set_coeff(poly1, c, e);
+        }
     }
-    return 1;
 }
