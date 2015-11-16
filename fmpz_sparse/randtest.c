@@ -45,12 +45,23 @@ void fmpz_sparse_new_randtest(fmpz_sparse_t res, flint_rand_t state,
     }
 
     _fmpz_sparse_reserve(res, terms);
-    for (i=0; i<terms; ++i) {
+
+    fmpz_init(res->coeffs);
+    fmpz_init(res->expons);
+    fmpz_randbits(res->coeffs, state, bits);
+    fmpz_set(res->expons, degree);
+
+    /*if terms > 1/2 * degree choose D - T unique exponents*/
+
+    /*if terms < 1/2 * degree choose T unique exponents*/
+
+    for (i=1; i<terms; ++i) {
         fmpz_init(res->coeffs+i);
         fmpz_init(res->expons+i);
         fmpz_randbits(res->coeffs+i, state, bits);
         fmpz_randm(res->expons+i, state, degree);
     }
+
     res->length = terms;
     _fmpz_sparse_normalise(res);
 }

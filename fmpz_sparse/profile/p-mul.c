@@ -188,13 +188,13 @@ main(void)
            flint_printf("len = %d, time = %wdms\n", len, sum), fflush(stdout);
         }
     }
-    fmpz_poly_clear(f);
-    fmpz_poly_clear(g);
-    fmpz_poly_clear(h);
+    fmpz_poly_clear(x);
+    fmpz_poly_clear(y);
+    fmpz_poly_clear(z);
     
-    fmpz_sparse_clear(x);
-    fmpz_sparse_clear(y);
-    fmpz_sparse_clear(z);
+    fmpz_sparse_clear(f);
+    fmpz_sparse_clear(g);
+    fmpz_sparse_clear(h);
     /* 
        Print 2-D ASCII image of the winning algorithms
      */
