@@ -753,9 +753,13 @@ void fmpz_sparse_div_dense(fmpz_sparse_t Q, fmpz_sparse_t A, fmpz_poly_t B)
 /* FIXME */
 FLINT_DLL void fmpz_sparse_rem_dense(fmpz_poly_t R, fmpz_sparse_t A, fmpz_poly_t B);
 
-/* FIXME */
-FLINT_DLL void fmpz_sparse_rem_cyc(fmpz_sparse_t res,
-    const fmpz_sparse_t poly, const fmpz_t e);
+FMPZ_SPARSE_INLINE 
+void fmpz_sparse_rem_cyc(fmpz_sparse_t res, const fmpz_sparse_t poly, const fmpz_t e)
+{
+  _fmpz_vec_scalar_mod_fmpz(res->expons, poly->expons, poly->length, e);
+  _fmpz_vec_set(res->coeffs, poly->coeffs, poly->length);
+  _fmpz_sparse_normalise(res);
+}
 
 FLINT_DLL void fmpz_sparse_rem_cyc_dense(fmpz_poly_t res,
     const fmpz_sparse_t poly, ulong e);
