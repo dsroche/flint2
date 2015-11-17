@@ -39,7 +39,8 @@ void fmpz_sparse_new_randtest(fmpz_sparse_t res, flint_rand_t state,
   neg = fmpz_sgn(degree);
 
   fmpz_sparse_zero(res);
-  
+ 
+  /*res is zero if no terms are desired*/
   if(terms == 0)
   {
     return;
@@ -61,6 +62,8 @@ void fmpz_sparse_new_randtest(fmpz_sparse_t res, flint_rand_t state,
   fmpz_randbits(res->coeffs, state, bits);
   fmpz_set(res->expons, abs);
   
+  /*res is one term of the desired degree if one terms are desired
+   * or degree is one*/
   if(fmpz_is_one(abs) || terms == 1)
   {
     res->length = 1;
@@ -84,6 +87,7 @@ void fmpz_sparse_new_randtest(fmpz_sparse_t res, flint_rand_t state,
     length = terms - 1;
   }
 
+  /*if a completely dense polynomial is desired*/
   if(length == 0)
   {
     for(i=1; i<terms; ++i)
@@ -103,7 +107,13 @@ void fmpz_sparse_new_randtest(fmpz_sparse_t res, flint_rand_t state,
   else
   {
     rands = _fmpz_vec_init(length);
-    _fmpz_vec_randtest_unsigned(rands, state, length, fmpz_bits(abs));
+
+    for(i = 0; i < length; ++i)
+    {
+      fmpz_randtest_unsigned(rands + i, state, fmpz_bits(abs));
+    }
+    
+    /*_fmpz_vec_randtest_unsigned(rands, state, length, fmpz_bits(abs));*/
     
     /*checks to make sure that all random exponents are unique 2*/
     while(unique == 0)
@@ -113,7 +123,7 @@ void fmpz_sparse_new_randtest(fmpz_sparse_t res, flint_rand_t state,
       /*fmpz_vec sorts in ascending order*/
       _fmpz_vec_sort(rands, length);
       
-      for(i = 0; i < length; i++)
+      for(i = 0; i < length - 1; ++i)
       {
         if(fmpz_equal(rands + i, rands + i + 1))
         {
@@ -126,9 +136,9 @@ void fmpz_sparse_new_randtest(fmpz_sparse_t res, flint_rand_t state,
     /*if terms <= .5 * degree*/
     if(length == terms - 1)
     {
-      for(i=1; i < terms; ++i)
+      for(i = 0; i < terms; ++i)
       {
-        fmpz_set(res->expons + i, rands + i - 1);
+        fmpz_set(res->expons + i + 1, rands + i);
       }
     }
     /*if terms > .5 * degree*/
@@ -138,9 +148,9 @@ void fmpz_sparse_new_randtest(fmpz_sparse_t res, flint_rand_t state,
       j = 0;
       
       /*fmpz_vec rands is sorted in ascending order*/
-      for(i=0; i < fmpz_get_si(abs); ++i)
+      for(i = 0; i < fmpz_get_si(abs); ++i)
       {
-        if(fmpz_get_si(rands + j) == i)
+        if(fmpz_equal_si(rands + j, i))
           j++;
         else
         {
@@ -150,7 +160,7 @@ void fmpz_sparse_new_randtest(fmpz_sparse_t res, flint_rand_t state,
       }
     }
     
-    for (i=1; i<terms; ++i) 
+    for (i = 1; i < terms; ++i) 
     {
       if(neg == -1)
         fmpz_mul_si(res->expons + i, res->expons + i,  1 - 2*n_randint(state,2));
@@ -158,9 +168,11 @@ void fmpz_sparse_new_randtest(fmpz_sparse_t res, flint_rand_t state,
       fmpz_init(res->coeffs+i);
       fmpz_randbits(res->coeffs+i, state, bits);
     }
-    
-    
-    
+  
+    for(i = 0; i < length; ++i)
+    {
+      _fmpz_demote(rands + i);
+    }
     flint_free(rands);
   }
   
