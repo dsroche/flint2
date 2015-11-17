@@ -27,8 +27,8 @@
 
 void 
 _fmpz_sparse_add(fmpz * res_c, fmpz * res_e, slong * res_len, const fmpz * poly1_c, 
-    const fmpz * poly1_e, slong len1, const fmpz * poly2_c, const fmpz * poly2_e,
-    slong len2)
+    const fmpz * poly1_e, const slong len1, const fmpz * poly2_c, const fmpz * poly2_e,
+    const slong len2)
 {
     slong i = 0, j = 0, k = 0;
 
@@ -95,6 +95,7 @@ fmpz_sparse_add(fmpz_sparse_t res, const fmpz_sparse_t poly1,
     const fmpz_sparse_t poly2)
 {
   slong max_length = poly1->length + poly2->length;
+
   if (poly1 == res || poly2 == res) 
   {
     fmpz_sparse_t temp;
@@ -106,6 +107,10 @@ fmpz_sparse_add(fmpz_sparse_t res, const fmpz_sparse_t poly1,
     fmpz_sparse_set(res, temp);
     fmpz_sparse_clear(temp);
   }
+  else if (fmpz_sparse_equal(poly1, poly2))
+  {
+    fmpz_sparse_scalar_mul_ui(res, poly1, 2);
+  }
   else if(poly1->length == 0)
   {
     fmpz_sparse_set(res, poly2);
@@ -116,6 +121,7 @@ fmpz_sparse_add(fmpz_sparse_t res, const fmpz_sparse_t poly1,
   }
   else
   {    
+    fmpz_sparse_zero(res);
     _fmpz_sparse_reserve(res, max_length);
     _fmpz_sparse_add(res->coeffs, res->expons, &res->length, poly1->coeffs, 
         poly1->expons, poly1->length, poly2->coeffs, poly2->expons, poly2->length);

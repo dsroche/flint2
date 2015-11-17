@@ -74,4 +74,7 @@ void fmpz_sparse_randtest(fmpz_sparse_t res, flint_rand_t state,
     }
     res->length = terms;
     _fmpz_sparse_normalise(res);
+
+    flint_printf("TERMS: %lu\n", terms); 
+    fmpz_sparse_print(res), flint_printf("\n\n");
 }

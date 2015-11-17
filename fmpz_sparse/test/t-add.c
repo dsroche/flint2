@@ -19,7 +19,7 @@
 =============================================================================*/
 /******************************************************************************
 
-  Authored 2015 by A. Whitman Groves; US Government work in the public domain.
+  Authored 10015 by A. Whitman Groves; US Government work in the public domain.
 
 ******************************************************************************/
 
@@ -54,8 +54,8 @@ main(void)
         fmpz_sparse_init(a);
         fmpz_sparse_init(b);
         fmpz_sparse_init(c);
-        fmpz_sparse_randtest(a, state, n_randint(state, 100), d, 200);
-        fmpz_sparse_randtest(b, state, n_randint(state, 100), e, 200);
+        fmpz_sparse_randtest(a, state, n_randint(state, 30), d, 1000);
+        fmpz_sparse_randtest(b, state, n_randint(state, 30), e, 1000);
 
         fmpz_sparse_add(c, a, b);
         fmpz_sparse_add(a, a, b);
@@ -64,7 +64,7 @@ main(void)
            
         if (!result)
         {
-            flint_printf("FAIL:\n");
+            flint_printf("FAIL PHASE I (i = %d):\n", i);
             fmpz_sparse_print(a), flint_printf("\n\n");
             fmpz_sparse_print(b), flint_printf("\n\n");
             fmpz_sparse_print(c), flint_printf("\n\n");
@@ -94,8 +94,8 @@ main(void)
         fmpz_sparse_init(a);
         fmpz_sparse_init(b);
         fmpz_sparse_init(c);
-        fmpz_sparse_randtest(a, state, n_randint(state, 100), d, 200);
-        fmpz_sparse_randtest(b, state, n_randint(state, 100), e, 200);
+        fmpz_sparse_randtest(a, state, n_randint(state, 30), d, 1000);
+        fmpz_sparse_randtest(b, state, n_randint(state, 30), e, 1000);
 
         fmpz_sparse_add(c, a, b);
         fmpz_sparse_add(b, a, b);
@@ -104,7 +104,7 @@ main(void)
         
         if (!result)
         {
-            flint_printf("FAIL:\n");
+            flint_printf("FAIL PHASE II (i = %d)::\n", i);
             fmpz_sparse_print(a), flint_printf("\n\n");
             fmpz_sparse_print(b), flint_printf("\n\n");
             fmpz_sparse_print(c), flint_printf("\n\n");

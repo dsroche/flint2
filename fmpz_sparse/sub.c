@@ -93,6 +93,7 @@ fmpz_sparse_sub(fmpz_sparse_t res, const fmpz_sparse_t poly1,
     const fmpz_sparse_t poly2)
 {
   slong max_length = poly1->length + poly2->length;
+
   if (poly1 == res || poly2 == res) 
   {
     fmpz_sparse_t temp;
@@ -104,9 +105,21 @@ fmpz_sparse_sub(fmpz_sparse_t res, const fmpz_sparse_t poly1,
     fmpz_sparse_set(res, temp);
     fmpz_sparse_clear(temp);
   }
-  else if (fmpz_sparse_equal(poly1, poly2)) fmpz_sparse_zero(res);
+  else if (fmpz_sparse_equal(poly1, poly2))
+  {
+    fmpz_sparse_zero(res);
+  }
+  else if(poly1->length == 0)
+  {
+    fmpz_sparse_neg(res, poly2);
+  }
+  else if(poly2->length == 0)
+  {
+    fmpz_sparse_set(res, poly1);
+  }
   else
   {
+    fmpz_sparse_zero(res);
     _fmpz_sparse_reserve(res, max_length);
     _fmpz_sparse_sub(res->coeffs, res->expons, &res->length, poly1->coeffs, 
         poly1->expons, poly1->length, poly2->coeffs, poly2->expons, poly2->length);
