@@ -19,51 +19,38 @@
 =============================================================================*/
 /******************************************************************************
 
-    Copyright (C) 2014 Alex J. Best
+    Authored 2015 by Daniel S. Roche; US Government work in the public domain. 
 
 ******************************************************************************/
 
-#include "fmpz_mat.h"
+#include <gmp.h>
+#include "flint.h"
+#include "fmpz.h"
 
-void
-fmpz_mat_hnf(fmpz_mat_t H, const fmpz_mat_t A)
+void fmpz_randprime(fmpz_t f, flint_rand_t state, mp_bitcnt_t bits, int proved)
 {
-    slong m = A->r, b = fmpz_mat_max_bits(A), cutoff = 2;
+    if (bits <= FLINT_BITS-3)
+    {
+        _fmpz_demote(f);
+        *f = n_randprime(state, bits, proved);
+    }
+    else
+    {
+        /* Here I would like to just call
+         * fmpz_randbits(f, state, bits);
+         * but it has different semantics from n_randbits,
+         * and in particular may return integers with fewer bits.
+         */
+        __mpz_struct *mpz_ptr = _fmpz_promote(f);
+        _flint_rand_init_gmp(state);
 
-    if (b < 0)
-        b = -b;
-
-    if (b <= 2)
-        cutoff = 52;
-    else if (b <= 4)
-        cutoff = 38;
-    else if (b <= 8)
-        cutoff = 30;
-    else if (b <= 16)
-        cutoff = 11;
-    else if (b <= 32)
-        cutoff = 11;
-    else if (b <= 64)
-        cutoff = 5;
-    else if (b <= 128)
-        cutoff = 4;
-    else if (b <= 512)
-        cutoff = 3;
-
-    /* 
-        TODO: we should call Micciancio-Warisnchi or Pauderis-Storjohann
-        when implemented
-    */
-       
-    if (m < cutoff)
-        fmpz_mat_hnf_classical(H, A);
-    else {
-        flint_rand_t state;
-
-        flint_randinit(state);
-
-        fmpz_mat_hnf_pernet_stein(H, A, state);
-
-        flint_randclear(state);
+        do
+        {
+            mpz_urandomb(mpz_ptr, state->gmp_state, bits-1);
+            mpz_setbit(mpz_ptr, bits-1);
+            _fmpz_demote_val(f);
+            
+            fmpz_nextprime(f, f, proved);
+        } while (fmpz_bits(f) != bits);
     }
 }
