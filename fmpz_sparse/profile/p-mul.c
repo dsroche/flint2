@@ -77,7 +77,7 @@ int write_rgb_ppm(const char* file_name, unsigned char* pixels,
     if (file == NULL)
         return -1;
     flint_fprintf(file, "P6\n%d %d\n255\n", width, height);
-    fwrite(pixels, sizeof(unsigned char), width * height * 3, file);
+    fwrite(pixels, sizeof(unsigned char), width * height * nalgs, file);
     fclose(file);
     return 0;
 }
@@ -215,7 +215,7 @@ main(void)
         unsigned char * PIXELS;
         int k;
         
-        PIXELS = (unsigned char *) flint_malloc(3 * rows * cols * sizeof(unsigned char));
+        PIXELS = (unsigned char *) flint_malloc(nalgs * rows * cols * sizeof(unsigned char));
         k = 0;
         for (i = 0; i < rows; i++)
         {
@@ -235,9 +235,6 @@ main(void)
                     v[m] = (max - v[m]) / max;
                     PIXELS[k++] = (unsigned char) (v[m] * 255);
                 }
-                for (; m < 3; m++)
-                    PIXELS[k++] = (unsigned char) 0;
-                
             }
         }
 

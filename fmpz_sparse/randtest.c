@@ -46,6 +46,7 @@ void fmpz_sparse_randtest(fmpz_sparse_t res, flint_rand_t state,
     return;
   }
 
+  fmpz_init(abs);
   fmpz_abs(abs, degree);
 
   if(fmpz_cmp_si(abs, terms - 1) < 0)
@@ -71,6 +72,8 @@ void fmpz_sparse_randtest(fmpz_sparse_t res, flint_rand_t state,
     return;
   }
 
+  fmpz_init(half);
+  fmpz_init(temp);
   fmpz_fdiv_q_ui(half, abs, 2);
   fmpz_set_ui(temp, terms);
 
@@ -135,7 +138,7 @@ void fmpz_sparse_randtest(fmpz_sparse_t res, flint_rand_t state,
       /*fmpz_vec rands is sorted in ascending order*/
       for(i = fmpz_get_si(abs) - 1; i >= 0; --i)
       {
-        if(fmpz_equal_si(rands + j, i))
+        if(j >= 0 && fmpz_equal_si(rands + j, i))
           j--;
         else     
         {
@@ -164,10 +167,7 @@ void fmpz_sparse_randtest(fmpz_sparse_t res, flint_rand_t state,
       fmpz_randbits(res->coeffs+i, state, bits);
     }
 
-    for(i = 0; i < length; ++i)
-    {
-      _fmpz_demote(rands + i);
-    }
+    _fmpz_vec_clear(rands, length);
   }
   
   res->length = terms;
