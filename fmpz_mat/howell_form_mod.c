@@ -19,38 +19,41 @@
 =============================================================================*/
 /******************************************************************************
 
-    Copyright (C) 2010 William Hart
-    Copyright (C) 2014 Abhinav Baid
+    Copyright (C) 2015 Tommy Hofmann
 
 ******************************************************************************/
 
-#include <stdlib.h>
-#include <gmp.h>
-#include "flint.h"
-#include "mpf_mat.h"
+#include "fmpz_mat.h"
 
-void
-mpf_mat_init(mpf_mat_t mat, slong rows, slong cols, mp_bitcnt_t prec)
+slong
+fmpz_mat_howell_form_mod(fmpz_mat_t A, const fmpz_t mod)
 {
+    slong i, j, n;
+    slong k;
 
-    if (rows != 0 && cols != 0)       /* Allocate space for r*c small entries */
+    if (fmpz_mat_is_empty(A))
+        return 0;
+
+    n = A->r;
+    k = n;
+    fmpz_mat_strong_echelon_form_mod(A, mod);
+
+    for (i = 0; i < n; i++)
     {
-        slong i;
-        mat->entries = (mpf *) flint_malloc(rows * cols * sizeof(mpf));
-        mat->rows = (mpf **) flint_malloc(rows * sizeof(mpf *));    /* Initialise rows */
-
-        for (i = 0; i < rows * cols; i++)
-            mpf_init2(mat->entries + i, prec);
-        for (i = 0; i < rows; i++)
-            mat->rows[i] = mat->entries + i * cols;
+        if (fmpz_mat_is_zero_row(A, i))
+        {
+            k--;
+            for (j = i + 1; j < n; j++)
+            {
+                if (!fmpz_mat_is_zero_row(A, j))
+                {
+                    fmpz_mat_swap_rows(A, NULL, i, j);
+                    j = n;
+                    k++;
+                }
+            }
+        }
     }
-    else
-    {
-       mat->entries = NULL;
-       mat->rows = NULL;
-    }
-
-    mat->r = rows;
-    mat->c = cols;
-    mat->prec = prec;
+    return k;
 }
+

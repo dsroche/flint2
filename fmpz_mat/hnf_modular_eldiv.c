@@ -19,38 +19,42 @@
 =============================================================================*/
 /******************************************************************************
 
-    Copyright (C) 2010 William Hart
-    Copyright (C) 2014 Abhinav Baid
+    Copyright (C) 2015 Tommy Hofmann
 
 ******************************************************************************/
 
-#include <stdlib.h>
-#include <gmp.h>
-#include "flint.h"
-#include "mpf_mat.h"
+#include "fmpz_mat.h"
 
 void
-mpf_mat_init(mpf_mat_t mat, slong rows, slong cols, mp_bitcnt_t prec)
+fmpz_mat_hnf_modular_eldiv(fmpz_mat_t A, const fmpz_t D)
 {
+    slong i;
+    mp_limb_t Dlimbt;
+    nmod_mat_t AmodD;
 
-    if (rows != 0 && cols != 0)       /* Allocate space for r*c small entries */
+    if (fmpz_mat_is_empty(A))
+        return;
+
+    if (fmpz_abs_fits_ui(D))
     {
-        slong i;
-        mat->entries = (mpf *) flint_malloc(rows * cols * sizeof(mpf));
-        mat->rows = (mpf **) flint_malloc(rows * sizeof(mpf *));    /* Initialise rows */
-
-        for (i = 0; i < rows * cols; i++)
-            mpf_init2(mat->entries + i, prec);
-        for (i = 0; i < rows; i++)
-            mat->rows[i] = mat->entries + i * cols;
+        Dlimbt = fmpz_get_ui(D);
+        nmod_mat_init(AmodD, A->r, A->c, Dlimbt);
+        fmpz_mat_get_nmod_mat(AmodD, A);
+        nmod_mat_strong_echelon_form(AmodD);
+        fmpz_mat_set_nmod_mat_unsigned(A, AmodD);
+        nmod_mat_clear(AmodD);
     }
     else
     {
-       mat->entries = NULL;
-       mat->rows = NULL;
+        fmpz_mat_strong_echelon_form_mod(A, D);
     }
 
-    mat->r = rows;
-    mat->c = cols;
-    mat->prec = prec;
+    for (i = 0; i < A->c; i++)
+    {
+        if (fmpz_is_zero(fmpz_mat_entry(A, i, i)))
+        {
+            fmpz_set(fmpz_mat_entry(A, i, i), D);
+        }
+    }
 }
+    
