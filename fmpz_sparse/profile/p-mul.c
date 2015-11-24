@@ -52,7 +52,7 @@
    imgname  File name for image
  */
 
-#define deg      60
+#define deg      61
 #define lenlo    1
 #define lenhi    60
 #define lenh     1
@@ -188,13 +188,7 @@ main(void)
            flint_printf("len = %d, time = %wdms\n", len, sum), fflush(stdout);
         }
     }
-    fmpz_poly_clear(x);
-    fmpz_poly_clear(y);
-    fmpz_poly_clear(z);
     
-    fmpz_sparse_clear(f);
-    fmpz_sparse_clear(g);
-    fmpz_sparse_clear(h);
     /* 
        Print 2-D ASCII image of the winning algorithms
      */
@@ -204,6 +198,14 @@ main(void)
             flint_printf("%d", X[i][j]);
         flint_printf("\n");
     }
+
+    fmpz_poly_clear(x);
+    fmpz_poly_clear(y);
+    fmpz_poly_clear(z);
+    
+    fmpz_sparse_clear(f);
+    fmpz_sparse_clear(g);
+    fmpz_sparse_clear(h);
     
     /*
        Print 2-D coloured image to file

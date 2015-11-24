@@ -25,6 +25,8 @@
 
 #include "fmpz_sparse.h"
 #include "fmpz_vec.h"
+#include "fmpz.h"
+
 void 
 fmpz_sparse_mul_interp(fmpz_sparse_t res, flint_rand_t state, const fmpz_sparse_t poly1, 
     const fmpz_sparse_t poly2)
@@ -63,7 +65,7 @@ fmpz_sparse_mul_interp(fmpz_sparse_t res, flint_rand_t state, const fmpz_sparse_
   fmpz_sparse_init(temp_2);
   
   fmpz_init(p);
-  fmpz_one(q);
+  fmpz_init(q);
 
   fmpz_sparse_set(f, poly1);
   fmpz_sparse_set(g, poly2);
@@ -88,31 +90,33 @@ fmpz_sparse_mul_interp(fmpz_sparse_t res, flint_rand_t state, const fmpz_sparse_
     fmpz_one(g_s->coeffs + i);
   }
   
-  /*for(i = 0; i < f_s->length; i++)
-  {
-    fmpz_set(f_s->expons + i, f->expons + i);
-  }
-
-  for(i = 0; i < g_s->length; i++)
-  {
-    fmpz_set(g_s->expons + i, g->expons + i);
-  }*/
-
-  flint_printf("poly1: %d, f: %d, f_s: %d\n", poly1->length, f->length, f_s->length);
   /* estimate structural sparsity */
   do
   {
-    fmpz_set_ui(p, n_randprime(state, 10, 1));
+    fmpz_randprime(p, state, 10, 1);
 
-    fmpz_set_ui(q, n_randprime(state, 5, 1));
+    fmpz_randprime(q, state, 5, 1);
 
+    fmpz_sparse_rem_cyc(f_s, f_s, p);
+    fmpz_sparse_rem_cyc(g_s, g_s, p);
+    fmpz_sparse_rem_cyc(f_s, f_s, q);
+    fmpz_sparse_rem_cyc(g_s, g_s, q);
     fmpz_sparse_mul_heaps(temp_1, f_s, g_s);
+    fmpz_sparse_rem_cyc(temp_1, temp_1, q);
+
+
+
+    /*
     _fmpz_vec_scalar_mod_fmpz(temp_1->expons, temp_1->expons, temp_1->length, p);
     _fmpz_vec_scalar_mod_fmpz(temp_1->expons, temp_1->expons, temp_1->length, q);
-    _fmpz_sparse_normalise(temp_1);
-  } while(temp_1->length >= (f_s->length+g_s->length)/2);
+    _fmpz_sparse_normalise(temp_1);*/
+  } while(temp_1->length >= (fmpz_get_si(p))/2);
   
   flint_printf("AFTER:\n");
+  fmpz_print(p);
+  flint_printf("\n");
+  fmpz_print(q);
+  flint_printf("\n");
   fmpz_sparse_print(f_s);
   flint_printf("\n");
   fmpz_sparse_print(g_s);

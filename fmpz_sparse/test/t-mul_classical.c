@@ -64,7 +64,7 @@ main(void)
         result = (fmpz_sparse_equal(a, b));
         if (!result)
         {
-            flint_printf("FAIL:\n");
+            flint_printf("FAIL PHASE I:\n");
             fmpz_sparse_print(a), flint_printf("\n\n");
             fmpz_sparse_print(b), flint_printf("\n\n");
             abort();
@@ -100,7 +100,7 @@ main(void)
         result = (fmpz_sparse_equal(a, c));
         if (!result)
         {
-            flint_printf("FAIL:\n");
+            flint_printf("FAIL PHASE II:\n");
             fmpz_sparse_print(a), flint_printf("\n\n");
             fmpz_sparse_print(c), flint_printf("\n\n");
             abort();
@@ -145,7 +145,7 @@ main(void)
         result = (fmpz_sparse_equal(a1, a2));
         if (!result)
         {
-            flint_printf("FAIL:\n");
+            flint_printf("FAIL PHASE III:\n");
             fmpz_sparse_print(a1), flint_printf("\n\n");
             fmpz_sparse_print(a2), flint_printf("\n\n");
             abort();

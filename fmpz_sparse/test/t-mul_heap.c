@@ -42,15 +42,15 @@ main(void)
 
     
     /* Check aliasing of a and b */
-    for (i = 0; i < 10 * flint_test_multiplier(); i++)
+    for (i = 0; i < 1000 * flint_test_multiplier(); i++)
     {
         fmpz_sparse_t a, b, c;
         fmpz_t d, e;
 
         fmpz_init(d);
         fmpz_init(e);
-        fmpz_randtest(d, state, 100);
-        fmpz_randtest(e, state, 100);
+        fmpz_randtest(d, state, 50);
+        fmpz_randtest(e, state, 50);
 
         fmpz_sparse_init(a);
         fmpz_sparse_init(b);
@@ -78,15 +78,15 @@ main(void)
     }
 
     /* Check aliasing of a and c */
-    for (i = 0; i < 10 * flint_test_multiplier(); i++)
+    for (i = 0; i < 1000 * flint_test_multiplier(); i++)
     {
         fmpz_sparse_t a, b, c;
         fmpz_t d, e;
 
         fmpz_init(d);
         fmpz_init(e);
-        fmpz_randtest(d, state, 100);
-        fmpz_randtest(e, state, 100);
+        fmpz_randtest(d, state, 50);
+        fmpz_randtest(e, state, 50);
 
         fmpz_sparse_init(a);
         fmpz_sparse_init(b);
@@ -114,7 +114,7 @@ main(void)
     }
 
     /* Check (b*c)+(b*d) = b*(c+d) */
-    for (i = 0; i < 10 * flint_test_multiplier(); i++)
+    for (i = 0; i < 1000 * flint_test_multiplier(); i++)
     {
         fmpz_sparse_t a1, a2, b, c, d;
         fmpz_t e, f, g;
@@ -122,9 +122,9 @@ main(void)
         fmpz_init(e);
         fmpz_init(f);
         fmpz_init(g);
-        fmpz_randtest(e, state, 100);
-        fmpz_randtest(f, state, 100);
-        fmpz_randtest(g, state, 100);
+        fmpz_randtest(e, state, 50);
+        fmpz_randtest(f, state, 50);
+        fmpz_randtest(g, state, 50);
 
         fmpz_sparse_init(a1);
         fmpz_sparse_init(a2);

@@ -51,7 +51,7 @@ main(void)
         fmpz_randtest(b ,state, 100);
 
         fmpz_sparse_init(a);
-        fmpz_sparse_randtest(a, state, n_randint(state, 100), b, 100);
+        fmpz_sparse_randtest(a, state, n_randint(state, 100), b, 200);
         fmpz_sparse_zero(a);
 
         result = (fmpz_sparse_is_zero(a));
