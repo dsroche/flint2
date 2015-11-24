@@ -759,7 +759,7 @@ void fmpz_sparse_rem_cyc(fmpz_sparse_t res, const fmpz_sparse_t poly, const fmpz
   if(poly == res)
   {
     fmpz_sparse_t temp;
-    fmpz_sparse_init(temp);
+    fmpz_sparse_init2(temp, poly->length);
     fmpz_sparse_rem_cyc(temp, poly, e);
     fmpz_sparse_swap(res, temp);
     fmpz_sparse_clear(temp);
@@ -767,8 +767,10 @@ void fmpz_sparse_rem_cyc(fmpz_sparse_t res, const fmpz_sparse_t poly, const fmpz
   else
   {
     fmpz_sparse_zero(res);
+    _fmpz_sparse_reserve(res, poly->length);
     _fmpz_vec_scalar_mod_fmpz(res->expons, poly->expons, poly->length, e);
     _fmpz_vec_set(res->coeffs, poly->coeffs, poly->length);
+    res->length = poly->length;
     _fmpz_sparse_normalise(res);
   }
 }
