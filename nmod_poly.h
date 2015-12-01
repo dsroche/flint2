@@ -290,6 +290,29 @@ FLINT_DLL void _nmod_poly_reverse(mp_ptr output, mp_srcptr input, slong len, slo
 
 FLINT_DLL void nmod_poly_reverse(nmod_poly_t output, const nmod_poly_t input, slong m);
 
+NMOD_POLY_INLINE 
+void nmod_poly_set_fmpz_poly(nmod_poly_t res, const fmpz_poly_t poly)
+{
+    int i;
+    nmod_poly_fit_length(res, fmpz_poly_length(poly));
+    res->length = fmpz_poly_length(poly);
+    for (i=0; i < res->length; ++i)
+    {
+        res->coeffs[i] = fmpz_fdiv_ui(fmpz_poly_get_coeff_ptr(poly, i), res->mod);
+    }
+}
+
+NMOD_POLY_INLINE
+void nmod_poly_get_fmpz_poly(fmpz_poly_t res, const nmod_poly_t poly)
+{
+    slong i;
+    fmpz_poly_zero(res);
+    for (i=0; i < poly->length; ++i)
+    {
+        fmpz_poly_set_coeff_ui(res, i, nmod_poly_get_coeff_ui(poly, i));
+    }
+}
+
 /* Comparison  ***************************************************************/
 
 NMOD_POLY_INLINE
