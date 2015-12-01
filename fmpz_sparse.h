@@ -89,6 +89,8 @@ typedef struct
 
 typedef fmpz_sparse_sp_interp_struct fmpz_sparse_sp_interp_t[1];
 
+extern const fmpz_t FMPZ_SPARSE_NEGATIVE_ONE;
+
 /*  Memory management ********************************************************/
 
 FLINT_DLL void fmpz_sparse_init(fmpz_sparse_t poly);
@@ -111,6 +113,13 @@ FMPZ_SPARSE_INLINE
 slong fmpz_sparse_terms(const fmpz_sparse_t poly)
 {
     return poly->length;
+}
+
+FMPZ_SPARSE_INLINE
+const fmpz * fmpz_sparse_degree_ptr(const fmpz_sparse_t poly)
+{
+    if (poly->length == 0) return FMPZ_SPARSE_NEGATIVE_ONE;
+    else return poly->expons + 0;
 }
 
 FMPZ_SPARSE_INLINE 
@@ -289,10 +298,6 @@ FLINT_DLL void fmpz_sparse_get_coeff(fmpz_t res,
     const fmpz_sparse_t poly, const fmpz_t e);
 
 /* FIXME */
-FLINT_DLL void fmpz_sparse_set_coeff_si_si(fmpz_sparse_t poly, 
-    slong c, slong e);
-
-/* FIXME */
 FLINT_DLL void fmpz_sparse_set_coeff_si_fmpz(fmpz_sparse_t poly, 
     slong c, const fmpz_t e);
 
@@ -302,6 +307,23 @@ FLINT_DLL void fmpz_sparse_set_coeff_fmpz_si(fmpz_sparse_t poly,
 
 FLINT_DLL void fmpz_sparse_set_coeff(fmpz_sparse_t poly, 
     const fmpz_t c, const fmpz_t e);
+
+FMPZ_SPARSE_INLINE
+void fmpz_sparse_set_coeff_si_si(fmpz_sparse_t poly, 
+    slong c, slong e)
+{
+    /* TODO this is stupidly inefficient. */
+    fmpz_t zc;
+    fmpz_t ze;
+
+    fmpz_init_set_si(zc, c);
+    fmpz_init_set_si(ze, e);
+
+    fmpz_sparse_set_coeff(poly, zc, ze);
+
+    fmpz_clear(zc);
+    fmpz_clear(ze);
+}
 
 /* FIXME */
 FLINT_DLL fmpz* fmpz_sparse_get_coeff_ptr(fmpz_sparse_t poly, const fmpz_t e);

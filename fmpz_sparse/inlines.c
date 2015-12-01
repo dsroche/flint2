@@ -33,3 +33,5 @@
 #undef ulong
 
 #include "fmpz_sparse.h"
+
+const fmpz_t FMPZ_SPARSE_NEGATIVE_ONE = {-1UL};
