@@ -52,7 +52,7 @@
    imgname  File name for image
  */
 
-#define deg      61
+#define deg      60
 #define lenlo    1
 #define lenhi    60
 #define lenh     1
@@ -63,7 +63,7 @@
 #define rows     ((bitshi + 1 - bitslo + (bitsh - 1)) / bitsh)
 #define cpumin   10
 #define ncases   1
-#define nalgs    4
+#define nalgs    2
 #define img      1
 #define imgname  "out.ppm"
 
@@ -139,23 +139,13 @@ main(void)
 
                 timeit_start(t[0]);
                 for (l = 0; l < loops; l++)
-                    fmpz_poly_mul_classical(z, y, x);
+                    fmpz_poly_mul(z, y, x);
                 timeit_stop(t[0]);
                 
                 timeit_start(t[1]);
                 for (l = 0; l < loops; l++)
-                    fmpz_poly_mul_karatsuba(z, y, x);
-                timeit_stop(t[1]);
-
-                timeit_start(t[2]);
-                for (l = 0; l < loops; l++)
-                    fmpz_poly_mul_KS(z, y, x);
-                timeit_stop(t[2]);
-
-                timeit_start(t[3]);
-                for (l = 0; l < loops; l++)
                     fmpz_sparse_mul_heaps(h, g, f);
-                timeit_stop(t[3]);
+                timeit_stop(t[1]);
 
                 for (c = 0; c < nalgs; c++)
                     if (t[c]->cpu <= cpumin)
@@ -172,14 +162,10 @@ main(void)
             for (c = 0; c < nalgs; c++)
                 T[i][j][c] = s[c] / (double) reps;
             
-            if (s[0] <= s[1] && s[0] <= s[2] && s[0] <= s[3])
+            if (s[0] <= s[1])
                 X[i][j] = 0;
-            else if (s[1] <= s[2] && s[1] <= s[3])
-                X[i][j] = 1;
-            else if (s[2] <= s[3])
-                X[i][j] = 2;
             else
-                X[i][j] = 3;
+                X[i][j] = 1;
         }
         {
            slong sum = 0, c;

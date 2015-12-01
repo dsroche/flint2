@@ -539,13 +539,15 @@ FLINT_DLL void fmpz_sparse_new_mul_classical(fmpz_sparse_t res,
 
 FLINT_DLL void fmpz_sparse_mul_heaps(fmpz_sparse_t res,
     const fmpz_sparse_t poly1, const fmpz_sparse_t poly2);
+
+FLINT_DLL void fmpz_sparse_mul_OS(fmpz_sparse_t res, flint_rand_t state, 
+    const fmpz_sparse_t poly1, const fmpz_sparse_t poly2);
+
+FLINT_DLL void fmpz_sparse_mul_interp(fmpz_sparse_t res, flint_rand_t state, 
+    const fmpz_sparse_t poly1, const fmpz_sparse_t poly2, slong terms);
 /*  END OF WHITMAN'S WORK %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
 
 FLINT_DLL void fmpz_sparse_mul_classical(fmpz_sparse_t res,
-    const fmpz_sparse_t poly1, const fmpz_sparse_t poly2);
-
-/* FIXME */
-FLINT_DLL void fmpz_sparse_mul_interp(fmpz_sparse_t res, flint_rand_t state, 
     const fmpz_sparse_t poly1, const fmpz_sparse_t poly2);
 
 FMPZ_SPARSE_INLINE 
