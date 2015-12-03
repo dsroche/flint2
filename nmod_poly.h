@@ -710,6 +710,8 @@ FLINT_DLL void _nmod_poly_rem(mp_ptr R, mp_srcptr A, slong lenA,
 
 FLINT_DLL void nmod_poly_rem(nmod_poly_t R, const nmod_poly_t A, const nmod_poly_t B);
 
+FLINT_DLL void nmod_poly_rem_cyc(nmod_poly_t res, const nmod_poly_t poly, ulong n);
+
 FLINT_DLL void _nmod_poly_inv_series_basecase(mp_ptr Qinv, 
                                               mp_srcptr Q, slong n, nmod_t mod);
 
