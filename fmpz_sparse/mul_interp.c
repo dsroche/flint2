@@ -44,7 +44,7 @@ fmpz_sparse_mul_interp(fmpz_sparse_t res, flint_rand_t state, const fmpz_sparse_
 
   fmpz_sparse_bp_interp_mul(f, poly2);
 
-  fmpz_sparse_bp_interp_interp(res, f);
+  fmpz_sparse_bp_interp(res, f);
 
   fmpz_sparse_bp_interp_clear(f);
 

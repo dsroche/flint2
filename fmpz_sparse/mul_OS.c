@@ -27,6 +27,8 @@
 #include "fmpz_vec.h"
 #include "math.h"
 
+#if 0
+
 /* mu = .5 / 4 */
 void
 fmpz_van_prime(fmpz_t res, flint_rand_t state, slong support, slong degree, double gamma, double mu)
@@ -384,3 +386,5 @@ fmpz_sparse_mul_OS(fmpz_sparse_t res, flint_rand_t state, const fmpz_sparse_t po
   fmpz_clear(p);
   fmpz_clear(q);
 }
+
+#endif

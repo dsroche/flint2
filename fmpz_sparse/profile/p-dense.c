@@ -58,7 +58,7 @@
 #define lenh     10
 #define deglo    1
 #define deghi    50
-#define degh     10
+#define degh     1
 #define cols     ((lenhi + 1 - lenlo + (lenh - 1)) / lenh)
 #define rows     ((deghi + 1 - deglo + (degh - 1)) / degh)
 #define cpumin   10
@@ -162,9 +162,7 @@ main(void)
             for (c = 0; c < nalgs; c++)
                 T[i][j][c] = s[c] / (double) reps;
             
-            if(deg < len)
-              X[i][j] = 2;
-            else if(s[0] <= s[1])
+            if(s[0] <= s[1])
               X[i][j] = 0;
             else
               X[i][j] = 1;
