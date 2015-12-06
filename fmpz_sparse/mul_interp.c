@@ -31,15 +31,21 @@ fmpz_sparse_mul_interp(fmpz_sparse_t res, flint_rand_t state, const fmpz_sparse_
     const fmpz_sparse_t poly2, slong terms)
 {
   fmpz_sparse_bp_interp_t f;
-  fmpz_t h, d;
+  fmpz_t h1, h2, d;
 
-  fmpz_init(h);
+  fmpz_init(h1);
+  fmpz_init(h2);
   fmpz_init(d);
 
-  fmpz_sparse_height(h, poly1);
-  fmpz_add(d, poly1->expons, poly2->expons);
+  fmpz_sparse_height(h1, poly1);
+  fmpz_sparse_height(h2, poly2);
+  fmpz_mul(h1, h1, h2);
+  fmpz_mul_si(h1, h1, 
+      FLINT_MIN(fmpz_sparse_terms(poly1), fmpz_sparse_terms(poly2)));
 
-  fmpz_sparse_bp_interp_init(f, terms, h, d, state);
+  fmpz_add(d, fmpz_sparse_degree_ptr(poly1), fmpz_sparse_degree_ptr(poly2));
+
+  fmpz_sparse_bp_interp_init(f, terms, h1, d, state);
   fmpz_sparse_bp_interp_eval(f, poly1);
 
   fmpz_sparse_bp_interp_mul(f, poly2);
@@ -48,6 +54,7 @@ fmpz_sparse_mul_interp(fmpz_sparse_t res, flint_rand_t state, const fmpz_sparse_
 
   fmpz_sparse_bp_interp_clear(f);
 
-  fmpz_clear(h);
+  fmpz_clear(h1);
+  fmpz_clear(h2);
   fmpz_clear(d);
 }
