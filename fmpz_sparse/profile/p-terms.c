@@ -54,19 +54,19 @@
  */
 
 #define bits     160
-#define lenlo    1
-#define lenhi    100
-#define lenh     2
+#define lenlo    0
+#define lenhi    49
+#define lenh     1
 #define deglo    50
 #define deghi    1000
-#define degh     10
-#define cols     ((lenhi + 1 - lenlo + (lenh - 1)) / lenh)
-#define rows     ((deghi + 1 - deglo + (degh - 1)) / degh)
+#define degh     50
+#define rows     ((lenhi + 1 - lenlo + (lenh - 1)) / lenh)
+#define cols     ((deghi + 1 - deglo + (degh - 1)) / degh)
 #define cpumin   10
 #define ncases   1
 #define nalgs    2
 #define img      1
-#define imgname  "out.ppm"
+#define imgname  "terms.ppm"
 
 /*
    Write a binary 24-bit ppm image.
@@ -105,11 +105,11 @@ main(void)
     fmpz_poly_init(z);
 
 
-    for (len = lenlo, j = 0; len <= lenhi; len += lenh, j++)
+    for (len = lenlo, i = 0; len <= lenhi; len += lenh, i++)
     {
         slong s[nalgs];
   
-        for (deg = deglo, i = 0; deg <= deghi; deg += degh, i++)
+        for (deg = deglo, j = 0; deg <= deghi; deg += degh, j++)
         {
             int c, n, reps = 0;
             
@@ -126,8 +126,8 @@ main(void)
                  */
                 {
                   fmpz_init_set_ui(degree, deg);
-                  fmpz_sparse_randtest(f, state, deg*(len/100), degree, bits);
-                  fmpz_sparse_randtest(g, state, deg*(len/100), degree, bits);
+                  fmpz_sparse_randtest(f, state, deg - i*(deg/degh), degree, bits);
+                  fmpz_sparse_randtest(g, state, deg - i*(deg/degh), degree, bits);
                 }
 
                 /*
@@ -163,9 +163,7 @@ main(void)
             for (c = 0; c < nalgs; c++)
                 T[i][j][c] = s[c] / (double) reps;
             
-            if(deg < len)
-              X[i][j] = 2;
-            else if(s[0] <= s[1])
+            if(s[0] <= s[1])
               X[i][j] = 0;
             else
               X[i][j] = 1;

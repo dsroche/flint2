@@ -53,12 +53,12 @@
  */
 
 #define bits     160
-#define lenlo    10
-#define lenhi    600
-#define lenh     10
-#define deglo    1
-#define deghi    50
-#define degh     1
+#define lenlo    100
+#define lenhi    1000
+#define lenh     50
+#define deglo    0
+#define deghi    98
+#define degh     2
 #define cols     ((lenhi + 1 - lenlo + (lenh - 1)) / lenh)
 #define rows     ((deghi + 1 - deglo + (degh - 1)) / degh)
 #define cpumin   10
@@ -124,7 +124,7 @@ main(void)
                    Construct random sparse polynomials f and g
                  */
                 {
-                  fmpz_init_set_ui(degree, deg*len);
+                  fmpz_init_set_ui(degree, (len/(deghi - deg + 2)) * 100);
                   fmpz_sparse_randtest(f, state, len, degree, bits);
                   fmpz_sparse_randtest(g, state, len, degree, bits);
                 }
@@ -171,7 +171,7 @@ main(void)
            slong sum = 0, c;
            for (c = 0; c < nalgs; c++)
               sum += s[c];
-           flint_printf("len = %d, time = %wdms\n", len, sum), fflush(stdout);
+           flint_printf("len = %d, deg = %d, time = %wdms\n", len, (len/(deghi-deg + 2))*100, sum), fflush(stdout);
         }
     }
     

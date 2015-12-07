@@ -52,12 +52,12 @@
    imgname  File name for image
  */
 
-#define deg      60
-#define lenlo    1
-#define lenhi    60
-#define lenh     1
+#define deg      500
+#define lenlo    10
+#define lenhi    500
+#define lenh     10
 #define bitslo   16
-#define bitshi   2048
+#define bitshi   1024
 #define bitsh    32
 #define cols     ((lenhi + 1 - lenlo + (lenh - 1)) / lenh)
 #define rows     ((bitshi + 1 - bitslo + (bitsh - 1)) / bitsh)
@@ -65,7 +65,7 @@
 #define ncases   1
 #define nalgs    2
 #define img      1
-#define imgname  "out.ppm"
+#define imgname  "standard.ppm"
 
 /*
    Write a binary 24-bit ppm image.
@@ -171,7 +171,7 @@ main(void)
            slong sum = 0, c;
            for (c = 0; c < nalgs; c++)
               sum += s[c];
-           flint_printf("len = %d, time = %wdms\n", len, sum), fflush(stdout);
+           flint_printf("len = %d, deg = %d, time = %wdms\n", len, deg, sum), fflush(stdout);
         }
     }
     
