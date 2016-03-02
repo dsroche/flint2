@@ -53,19 +53,19 @@
  */
 
 #define bits     160
-#define lenlo    100
+#define lenlo    50
 #define lenhi    1000
 #define lenh     50
 #define deglo    0
-#define deghi    98
-#define degh     2
+#define deghi    49
+#define degh     1
 #define cols     ((lenhi + 1 - lenlo + (lenh - 1)) / lenh)
 #define rows     ((deghi + 1 - deglo + (degh - 1)) / degh)
 #define cpumin   10
 #define ncases   1
 #define nalgs    2
 #define img      1
-#define imgname  "out.ppm"
+#define imgname  "dense.ppm"
 
 /*
    Write a binary 24-bit ppm image.
@@ -77,7 +77,7 @@ int write_rgb_ppm(const char* file_name, unsigned char* pixels,
     if (file == NULL)
         return -1;
     flint_fprintf(file, "P6\n%d %d\n255\n", width, height);
-    fwrite(pixels, sizeof(unsigned char), width * height * nalgs, file);
+    fwrite(pixels, sizeof(unsigned char), width * height * 3, file);
     fclose(file);
     return 0;
 }
@@ -104,7 +104,7 @@ main(void)
     fmpz_poly_init(z);
 
 
-    for (deg = deglo, i = 0; deg <= deghi; deg += degh, i++)
+    for (deg = deghi, i = 0; deg >= deglo; deg -= degh, i++)
     {
         slong s[nalgs];
   
@@ -124,7 +124,7 @@ main(void)
                    Construct random sparse polynomials f and g
                  */
                 {
-                  fmpz_init_set_ui(degree, (len/(deghi - deg + 2)) * 100);
+                  fmpz_init_set_ui(degree, (len/(deg + 2)) * 50);
                   fmpz_sparse_randtest(f, state, len, degree, bits);
                   fmpz_sparse_randtest(g, state, len, degree, bits);
                 }
@@ -201,7 +201,7 @@ main(void)
         unsigned char * PIXELS;
         int k;
         
-        PIXELS = (unsigned char *) flint_malloc(nalgs * rows * cols * sizeof(unsigned char));
+        PIXELS = (unsigned char *) flint_malloc(3 * rows * cols * sizeof(unsigned char));
         k = 0;
         for (i = 0; i < rows; i++)
         {
@@ -221,6 +221,8 @@ main(void)
                     v[m] = (max - v[m]) / max;
                     PIXELS[k++] = (unsigned char) (v[m] * 255);
                 }
+                for (; m < 3; m++)
+                  PIXELS[k++] = (unsigned char) 0;
             }
         }
 

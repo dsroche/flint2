@@ -53,20 +53,20 @@
    imgname  File name for image
  */
 
-#define bits     160
-#define lenlo    0
-#define lenhi    49
+#define bits     512
+#define lenlo    50
+#define lenhi    98
 #define lenh     1
-#define deglo    50
+#define deglo    100
 #define deghi    1000
-#define degh     50
+#define degh     30
 #define rows     ((lenhi + 1 - lenlo + (lenh - 1)) / lenh)
 #define cols     ((deghi + 1 - deglo + (degh - 1)) / degh)
 #define cpumin   10
 #define ncases   1
 #define nalgs    2
 #define img      1
-#define imgname  "terms.ppm"
+#define imgname  "mul_terms.ppm"
 
 /*
    Write a binary 24-bit ppm image.
@@ -78,7 +78,7 @@ int write_rgb_ppm(const char* file_name, unsigned char* pixels,
     if (file == NULL)
         return -1;
     flint_fprintf(file, "P6\n%d %d\n255\n", width, height);
-    fwrite(pixels, sizeof(unsigned char), width * height * nalgs, file);
+    fwrite(pixels, sizeof(unsigned char), width * height * 3, file);
     fclose(file);
     return 0;
 }
@@ -126,8 +126,8 @@ main(void)
                  */
                 {
                   fmpz_init_set_ui(degree, deg);
-                  fmpz_sparse_randtest(f, state, deg - i*(deg/degh), degree, bits);
-                  fmpz_sparse_randtest(g, state, deg - i*(deg/degh), degree, bits);
+                  fmpz_sparse_randtest(f, state, deg - (len*deg)/deglo, degree, bits);
+                  fmpz_sparse_randtest(g, state, deg - (len*deg)/deglo, degree, bits);
                 }
 
                 /*
@@ -140,12 +140,12 @@ main(void)
 
                 timeit_start(t[0]);
                 for (l = 0; l < loops; l++)
-                    fmpz_poly_mul(z, y, x);
+                    fmpz_sparse_mul_heaps(h, g, f);
                 timeit_stop(t[0]);
                 
                 timeit_start(t[1]);
                 for (l = 0; l < loops; l++)
-                    fmpz_sparse_mul_heaps(h, g, f);
+                    fmpz_poly_mul(z, y, x);
                 timeit_stop(t[1]);
 
                 for (c = 0; c < nalgs; c++)
@@ -172,7 +172,7 @@ main(void)
            slong sum = 0, c;
            for (c = 0; c < nalgs; c++)
               sum += s[c];
-           flint_printf("len = %d, time = %wdms\n", len, sum), fflush(stdout);
+           flint_printf("len = %d, time = %wdms\n", deg - (len*deg)/deglo, sum), fflush(stdout);
         }
     }
     
@@ -202,7 +202,7 @@ main(void)
         unsigned char * PIXELS;
         int k;
         
-        PIXELS = (unsigned char *) flint_malloc(nalgs * rows * cols * sizeof(unsigned char));
+        PIXELS = (unsigned char *) flint_malloc(3 * rows * cols * sizeof(unsigned char));
         k = 0;
         for (i = 0; i < rows; i++)
         {
@@ -213,15 +213,17 @@ main(void)
                 
                 for (m = 0; m < nalgs; m++)
                 {
-                    v[m] = T[i][j][m] - T[i][j][X[i][j]];
-                    if (v[m] > max)
-                        max = v[m];
+                  v[m] = T[i][j][m];
+                  if (v[m] > max)
+                    max = v[m];
                 }
                 for (m = 0; m < nalgs; m++)
                 {
-                    v[m] = (max - v[m]) / max;
-                    PIXELS[k++] = (unsigned char) (v[m] * 255);
+                  v[m] = v[m] / max;
+                  PIXELS[k++] = (unsigned char) (v[m] * 255);
                 }
+                for (; m < 3; m++)
+                  PIXELS[k++] = (unsigned char) 0;    
             }
         }
 
