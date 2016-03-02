@@ -50,6 +50,10 @@ void fmpz_sparse_bp_interp(fmpz_sparse_t res,
   slong * perm;
   const fmpz * w = evals->sample_points + 1;
 
+  flint_printf("ORDER: ");
+  fmpz_print(evals->order);
+  flint_printf("\n");
+
   fmpz_sparse_zero(res);
 
   if (T == 0) return;

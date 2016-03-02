@@ -142,6 +142,20 @@ fmpz_sparse_sumset(fmpz * res, flint_rand_t state, const fmpz_sparse_t poly1, co
 
   _fmpz_vec_clear(res, 0);
 
+  flint_printf("poly1: ");
+  fmpz_sparse_print(poly1);
+
+  flint_printf("\npoly2: ");
+  fmpz_sparse_print(poly2);
+
+  flint_printf("\n");
+
+  if(fmpz_sparse_is_zero(poly1) || fmpz_sparse_is_zero(poly2))
+  {
+    res = NULL;
+    return 0;
+  }
+
   fmpz_sparse_init(f_1);
   fmpz_sparse_init(g_1);
   fmpz_sparse_init(f_2);
@@ -174,11 +188,6 @@ fmpz_sparse_sumset(fmpz * res, flint_rand_t state, const fmpz_sparse_t poly1, co
   
   if(fmpz_cmp(degree, poly1->expons + poly1->length - 1) < 0)
     fmpz_set(degree, poly1->expons + poly1->length - 1);
-
-
-  fmpz_set(degree, FLINT_MAX(poly1->expons + 0, poly2->expons + 0));
-  fmpz_set(degree, FLINT_MAX(degree, poly2->expons +  poly2->length -1));
-  fmpz_set(degree, FLINT_MAX(degree, poly1->expons +  poly1->length -1));
 
   flint_printf("heir\n");
   fmpz_diff_prime(p, state, R * R, fmpz_bits(degree) + 2, 1.0);
@@ -241,7 +250,14 @@ fmpz_sparse_sumset(fmpz * res, flint_rand_t state, const fmpz_sparse_t poly1, co
   fmpz_sparse_rem_cyc(g_2, g_2, p);
 
   flint_printf("before the terp\n");
-  
+ 
+  flint_printf("\nf_2: ");
+  fmpz_sparse_print(f_2);
+  flint_printf("\ng_2: ");
+  fmpz_sparse_print(g_2);
+  flint_printf("\n");
+
+
   fmpz_sparse_mul_interp(h_1, state, f_1, g_1, Ss);
   fmpz_sparse_mul_interp(h_2, state, f_2, g_2, Ss);
 
