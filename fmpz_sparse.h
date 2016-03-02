@@ -897,6 +897,9 @@ FLINT_DLL void fmpz_sparse_sp_interp_pow(fmpz_sparse_sp_interp_t res, ulong pow)
 FLINT_DLL void fmpz_sparse_sp_interp(fmpz_sparse_t res,
     const fmpz_sparse_sp_interp_t evals);
 
+FLINT_DLL slong _fmpz_sparse_prim_roots(fmpz_t p, fmpz * qq, fmpz * ww, flint_rand_t state,
+    slong len, mp_bitcnt_t p_bits, mp_bitcnt_t q_prod_bits);
+
 /*  Divisibility testing  ***************************************************/
 
 FMPZ_SPARSE_INLINE
