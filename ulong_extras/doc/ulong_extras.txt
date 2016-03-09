@@ -304,16 +304,21 @@ ulong n_mulmod_precomp(ulong a, ulong b, ulong n, double ninv)
     computed integer quotient is at most two above and one below the quotient 
     we are after.
 
-ulong n_mulmod2_preinv(ulong a, ulong b, 
-                                           ulong n, ulong ninv)
+ulong n_mulmod2_preinv(ulong a, ulong b, ulong n, ulong ninv)
 
     Returns $a b \bmod{n}$ given a precomputed inverse of $n$ computed by\\ 
     \code{n_preinvert_limb()}. There are no restrictions on $a$, $b$ or 
     on $n$. This is implemented by multiplying using \code{umul_ppmm()} and 
     then reducing using \code{n_ll_mod_preinv()}.
 
-ulong n_mulmod_preinv(ulong a, ulong b, ulong n, 
-                                            ulong ninv, ulong norm)
+ulong n_mulmod2(ulong a, ulong b, ulong n)
+
+    Returns $a b \bmod{n}$. There are no restrictions on $a$, $b$ or 
+    on $n$. This is implemented by multiplying using \code{umul_ppmm()} and 
+    then reducing using \code{n_ll_mod_preinv()} after computing a precomputed
+    inverse.
+
+ulong n_mulmod_preinv(ulong a, ulong b, ulong n, ulong ninv, ulong norm)
 
     Returns $a b \pmod{n}$ given a precomputed inverse of $n$ computed by\\ 
     \code{n_preinvert_limb()}, assuming $a$ and $b$ are reduced modulo $n$ 
@@ -342,8 +347,8 @@ ulong n_mulmod_preinv(ulong a, ulong b, ulong n,
 
 ulong n_gcd(ulong x, ulong y)
 
-    Returns the greatest common divisor $g$ of $x$ and $y$. 
-    We require $x \geq y$.
+    Returns the greatest common divisor $g$ of $x$ and $y$. No assumptions
+    are made about the values $x$ and $y$.
 
     The algorithm is a slight embelishment of the Euclidean algorithm
     which uses some branches to avoid most divisions.
@@ -363,14 +368,19 @@ ulong n_gcd_full(ulong x, ulong y)
     Returns the greatest common divisor $g$ of $x$ and $y$.
     No assumptions are made about $x$ and $y$.
 
+    This function is deprecated.
+
 ulong n_gcdinv(ulong * a, ulong x, ulong y)
 
     Returns the greatest common divisor $g$ of $x$ and $y$ and computes 
     $a$ such that $0 \leq a < y$ and $a x = \gcd(x, y) \bmod{y}$, when 
-    this is defined. We require $0 \leq x < y$.
+    this is defined. We require $x < y$.
 
-    This is merely an adaption of the extended Euclidean algorithm with 
-    appropriate normalisation.
+    When $y = 1$ the greatest common divisor is set to $1$ and $a$ is
+    set to $0$.
+
+    This is merely an adaption of the extended Euclidean algorithm
+    computing just one cofactor and reducing it modulo $y$.
 
 ulong n_xgcd(ulong * a, ulong * b, ulong x, ulong y)
 
@@ -435,12 +445,8 @@ ulong n_submod(ulong a, ulong b, ulong n)
 
 ulong n_invmod(ulong x, ulong y)
 
-    Returns a value $a$ such that $0 \leq a < y$ and 
-    $a x = \gcd(x, y) \bmod{y}$, when this is defined. 
-    We require $0 \leq x < y$.
-
-    Specifically, when $x$ is coprime to $y$, $a$ is the inverse 
-    of $x$ in $\Z / y \Z$.
+    Returns the inverse of $x$ modulo $y$, if it exists. Otherwise an exception
+    is thrown.
 
     This is merely an adaption of the extended Euclidean algorithm 
     with appropriate normalisation.
@@ -476,8 +482,7 @@ ulong n_powmod(ulong a, mp_limb_signed_t exp, ulong n)
     This is implemented by precomputing an inverse and calling the 
     \code{precomp} version of this function.
 
-ulong n_powmod2_preinv(ulong a, mp_limb_signed_t exp, ulong n, 
-                                                                ulong ninv)
+ulong n_powmod2_preinv(ulong a, mp_limb_signed_t exp, ulong n, ulong ninv)
 
     Returns \code{(a^exp) % n} given a precomputed inverse of $n$ computed 
     by \code{n_preinvert_limb()}. We require $0 \leq a < n$, but there are no 
@@ -485,6 +490,9 @@ ulong n_powmod2_preinv(ulong a, mp_limb_signed_t exp, ulong n,
 
     This is implemented as a standard binary powering algorithm using
     repeated squaring and reducing modulo $n$ at each step.
+
+    If \code{exp} is negative but $a$ is not invertible modulo $n$, an
+    exception is raised.
 
 ulong n_powmod2(ulong a, mp_limb_signed_t exp, ulong n)
 
@@ -494,8 +502,10 @@ ulong n_powmod2(ulong a, mp_limb_signed_t exp, ulong n)
     This is implemented by precomputing an inverse limb and calling the 
     \code{preinv} version of this function.
 
-ulong n_powmod2_ui_preinv(ulong a, ulong exp, ulong n, 
-                                                                ulong ninv)
+    If \code{exp} is negative but $a$ is not invertible modulo $n$, an
+    exception is raised.
+
+ulong n_powmod2_ui_preinv(ulong a, ulong exp, ulong n, ulong ninv)
 
     Returns \code{(a^exp) % n} given a precomputed inverse of $n$ computed 
     by \code{n_preinvert_limb()}. We require $0 \leq a < n$, but there are no 

@@ -619,6 +619,14 @@ FLINT_DLL void _fmpz_poly_resultant(fmpz_t res, const fmpz * poly1, slong len1,
 FLINT_DLL void fmpz_poly_resultant(fmpz_t res, const fmpz_poly_t poly1,
                                                       const fmpz_poly_t poly2);
 
+FLINT_DLL void _fmpz_poly_resultant_modular_div(fmpz_t res,
+       const fmpz * poly1, slong len1, 
+       const fmpz * poly2, slong len2, const fmpz_t divisor, slong nbits);
+
+FLINT_DLL void fmpz_poly_resultant_modular_div(fmpz_t res, 
+               const fmpz_poly_t poly1, const fmpz_poly_t poly2,
+               const fmpz_t divisor, slong nbits);
+
 FLINT_DLL void _fmpz_poly_xgcd_modular(fmpz_t r, fmpz * s, fmpz * t, 
                const fmpz * poly1, slong len1, const fmpz * poly2, slong len2);
 
@@ -978,6 +986,17 @@ FLINT_DLL int _fmpz_poly_sqrt(fmpz * res, const fmpz * poly, slong len);
 
 FLINT_DLL int fmpz_poly_sqrt(fmpz_poly_t b, const fmpz_poly_t a);
 
+/* Power sums ****************************************************************/
+
+FLINT_DLL void _fmpz_poly_power_sums_naive(fmpz * res, const fmpz * poly, slong len, slong n);
+
+FLINT_DLL void fmpz_poly_power_sums_naive(fmpz_poly_t res, const fmpz_poly_t poly, slong n);
+
+FLINT_DLL void fmpz_poly_power_sums(fmpz_poly_t res, const fmpz_poly_t poly, slong n);
+
+FLINT_DLL void _fmpz_poly_power_sums_to_poly(fmpz * res, const fmpz * poly, slong len);
+
+FLINT_DLL void fmpz_poly_power_sums_to_poly(fmpz_poly_t res, const fmpz_poly_t Q);
 
 /*  Signature  ***************************************************************/
 
@@ -1217,6 +1236,10 @@ FLINT_DLL void fmpz_poly_chebyshev_t(fmpz_poly_t poly, ulong n);
 FLINT_DLL void _fmpz_poly_chebyshev_u(fmpz * coeffs, ulong n);
 
 FLINT_DLL void fmpz_poly_chebyshev_u(fmpz_poly_t poly, ulong n);
+
+FLINT_DLL void _fmpz_poly_fibonacci(fmpz * coeffs, ulong n);
+
+FLINT_DLL void fmpz_poly_fibonacci(fmpz_poly_t poly, ulong n);
 
 FLINT_DLL void _fmpz_poly_eta_qexp(fmpz * f, slong e, slong n);
 

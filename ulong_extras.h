@@ -19,7 +19,7 @@
 =============================================================================*/
 /******************************************************************************
 
-    Copyright (C) 2006, 2007, 2008, 2009 William Hart
+    Copyright (C) 2006, 2007, 2008, 2009, 2016 William Hart
     Copyright (C) 2008, Peter Shrimpton
     Copyright (C) 2009, Tom Boothby
     Copyright (C) 2010, Fredrik Johansson
@@ -200,38 +200,59 @@ FLINT_DLL ulong n_lll_mod_preinv(ulong a_hi, ulong a_mi,
 FLINT_DLL ulong n_mulmod_precomp(ulong a, ulong b, 
                                            ulong n, double ninv);
 
-FLINT_DLL ulong n_mulmod2_preinv(ulong a, ulong b, 
-                                        ulong n, ulong ninv);
+ULONG_EXTRAS_INLINE
+ulong n_mulmod2_preinv(ulong a, ulong b, ulong n, ulong ninv)
+{
+    ulong p1, p2;
+
+    FLINT_ASSERT(n != 0);
+
+    umul_ppmm(p1, p2, a, b);
+    return n_ll_mod_preinv(p1, p2, n, ninv);
+}
+
+ULONG_EXTRAS_INLINE
+ulong n_mulmod2(ulong a, ulong b, ulong n)
+{
+    ulong p1, p2, ninv;
+
+    FLINT_ASSERT(n != 0);
+
+    ninv = n_preinvert_limb(n);
+    umul_ppmm(p1, p2, a, b);
+    return n_ll_mod_preinv(p1, p2, n, ninv);
+}
 
 FLINT_DLL ulong n_mulmod_preinv(ulong a, ulong b, 
                             ulong n, ulong ninv, ulong norm);
 
 FLINT_DLL ulong n_powmod_ui_precomp(ulong a, ulong exp, ulong n, double npre);
 
-FLINT_DLL ulong n_powmod_precomp(ulong a, 
-                     mp_limb_signed_t exp, ulong n, double npre);
+FLINT_DLL ulong n_powmod_precomp(ulong a, slong exp, ulong n, double npre);
 
 ULONG_EXTRAS_INLINE
-ulong n_powmod(ulong a, mp_limb_signed_t exp, ulong n)
+ulong n_powmod(ulong a, slong exp, ulong n)
 {
    double npre = n_precompute_inverse(n);
 
    return n_powmod_precomp(a, exp, n, npre);
 }
 
-FLINT_DLL ulong n_powmod2_preinv(ulong a, 
-                  mp_limb_signed_t exp, ulong n, ulong ninv);
+FLINT_DLL ulong n_powmod2_preinv(ulong a, slong exp, ulong n, ulong ninv);
 
-FLINT_DLL ulong n_powmod2_ui_preinv(ulong a, ulong exp,
-                                            ulong n, ulong ninv);
+FLINT_DLL ulong n_powmod2_ui_preinv(ulong a, ulong exp, ulong n, ulong ninv);
 
 FLINT_DLL ulong n_powmod_ui_preinv(ulong a, ulong exp, ulong n, 
-                                             ulong ninv, ulong norm);
+                                                       ulong ninv, ulong norm);
 
 ULONG_EXTRAS_INLINE
-ulong n_powmod2(ulong a, mp_limb_signed_t exp, ulong n)
+ulong n_powmod2(ulong a, slong exp, ulong n)
 {
-   ulong ninv = n_preinvert_limb(n);
+   ulong ninv;
+
+   FLINT_ASSERT(n != 0);
+
+   ninv = n_preinvert_limb(n);
 
    return n_powmod2_preinv(a, exp, n, ninv);
 }
@@ -239,18 +260,29 @@ ulong n_powmod2(ulong a, mp_limb_signed_t exp, ulong n)
 ULONG_EXTRAS_INLINE
 ulong n_addmod(ulong x, ulong y, ulong n)
 {
+    FLINT_ASSERT(x < n);
+    FLINT_ASSERT(y < n);
+    FLINT_ASSERT(n != 0);
+
     return (n - y > x ? x + y : x + y - n);
 }
 
 ULONG_EXTRAS_INLINE
 ulong n_submod(ulong x, ulong y, ulong n)
 {
+    FLINT_ASSERT(x < n);
+    FLINT_ASSERT(y < n);
+    FLINT_ASSERT(n != 0);
+
     return (y > x ? x - y + n : x - y);
 }
 
 ULONG_EXTRAS_INLINE
 ulong n_negmod(ulong x, ulong n)
 {
+    FLINT_ASSERT(x < n);
+    FLINT_ASSERT(n != 0);
+
     return n_submod(0, x, n);
 }
 
@@ -269,13 +301,23 @@ FLINT_DLL ulong n_gcd(ulong x, ulong y);
 
 FLINT_DLL ulong n_xgcd(ulong * a, ulong * b, ulong x, ulong y);
 
-FLINT_DLL ulong n_invmod(ulong x, ulong y);
-
 FLINT_DLL ulong n_gcdinv(ulong * a, ulong x, ulong y);
+
+ULONG_EXTRAS_INLINE
+ulong n_invmod(ulong x, ulong y)
+{
+   ulong r, g;
+
+   g = n_gcdinv(&r, x, y);
+   if (g != 1)
+      flint_throw(FLINT_IMPINV, "Cannot invert modulo %wd*%wd\n", g, g/y);
+
+   return r;
+}
 
 FLINT_DLL ulong n_revbin(ulong in, ulong bits);
 
-FLINT_DLL int n_jacobi(mp_limb_signed_t x, ulong y);
+FLINT_DLL int n_jacobi(slong x, ulong y);
 
 FLINT_DLL int n_jacobi_unsigned(ulong x, ulong y);
 

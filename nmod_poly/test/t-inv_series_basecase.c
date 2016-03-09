@@ -57,7 +57,7 @@ main(void)
         do nmod_poly_randtest(q, state, n_randint(state, 2000));
         while (q->length == 0 || q->coeffs[0] == 0);
 
-        m = n_randint(state, q->length) + 1;
+        m = n_randint(state, 2000) + 1;
 
         nmod_poly_inv_series_basecase(qinv, q, m);
         
@@ -95,7 +95,7 @@ main(void)
         do nmod_poly_randtest(q, state, n_randint(state, 1000));
         while (q->length == 0 || q->coeffs[0] == 0);
 
-        m = n_randint(state, q->length) + 1;
+        m = n_randint(state, 2000) + 1;
 
         nmod_poly_inv_series_basecase(qinv, q, m);
         nmod_poly_inv_series_basecase(q, q, m);
