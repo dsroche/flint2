@@ -92,6 +92,13 @@ FLINT_DLL int fmpz_mat_is_zero(const fmpz_mat_t mat);
 FLINT_DLL int fmpz_mat_is_one(const fmpz_mat_t mat);
 
 FMPZ_MAT_INLINE
+int
+fmpz_mat_is_zero_row(const fmpz_mat_t mat, slong i)
+{
+    return _fmpz_vec_is_zero(mat->rows[i], mat->c);
+}
+
+FMPZ_MAT_INLINE
 int fmpz_mat_is_empty(const fmpz_mat_t mat)
 {
     return (mat->r == 0) || (mat->c == 0);
@@ -205,6 +212,8 @@ FLINT_DLL void fmpz_mat_mul(fmpz_mat_t C, const fmpz_mat_t A, const fmpz_mat_t B
 
 FLINT_DLL void fmpz_mat_mul_classical(fmpz_mat_t C, const fmpz_mat_t A,
     const fmpz_mat_t B);
+    
+FLINT_DLL void fmpz_mat_mul_strassen(fmpz_mat_t C, const fmpz_mat_t A, const fmpz_mat_t B);
 
 FLINT_DLL void fmpz_mat_mul_classical_inline(fmpz_mat_t C, const fmpz_mat_t A,
     const fmpz_mat_t B);
@@ -265,6 +274,12 @@ FLINT_DLL int fmpz_mat_is_in_rref_with_rank(const fmpz_mat_t A, const fmpz_t den
 /* Modular gaussian elimination *********************************************/
 
 FLINT_DLL slong fmpz_mat_rref_mod(slong * perm, fmpz_mat_t A, const fmpz_t p);
+
+/* Modular Howell and strong echelon form ***********************************/
+
+FLINT_DLL slong fmpz_mat_howell_form_mod(fmpz_mat_t A, const fmpz_t mod);
+
+FLINT_DLL void fmpz_mat_strong_echelon_form_mod(fmpz_mat_t A, const fmpz_t mod);
 
 /* Trace ********************************************************************/
 
@@ -342,7 +357,7 @@ void fmpz_mat_minpoly(fmpz_poly_t cp, const fmpz_mat_t mat)
 {
    if (mat->r != mat->c)
    {
-       flint_printf("Exception (nmod_mat_minpoly).  Non-square matrix.\n");
+       flint_printf("Exception (fmpz_mat_minpoly).  Non-square matrix.\n");
        abort();
    }
 
@@ -413,6 +428,7 @@ FLINT_DLL void fmpz_mat_hnf_classical(fmpz_mat_t H, const fmpz_mat_t A);
 FLINT_DLL void fmpz_mat_hnf_xgcd(fmpz_mat_t H, const fmpz_mat_t A);
 FLINT_DLL void fmpz_mat_hnf_minors(fmpz_mat_t H, const fmpz_mat_t A);
 FLINT_DLL void fmpz_mat_hnf_modular(fmpz_mat_t H, const fmpz_mat_t A, const fmpz_t D);
+FLINT_DLL void fmpz_mat_hnf_modular_eldiv(fmpz_mat_t A, const fmpz_t D);
 FLINT_DLL void fmpz_mat_hnf_pernet_stein(fmpz_mat_t H, const fmpz_mat_t A, flint_rand_t state);
 FLINT_DLL int fmpz_mat_is_in_hnf(const fmpz_mat_t A);
 

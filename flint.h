@@ -33,15 +33,15 @@
 #endif
 #include <gmp.h>
 #include <mpfr.h>
+#include <stdarg.h>
 #include <stdio.h>
-#include <stdlib.h> /* for alloca on *BSD */
-#if !defined(alloca) && !defined(__MINGW32__) && !defined(_MSC_VER)
+#include <stdlib.h> /* for alloca on FreeBSD */
+#if !defined(BSD) && !defined(__MINGW64__) && !defined(__MINGW32__) && !defined(_MSC_VER)
+/* MinGW and FreeBSD have alloca, but not alloca.h */
 #include <alloca.h>
-#else
-#include <malloc.h>
-#if defined(_MSC_VER)
-#define alloca _alloca
 #endif
+#if defined(__MINGW32__)
+#include <malloc.h> /* for alloca on MinGW */
 #endif
 #include "limits.h"
 #include "longlong.h"
@@ -104,9 +104,18 @@ typedef void (*flint_cleanup_function_t)(void);
 FLINT_DLL void flint_register_cleanup_function(flint_cleanup_function_t cleanup_function);
 FLINT_DLL void flint_cleanup(void);
 
+FLINT_DLL void __flint_set_memory_functions(void *(*alloc_func) (size_t),
+     void *(*calloc_func) (size_t, size_t), void *(*realloc_func) (void *, size_t),
+                                                              void (*free_func) (void *));
+
 #if defined(_WIN64) || defined(__mips64)
+#if defined(__MINGW64__)
+#define WORD_FMT "%I64"
+#define WORD_WIDTH_FMT "%*I64"
+#else
 #define WORD_FMT "%ll"
 #define WORD_WIDTH_FMT "%*ll"
+#endif
 #define WORD(xx) (xx##LL)
 #define UWORD(xx) (xx##ULL)
 #define UWORD_MAX ULLONG_MAX
@@ -376,6 +385,7 @@ mpn_tdiv_q(mp_ptr qp, mp_srcptr np, mp_size_t nn, mp_srcptr dp, mp_size_t dn)
 FLINT_DLL int parse_fmt(int * floating, const char * fmt);
 
 FLINT_DLL int flint_printf(const char * str, ...); /* flint version of printf */
+FLINT_DLL int flint_vprintf(const char * str, va_list ap); /* va_list version of flint_printf */
 FLINT_DLL int flint_fprintf(FILE * f, const char * str, ...); /* flint version of fprintf */
 FLINT_DLL int flint_sprintf(char * s, const char * str, ...); /* flint version of sprintf */
 
@@ -384,6 +394,7 @@ FLINT_DLL int flint_fscanf(FILE * f, const char * str, ...); /* flint version of
 FLINT_DLL int flint_sscanf(const char * s, const char * str, ...); /* flint version of sscanf */
 
 #include "gmpcompat.h"
+#include "exception.h"
 
 #ifdef __cplusplus
 }

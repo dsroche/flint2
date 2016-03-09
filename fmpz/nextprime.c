@@ -53,7 +53,7 @@ void fmpz_nextprime(fmpz_t res, const fmpz_t n, int proved)
         /* n is small, but res might not be */
         mpz_t temp_n;
         __mpz_struct *res_mpz = _fmpz_promote(res);
-        mpz_init_set_ui(temp_n, *n);
+        flint_mpz_init_set_ui(temp_n, *n);
         mpz_nextprime(res_mpz, temp_n);
         _fmpz_demote_val(res);
         mpz_clear(temp_n);
@@ -84,3 +84,4 @@ void fmpz_nextprime(fmpz_t res, const fmpz_t n, int proved)
         }
     }
 }
+

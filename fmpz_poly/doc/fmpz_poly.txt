@@ -1290,6 +1290,18 @@ void fmpz_poly_resultant_modular(fmpz_t res, const fmpz_poly_t poly1,
     This function uses the modular algorithm described 
     in~\citep{Col1971}.
 
+void fmpz_poly_resultant_modular_div(fmpz_t res, const fmpz_poly_t poly1,
+                                                 const fmpz_poly_t poly2,
+                                                 const fmpz_t div,
+                                                 slong nbits)
+
+    Computes the resultant of \code{poly1} and \code{poly2} divided by
+    \code{div} using a slight modification of the above function. It is assumed that
+    the resultant is exactly divisible by \code{div} and the result \code{res}
+    has at most \code{nbits} bits.
+    This bypasses the computation of general bounds.
+
+
 void _fmpz_poly_resultant_euclidean(fmpz_t res, const fmpz * poly1, slong len1,
                                       const fmpz * poly2, slong len2)
 
@@ -1670,7 +1682,7 @@ void _fmpz_poly_preinvert(fmpz * B_inv, const fmpz * B, slong n)
 
     Given a monic polynomial \code{B} of length \code{n}, compute a precomputed
     inverse \code{B_inv} of length \code{n} for use in the functions below. No 
-    aliasing of B and $B_inv$ is permitted. We assume \code{n} is not zero.
+    aliasing of \code{B} and \code{B_inv} is permitted. We assume \code{n} is not zero.
 
 void fmpz_poly_preinvert(fmpz_poly_t B_inv, const fmpz_poly_t B)
 
@@ -2495,6 +2507,37 @@ int fmpz_poly_sqrt(fmpz_poly_t b, const fmpz_poly_t a)
 
 *******************************************************************************
 
+    Power sums
+
+*******************************************************************************
+
+void _fmpz_poly_power_sums_naive(fmpz * res, const fmpz * poly, slong len, slong n)
+
+    Compute the (truncated) power sums series of the monic polynomial
+    \code{(poly,len)} up to length $n$ using Newton identities.
+
+void fmpz_poly_power_sums_naive(fmpz_poly_t res, const fmpz_poly_t poly, slong n)
+
+    Compute the (truncated) power sum series of the monic polynomial
+    \code{poly} up to length $n$ using Newton identities.
+
+void fmpz_poly_power_sums(fmpz_poly_t res, const fmpz_poly_t poly, slong n)
+
+    Compute the (truncated) power sums series of the monic polynomial \code{poly}
+    up to length $n$. That is the power series whose coefficient of degree $i$ is
+    the sum of the $i$-th power of all (complex) roots of the polynomial
+    \code{poly}.
+
+void _fmpz_poly_power_sums_to_poly(fmpz * res, const fmpz * poly, slong len)
+
+    Compute the (monic) polynomial given by its power sums series \code{(poly,len)}.
+
+void fmpz_poly_power_sums_to_poly(fmpz_poly_t res, const fmpz_poly_t Q);
+
+    Compute the (monic) polynomial given its power sums series \code{(Q)}.
+
+*******************************************************************************
+
     Signature
 
 *******************************************************************************
@@ -3104,6 +3147,26 @@ void fmpz_poly_chebyshev_u(fmpz_poly_t poly, ulong n)
 
     Sets \code{poly} to the Chebyshev polynomial of the first kind $U_n(x)$,
     defined by $(n+1) U_n(x) = T'_{n+1}(x)$.
+    The coefficients are calculated using a hypergeometric recurrence.
+
+*******************************************************************************
+
+    Fibonacci polynomials
+
+*******************************************************************************
+
+void _fmpz_poly_fibonacci(fmpz * coeffs, ulong n)
+
+    Sets \code{coeffs} to the coefficient array of the $n$-th Fibonacci polynomial
+    $$P_n(x) = \begin{cases}0, & \mbox{if } n =  0\\1, & \mbox{if } n =  1\\
+    x P_{n - 1}(x) + P_{n - 2}(x),& \mbox{if }  n \geq 2\end{cases}$$
+    The coefficients are calculated using a hypergeometric recurrence.
+
+void fmpz_poly_fibonacci(fmpz_poly_t poly, ulong n)
+
+    Sets \code{poly} to the $n$-th Fibonacci polynomial
+    $$P_n(x) = \begin{cases}0, & \mbox{if } n =  0\\1, & \mbox{if } n =  1\\
+    x P_{n - 1}(x) + P_{n - 2}(x),& \mbox{if }  n \geq 2\end{cases}$$
     The coefficients are calculated using a hypergeometric recurrence.
 
 *******************************************************************************

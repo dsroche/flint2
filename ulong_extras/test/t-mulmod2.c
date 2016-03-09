@@ -19,7 +19,7 @@
 =============================================================================*/
 /******************************************************************************
 
-    Copyright (C) 2013 William Hart
+    Copyright (C) 2009, 2016 William Hart
 
 ******************************************************************************/
 
@@ -27,32 +27,41 @@
 #include "flint.h"
 #include "ulong_extras.h"
 
-mp_limb_t
-n_powmod_ui_preinv(mp_limb_t a, mp_limb_t exp, mp_limb_t n, mp_limb_t ninv, ulong norm)
+int
+main(void)
 {
-    mp_limb_t x;
+    int i, result;
+    FLINT_TEST_INIT(state);
 
-    if (n == (UWORD(1)<<norm) || (a == 0 && exp != 0)) return UWORD(0);
+    flint_printf("mulmod2....");
+    fflush(stdout);
 
-    if (exp)
+    for (i = 0; i < 100000 * flint_test_multiplier(); i++)
     {
-       while ((exp & 1) == 0)
-       {
-          a = n_mulmod_preinv(a, a, n, ninv, norm);
-          exp >>= 1;
-       }
+        ulong a, b, d, r1, r2, q, p1, p2;
 
-       x = a;
-       
-       while (exp >>= 1)
-       {
-          a = n_mulmod_preinv(a, a, n, ninv, norm);
-          if (exp & 1) x = n_mulmod_preinv(x, a, n, ninv, norm);
-       }
+        d = n_randtest_not_zero(state);
+        a = n_randtest(state) % d;
+        b = n_randtest(state) % d;
 
-       return x;
-    } else
-       return (UWORD(1)<<norm);
+        r1 = n_mulmod2(a, b, d);
+
+        umul_ppmm(p1, p2, a, b);
+        p1 %= d;
+        udiv_qrnnd(q, r2, p1, p2, d);
+
+        result = (r1 == r2);
+        if (!result)
+        {
+            flint_printf("FAIL:\n");
+            flint_printf("a = %wu, b = %wu, d = %wu\n", a, b, d);
+            flint_printf("q = %wu, r1 = %wu, r2 = %wu\n", q, r1, r2);
+            abort();
+        }
+    }
+
+    FLINT_TEST_CLEANUP(state);
+
+    flint_printf("PASS\n");
+    return 0;
 }
-
-
