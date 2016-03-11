@@ -37,12 +37,13 @@
 /*
    Definitions for the parameters of the timing process.
    
+   bits     Fixed bitsize of the coefficients
    lenlo    Minimum length
    lenhi    Maximum length
    lenh     Step size for the length
-   bitslo   Minimum bit size
-   bitshi   Maximum bit size
-   bitsh    Step size for the bit size
+   deglo    Minimum degree
+   deghi    Maximum degree
+   degh     Step size for the degree
    cols     Number of different lengths
    rows     Number of different bit sizes
    cpumin   Minimum number of ms spent on each test case
@@ -52,20 +53,20 @@
    imgname  File name for image
  */
 
-#define bits     160
-#define lenlo    50
-#define lenhi    1000
-#define lenh     50
-#define deglo    0
-#define deghi    49
-#define degh     1
-#define cols     ((lenhi + 1 - lenlo + (lenh - 1)) / lenh)
-#define rows     ((deghi + 1 - deglo + (degh - 1)) / degh)
+#define bits     512
+#define lenlo    0
+#define lenhi    98
+#define lenh     2
+#define deglo    100
+#define deghi    1000
+#define degh     30
+#define rows     ((lenhi + 1 - lenlo + (lenh - 1)) / lenh)
+#define cols     ((deghi + 1 - deglo + (degh - 1)) / degh)
 #define cpumin   10
 #define ncases   1
 #define nalgs    2
 #define img      1
-#define imgname  "dense.ppm"
+#define imgname  "add_terms.ppm"
 
 /*
    Write a binary 24-bit ppm image.
@@ -104,11 +105,11 @@ main(void)
     fmpz_poly_init(z);
 
 
-    for (deg = deghi, i = 0; deg >= deglo; deg -= degh, i++)
+    for (len = lenlo, i = 0; len <= lenhi; len += lenh, i++)
     {
         slong s[nalgs];
   
-        for (len = lenlo, j = 0; len <= lenhi; len += lenh, j++)
+        for (deg = deglo, j = 0; deg <= deghi; deg += degh, j++)
         {
             int c, n, reps = 0;
             
@@ -124,9 +125,9 @@ main(void)
                    Construct random sparse polynomials f and g
                  */
                 {
-                  fmpz_init_set_ui(degree, (len/(deg + 2)) * 50);
-                  fmpz_sparse_randtest(f, state, len, degree, bits);
-                  fmpz_sparse_randtest(g, state, len, degree, bits);
+                  fmpz_init_set_ui(degree, deg);
+                  fmpz_sparse_randtest(f, state, deg - (len*deg)/deglo, degree, bits);
+                  fmpz_sparse_randtest(g, state, deg - (len*deg)/deglo, degree, bits);
                 }
 
                 /*
@@ -139,12 +140,12 @@ main(void)
 
                 timeit_start(t[0]);
                 for (l = 0; l < loops; l++)
-                    fmpz_poly_mul(z, y, x);
+                    fmpz_sparse_add(h, g, f);
                 timeit_stop(t[0]);
                 
                 timeit_start(t[1]);
                 for (l = 0; l < loops; l++)
-                    fmpz_sparse_mul_heaps(h, g, f);
+                    fmpz_poly_add(z, y, x);
                 timeit_stop(t[1]);
 
                 for (c = 0; c < nalgs; c++)
@@ -171,7 +172,7 @@ main(void)
            slong sum = 0, c;
            for (c = 0; c < nalgs; c++)
               sum += s[c];
-           flint_printf("len = %d, deg = %d, time = %wdms\n", len, (len/(deghi-deg + 2))*100, sum), fflush(stdout);
+           flint_printf("len = %d, deg = %d, time = %wd ms\n", deg - (len*deg)/deglo, deg, sum), fflush(stdout);
         }
     }
     
@@ -212,17 +213,17 @@ main(void)
                 
                 for (m = 0; m < nalgs; m++)
                 {
-                    v[m] = T[i][j][m] - T[i][j][X[i][j]];
-                    if (v[m] > max)
-                        max = v[m];
+                  v[m] = T[i][j][m];
+                  if (v[m] > max)
+                    max = v[m];
                 }
                 for (m = 0; m < nalgs; m++)
                 {
-                    v[m] = (max - v[m]) / max;
-                    PIXELS[k++] = (unsigned char) (v[m] * 255);
+                  v[m] = v[m] / max;
+                  PIXELS[k++] = (unsigned char) (v[m] * 255);
                 }
                 for (; m < 3; m++)
-                  PIXELS[k++] = (unsigned char) 0;
+                  PIXELS[k++] = (unsigned char) 0;    
             }
         }
 

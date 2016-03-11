@@ -52,20 +52,20 @@
    imgname  File name for image
  */
 
-#define deg      500
+#define deg      1000
 #define lenlo    10
 #define lenhi    500
 #define lenh     10
-#define bitslo   16
+#define bitslo   32
 #define bitshi   1024
 #define bitsh    32
-#define cols     ((lenhi + 1 - lenlo + (lenh - 1)) / lenh)
-#define rows     ((bitshi + 1 - bitslo + (bitsh - 1)) / bitsh)
+#define rows     ((lenhi + 1 - lenlo + (lenh - 1)) / lenh)
+#define cols     ((bitshi + 1 - bitslo + (bitsh - 1)) / bitsh)
 #define cpumin   10
 #define ncases   1
 #define nalgs    2
 #define img      1
-#define imgname  "standard.ppm"
+#define imgname  "mul.ppm"
 
 /*
    Write a binary 24-bit ppm image.
@@ -77,7 +77,7 @@ int write_rgb_ppm(const char* file_name, unsigned char* pixels,
     if (file == NULL)
         return -1;
     flint_fprintf(file, "P6\n%d %d\n255\n", width, height);
-    fwrite(pixels, sizeof(unsigned char), width * height * nalgs, file);
+    fwrite(pixels, sizeof(unsigned char), width * height * 3, file);
     fclose(file);
     return 0;
 }
@@ -105,11 +105,11 @@ main(void)
 
     fmpz_init_set_ui(degree, deg);
 
-    for (len = lenlo, j = 0; len <= lenhi; len += lenh, j++)
+    for (len = lenhi, i = 0; len >= lenlo; len -= lenh, i++)
     {
         slong s[nalgs];
         
-        for (bits = bitslo, i = 0; bits <= bitshi; bits += bitsh, i++)
+        for (bits = bitslo, j = 0; bits <= bitshi; bits += bitsh, j++)
         {
             int c, n, reps = 0;
             
@@ -139,12 +139,12 @@ main(void)
 
                 timeit_start(t[0]);
                 for (l = 0; l < loops; l++)
-                    fmpz_poly_mul(z, y, x);
+                    fmpz_sparse_mul_heaps(h, g, f);
                 timeit_stop(t[0]);
                 
                 timeit_start(t[1]);
                 for (l = 0; l < loops; l++)
-                    fmpz_sparse_mul_heaps(h, g, f);
+                    fmpz_poly_mul(z, y, x);
                 timeit_stop(t[1]);
 
                 for (c = 0; c < nalgs; c++)
@@ -201,7 +201,7 @@ main(void)
         unsigned char * PIXELS;
         int k;
         
-        PIXELS = (unsigned char *) flint_malloc(nalgs * rows * cols * sizeof(unsigned char));
+        PIXELS = (unsigned char *) flint_malloc(3 * rows * cols * sizeof(unsigned char));
         k = 0;
         for (i = 0; i < rows; i++)
         {
@@ -212,15 +212,17 @@ main(void)
                 
                 for (m = 0; m < nalgs; m++)
                 {
-                    v[m] = T[i][j][m] - T[i][j][X[i][j]];
+                    v[m] = T[i][j][m];
                     if (v[m] > max)
                         max = v[m];
                 }
-                for (m = 0; m < nalgs; m++)
+                for (m = 0; m < FLINT_MIN(3,nalgs); m++)
                 {
-                    v[m] = (max - v[m]) / max;
+                    v[m] = v[m] / max;
                     PIXELS[k++] = (unsigned char) (v[m] * 255);
                 }
+                for(; m < 3; m++)
+                  PIXELS[k++] = (unsigned char) 0;
             }
         }
 

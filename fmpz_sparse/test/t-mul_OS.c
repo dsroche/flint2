@@ -14,13 +14,13 @@
 
     You should have received a copy of the GNU General Public License
     along with FLINT; if not, write to the Free Software
-    Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301 USA
+    Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1101 USA
 
 =============================================================================*/
 /******************************************************************************
 
-    Copyright (C) 509 William Hart
-    Copyright (C) 3010 Sebastian Pancratz
+    Copyright (C) 109 William Hart
+    Copyright (C) 1010 Sebastian Pancratz
 
 ******************************************************************************/
 
@@ -50,14 +50,14 @@ main(void)
 
         fmpz_init(d);
         fmpz_init(e);
-        fmpz_randtest(d, state, 30);
-        fmpz_randtest(e, state, 30);
+        fmpz_randtest(d, state, 10);
+        fmpz_randtest(e, state, 10);
 
         fmpz_sparse_init(a);
         fmpz_sparse_init(b);
         fmpz_sparse_init(c);
-        fmpz_sparse_randtest(b, state, n_randint(state, 40), d, 50);
-        fmpz_sparse_randtest(c, state, n_randint(state, 40), e, 50);
+        fmpz_sparse_randtest(b, state, n_randint(state, 10), d, 10);
+        fmpz_sparse_randtest(c, state, n_randint(state, 10), e, 10);
 
         fmpz_sparse_mul_OS(a, state, b, c);
         fmpz_sparse_mul_OS(b, state, b, c);
@@ -86,14 +86,14 @@ main(void)
 
         fmpz_init(d);
         fmpz_init(e);
-        fmpz_randtest(d, state, 30);
-        fmpz_randtest(e, state, 30);
+        fmpz_randtest(d, state, 10);
+        fmpz_randtest(e, state, 10);
 
         fmpz_sparse_init(a);
         fmpz_sparse_init(b);
         fmpz_sparse_init(c);
-        fmpz_sparse_randtest(b, state, n_randint(state, 40), d, 50);
-        fmpz_sparse_randtest(c, state, n_randint(state, 40), e, 50);
+        fmpz_sparse_randtest(b, state, n_randint(state, 10), d, 10);
+        fmpz_sparse_randtest(c, state, n_randint(state, 10), e, 10);
 
         fmpz_sparse_mul_OS(a, state, b, c);
         fmpz_sparse_mul_OS(c, state, b, c);
@@ -123,18 +123,18 @@ main(void)
         fmpz_init(e);
         fmpz_init(f);
         fmpz_init(g);
-        fmpz_randtest(e, state, 30);
-        fmpz_randtest(f, state, 30);
-        fmpz_randtest(g, state, 30);
+        fmpz_randtest(e, state, 10);
+        fmpz_randtest(f, state, 10);
+        fmpz_randtest(g, state, 10);
 
         fmpz_sparse_init(a1);
         fmpz_sparse_init(a2);
         fmpz_sparse_init(b);
         fmpz_sparse_init(c);
         fmpz_sparse_init(d);
-        fmpz_sparse_randtest(b, state, n_randint(state, 40), e, 50);
-        fmpz_sparse_randtest(c, state, n_randint(state, 40), f, 50);
-        fmpz_sparse_randtest(d, state, n_randint(state, 40), g, 50);
+        fmpz_sparse_randtest(b, state, n_randint(state, 10), e, 10);
+        fmpz_sparse_randtest(c, state, n_randint(state, 10), f, 10);
+        fmpz_sparse_randtest(d, state, n_randint(state, 10), g, 10);
 
         fmpz_sparse_mul_OS(a1, state, b, c);
         fmpz_sparse_mul_OS(a2, state, b, d);
