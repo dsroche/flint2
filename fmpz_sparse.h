@@ -1022,8 +1022,17 @@ FLINT_DLL void fmpz_diff_prime(fmpz_t res, flint_rand_t state, slong support,
 FLINT_DLL slong fmpz_sparse_sumcheck(fmpz ** res, const fmpz_sparse_t poly1, 
     const fmpz_sparse_t poly2);
 
+/* FIXME FIXME TODO TODO temporary until git push by Whitman
 FLINT_DLL slong fmpz_sparse_sumset(fmpz ** res, flint_rand_t state, const 
     fmpz_sparse_t poly1, const fmpz_sparse_t poly2);
+*/
+FMPZ_SPARSE_INLINE
+slong fmpz_sparse_sumset(fmpz ** res, flint_rand_t state, const 
+    fmpz_sparse_t poly1, const fmpz_sparse_t poly2)
+{
+    FLINT_ASSERT(0);
+    return -1;
+}
 
 /* TODO: CRT would be nice, but we would need a fmpz_sparse_nmod type first. */
 
