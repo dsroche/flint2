@@ -4,7 +4,7 @@ LD_PRE=LD_LIBRARY_PATH=..
 CC=gcc
 
 WARNS=-ansi -pedantic -Wall -Wextra -Werror -Wno-unused-parameter
-CFLAGS=$(WARNS) -DWANT_ASSERT=1 -mpopcnt -g -O0
+CFLAGS=$(WARNS) -DWANT_ASSERT=1 -mpopcnt -ggdb -O0
 CFLAGS_PROF=$(WARNS) -Wno-unused -mpopcnt -funroll-loops -O3
 LIBS=-lflint -lmpfr -lgmp -lm
 
