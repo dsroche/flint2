@@ -42,30 +42,22 @@ main(void)
     fflush(stdout);
 
     /* Compare against mul_heaps */
-    for (i = 0; i < 1000 * flint_test_multiplier(); i++)
+    for (i = 0; i < 10 * flint_test_multiplier(); i++)
     {
         fmpz_sparse_t a, b, c1, c2;
         fmpz_t d, e;
 
         fmpz_init(d);
         fmpz_init(e);
-        /* FIXME
-        fmpz_randtest(d, state, 30);
-        fmpz_randtest(e, state, 30);
-        */
-        fmpz_randtest_unsigned(d, state, 7);
-        fmpz_randtest_unsigned(e, state, 7);
+        fmpz_randtest_unsigned(d, state, 20);
+        fmpz_randtest_unsigned(e, state, 20);
 
         fmpz_sparse_init(a);
         fmpz_sparse_init(b);
         fmpz_sparse_init(c1);
         fmpz_sparse_init(c2);
-        /* FIXME
-        fmpz_sparse_randtest(a, state, n_randint(state, 40), d, 50);
-        fmpz_sparse_randtest(b, state, n_randint(state, 40), e, 50);
-        */
-        fmpz_sparse_randtest(a, state, n_randint(state, 10), d, 5);
-        fmpz_sparse_randtest(b, state, n_randint(state, 10), e, 5);
+        fmpz_sparse_randtest(a, state, n_randint(state, 30), d, 50);
+        fmpz_sparse_randtest(b, state, n_randint(state, 30), e, 50);
 
         fmpz_sparse_mul_heaps(c1, a, b);
         fmpz_sparse_mul_interp(c2, state, a, b, fmpz_sparse_terms(c1));
@@ -98,14 +90,14 @@ main(void)
 
         fmpz_init(d);
         fmpz_init(e);
-        fmpz_randtest(d, state, 30);
-        fmpz_randtest(e, state, 30);
+        fmpz_randtest_unsigned(d, state, 20);
+        fmpz_randtest_unsigned(e, state, 20);
 
         fmpz_sparse_init(a);
         fmpz_sparse_init(b);
         fmpz_sparse_init(c);
-        fmpz_sparse_randtest(b, state, n_randint(state, 40), d, 50);
-        fmpz_sparse_randtest(c, state, n_randint(state, 40), e, 50);
+        fmpz_sparse_randtest(b, state, n_randint(state, 30), d, 50);
+        fmpz_sparse_randtest(c, state, n_randint(state, 30), e, 50);
         outsize = fmpz_sparse_terms(b) * fmpz_sparse_terms(c);
 
         fmpz_sparse_mul_interp(a, state, b, c, outsize);
@@ -136,14 +128,14 @@ main(void)
 
         fmpz_init(d);
         fmpz_init(e);
-        fmpz_randtest(d, state, 30);
-        fmpz_randtest(e, state, 30);
+        fmpz_randtest_unsigned(d, state, 20);
+        fmpz_randtest_unsigned(e, state, 20);
 
         fmpz_sparse_init(a);
         fmpz_sparse_init(b);
         fmpz_sparse_init(c);
-        fmpz_sparse_randtest(b, state, n_randint(state, 40), d, 50);
-        fmpz_sparse_randtest(c, state, n_randint(state, 40), e, 50);
+        fmpz_sparse_randtest(b, state, n_randint(state, 30), d, 50);
+        fmpz_sparse_randtest(c, state, n_randint(state, 30), e, 50);
         outsize = fmpz_sparse_terms(b) * fmpz_sparse_terms(c);
 
         fmpz_sparse_mul_interp(a, state, b, c, outsize);

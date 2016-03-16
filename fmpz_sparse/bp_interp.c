@@ -29,8 +29,6 @@
 #include "long_extras.h"
 #include "fmpz_mod_poly.h"
 
-int OHNO = 0; /* FIXME */
-
 void _fmpz_mod_poly_powmod_x_2exp(fmpz* res, 
         const fmpz* poly, slong len, ulong k, const fmpz_t p)
 {
@@ -102,21 +100,10 @@ slong _fmpz_mod_poly_binary_roots(fmpz* roots, fmpz* expons,
     slong i, nroots;
     const fmpz *one = poly + (len-1);
     
-if (OHNO && len <= 1)
-{ /* FIXME */
-flint_printf("hit base case k=%wd\n", k);
-fflush(stdout);
-}
     if (len <= 1) return 0;
     FLINT_ASSERT(fmpz_is_one(one));
     FLINT_ASSERT(k >= 0);
     
-if (OHNO) {
-flint_printf("\nk=%wd, theta=", k);
-fmpz_print(theta); flint_printf("\n");
-_fmpz_mod_poly_print(poly, len, p); flint_printf("\n");
-fflush(stdout); /* FIXME */
-}
     if ((len-1) >> k > 0)
     {
         /* degree exceeds 2^k, so every root must be present. */
@@ -155,10 +142,6 @@ fflush(stdout); /* FIXME */
         FMPZ_VEC_NORM(h, lenh);
         if (lenh == 0)
         {
-if (OHNO) { 
-flint_printf("**even roots only k=%wd**\n", k);
-fflush(stdout); /* FIXME */
-}
             /* all root powers are even; only need one recursive call. */
             nroots = _fmpz_mod_poly_binary_roots(roots, expons, poly, len, t2, k-1, p);
             _fmpz_vec_scalar_mul_2exp(expons, expons, nroots, UWORD(1));
@@ -175,10 +158,6 @@ fflush(stdout); /* FIXME */
                 /* all root powers are odd; only need one recursive call */
                 nroots = 0;
 
-if (OHNO) { 
-flint_printf("**odd roots only k=%wd**\n", k);
-fflush(stdout); /* FIXME */
-}
                 /* set h = poly */
                 h = g + leng;
                 _fmpz_vec_set(h, poly, len);
@@ -190,11 +169,6 @@ fflush(stdout); /* FIXME */
                 fmpz_invmod(temp, g + (leng-1), p);
                 _fmpz_mod_poly_scalar_mul_fmpz(g, g, leng, temp, p);
 
-if (OHNO) { 
-flint_printf("**even roots REC CALL k=%wd**\n", k);
-flint_printf("leng=%wd\n", leng);
-fflush(stdout); /* FIXME */
-}
                 /* recursive call on even roots */
                 nroots = _fmpz_mod_poly_binary_roots(roots, expons, g, leng, t2, k-1, p);
                 _fmpz_vec_scalar_mul_2exp(expons, expons, nroots, UWORD(1));
@@ -222,10 +196,6 @@ fflush(stdout); /* FIXME */
             fmpz_invmod(temp, temp, p);
             _fmpz_mod_poly_scalar_mul_fmpz(h, h, lenh-1, temp, p);
 
-if (OHNO) { 
-flint_printf("**odd roots REC CALL k=%wd**\n", k);
-fflush(stdout); /* FIXME */
-}
             /* recursive call on odd roots */
             oddroots = _fmpz_mod_poly_binary_roots(roots+nroots, expons+nroots, 
                     h, lenh, t2, k-1, p);
@@ -245,22 +215,50 @@ fflush(stdout); /* FIXME */
     }
 
     FLINT_ASSERT(nroots == len-1);
-#ifdef WANT_ASSERT
-    { /* FIXME very expensive assertion here */
-        fmpz *evals = _fmpz_vec_init(nroots);
-        _fmpz_mod_poly_evaluate_fmpz_vec(evals, poly, len, roots, nroots, p);
-if(OHNO)
-{
-flint_printf("\nchecking k=%wd p=",k); fmpz_print(p); flint_printf("\n"); 
-_fmpz_vec_print(roots, nroots); flint_printf("\n");
-_fmpz_vec_print(expons, nroots); flint_printf("\n");
-fflush(stdout);
-}
-        FLINT_ASSERT(_fmpz_vec_is_zero(evals, nroots));
-        _fmpz_vec_clear(evals, nroots);
-    }
-#endif
     return nroots;
+}
+
+void _fmpz_mod_poly_transposed_vandermonde(fmpz* xx,
+        const fmpz* vv, const fmpz* bb, slong len, const fmpz* poly, const fmpz_t p)
+{
+    /* Solves the Vandermonde system V(vv)^T * xx = bb mod p
+     * for the vector xx.
+     * len is the size of xx, vv, and bb.
+     * (poly, len+1) is a polynomial whose roots are the vv entries.
+     * Entries in xx are reduced in the symmetric range [-p/2 .. p/2].
+     */
+    fmpz *D, *Q;
+    slong i;
+
+    if (len <= 0) return;
+
+    D = _fmpz_vec_init(3*len);
+    Q = D + len;
+
+    /* D = reversal of bb */
+    for (i=0; i<len; ++i) fmpz_set(D + i, bb + (len-i-1));
+
+    /* Q = poly*D / x^len. TODO: make this faster using mullow? */
+    _fmpz_mod_poly_mul(Q, poly, len+1, D, len, p);
+    Q = Q + len;
+
+    /* xx = evals of Q at points in vv */
+    _fmpz_mod_poly_evaluate_fmpz_vec(xx, Q, len, vv, len, p);
+
+    /* overwrite D with evals of (d poly/dx) at points in vv */
+    /* TODO: re-use subproduct tree to make this faster? */
+    _fmpz_mod_poly_derivative(Q, poly, len+1, p);
+    _fmpz_mod_poly_evaluate_fmpz_vec(D, Q, len, vv, len, p);
+
+    /* pairwise divide the two sets of evaluations */
+    for (i=0; i<len; ++i)
+    {
+        fmpz_invmod(D+i, D+i, p);
+        fmpz_mul(xx+i, xx+i, D+i);
+    }
+    _fmpz_vec_scalar_smod_fmpz(xx, xx, len, p);
+
+    _fmpz_vec_clear(D, 3*len);
 }
 
 int fmpz_sparse_bp_interp(fmpz_sparse_t res,
@@ -271,27 +269,17 @@ int fmpz_sparse_bp_interp(fmpz_sparse_t res,
       * Compute coefficients from transposed Vandermode
       */
 
-    fq_ctx_t Fq;
-    fq_mat_t M;
-    fq_mat_t b;
     fmpz_mod_poly_t G;
-    fmpz_t temp_fmpz;
     fmpz * roots;
-    fmpz * expons;
-    slong T = evals->length / 2;
-    slong t;
-    slong i, j;
-    slong temp_slong;
-    slong * perm;
+    slong i, t;
     const fmpz * w = evals->sample_points + 1;
-
-/* FIXME
-flint_printf("\nstart with T=%wd q=",T); fmpz_print(evals->q); flint_printf("\n"); fflush(stdout);
-*/
 
     fmpz_sparse_zero(res);
 
-    if (T == 0) return 1;
+    if (evals->length == 0) 
+    {
+        return 1;
+    }
 
     /* Berlekamp-Massey to discover Prony polynomial */
 
@@ -299,109 +287,39 @@ flint_printf("\nstart with T=%wd q=",T); fmpz_print(evals->q); flint_printf("\n"
     fmpz_mod_poly_minpoly(G, evals->evaluations, evals->length);
 
     t = fmpz_mod_poly_degree(G);
-    if (t > T)
+    if (t > evals->length / 2)
     {
         /* sparsity estimate was too low */
         fmpz_mod_poly_clear(G);
         return 0;
     }
 
+    _fmpz_sparse_reserve(res, t);
+    for (i=res->length; i<t; ++i)
+    {
+        fmpz_init(res->coeffs + i);
+        fmpz_init(res->expons + i);
+    }
+    _fmpz_sparse_set_length(res, t);
+
     /* find roots of Prony polynomial, and their orders */
 
     roots = _fmpz_vec_init(t);
-    expons = _fmpz_vec_init(t);
-{
-fmpz_t checkp;
-fmpz_init(checkp);
-fmpz_set_str(checkp, "0", 10);
-if (fmpz_equal(checkp, evals->q)) OHNO=1;
-if (OHNO) {
-flint_printf("------------binary roots---------------------------------------------\n\n"); fflush(stdout); /* FIXME */
-}
-fmpz_clear(checkp);
-}
-    _fmpz_mod_poly_binary_roots(roots, expons, 
+    _fmpz_mod_poly_binary_roots(roots, res->expons, 
             G->coeffs, G->length, w, evals->log2_order, evals->q);
 
     /* solve transposed Vandermode to get coeffs */
-    fmpz_init(temp_fmpz);
+    /* Varndermonde(roots)^T * x = evals, truncated to length t */
 
-    /* build finite field */
-    fq_ctx_init(Fq, evals->q, WORD(1), "x");
+    _fmpz_mod_poly_transposed_vandermonde(res->coeffs,
+            roots, evals->evaluations, t, G->coeffs, evals->q);
 
-    fq_mat_init(M, t, t, Fq);
-    perm = flint_calloc(t, sizeof(slong));
-
-    for (i=0; i<t; ++i)
-    {
-        fq_set_ui(fq_mat_entry(M,0,i), UWORD(1), Fq);
-    }
-
-    for (i=1; i<t; ++i)
-    {
-        for (j=0; j<t; ++j) 
-        {
-            fmpz_mul(temp_fmpz, 
-                    fmpz_poly_get_coeff_ptr(fq_mat_entry(M,i-1,j), 0),
-                    roots+j);
-            fq_set_fmpz(fq_mat_entry(M,i,j), temp_fmpz, Fq);
-        }
-    }
-
-    temp_slong = fq_mat_lu(perm, M, 1, Fq);
-    FLINT_ASSERT (temp_slong);
-
-#ifdef WANT_ASSERT
-    for (i=0; i<t; ++i) FLINT_ASSERT(perm[i] == i);
-#endif
-
-    fq_mat_init(b, t, 1, Fq);
-    for (i=0; i<t; ++i)
-    {
-        fq_set_fmpz(fq_mat_entry(b,i,0), evals->evaluations+i, Fq);
-    }
-
-    fq_mat_solve_tril(b, M, b, 1, Fq);
-    fq_mat_solve_triu(b, M, b, 0, Fq);
-
-    /* set coeffs and expons of the actual polynomial */
-    
-    if (evals->laurent)
-    {
-        fmpz_set_ui(temp_fmpz, UWORD(1));
-        fmpz_mul_2exp(temp_fmpz, temp_fmpz, evals->log2_order-1);
-
-        for (i=0; i<t; ++i)
-        {
-            if (fmpz_cmp(expons+i, temp_fmpz) > 0)
-            {
-                fmpz_submul_ui(expons+i, temp_fmpz, UWORD(2));
-            }
-        }
-    }
-
-    for (i=0; i<t; ++i)
-    {
-        fq_struct * coeff = fq_mat_entry(b,i,0);
-
-        if (!fq_is_zero(coeff, Fq))
-        {
-            FLINT_ASSERT(fmpz_poly_length(coeff) == UWORD(1));
-            fmpz_mods(temp_fmpz, fmpz_poly_get_coeff_ptr(coeff,0), evals->q);
-            fmpz_sparse_set_coeff(res, temp_fmpz, expons+i);
-        }
-    }
-
-    fq_mat_clear(b, Fq);
-    fq_mat_clear(M, Fq);
+    /* sort terms and remove zero coeffs */
+    _fmpz_sparse_normalise(res);
 
     /* clean-up */
     _fmpz_vec_clear(roots, t);
-    _fmpz_vec_clear(expons, t);
     fmpz_mod_poly_clear(G);
-    flint_free(perm);
-    fq_ctx_clear(Fq);
-    fmpz_clear(temp_fmpz);
 
     return 1;
 }
