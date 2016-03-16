@@ -30,7 +30,6 @@
 void fmpz_sparse_bp_interp_clear(fmpz_sparse_bp_interp_t res)
 {
   fmpz_clear(res->q);
-  fmpz_clear(res->order);
   _fmpz_vec_clear(res->sample_points, res->length);
   _fmpz_vec_clear(res->evaluations, res->length);
 }

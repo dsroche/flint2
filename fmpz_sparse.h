@@ -70,7 +70,7 @@ typedef fmpz_sparse_struct fmpz_sparse_t[1];
 typedef struct
 {
     fmpz_t q;
-    fmpz_t order;
+    ulong log2_order;
     int laurent;
     fmpz * sample_points;
     fmpz * evaluations;
@@ -868,7 +868,7 @@ FLINT_DLL void fmpz_sparse_bp_interp_add(fmpz_sparse_bp_interp_t res,
 
 FLINT_DLL void fmpz_sparse_bp_interp_pow(fmpz_sparse_bp_interp_t res, ulong pow);
 
-FLINT_DLL void fmpz_sparse_bp_interp(fmpz_sparse_t res,
+FLINT_DLL int fmpz_sparse_bp_interp(fmpz_sparse_t res,
     const fmpz_sparse_bp_interp_t evals);
 
 /* FIXME */
