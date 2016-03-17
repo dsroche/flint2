@@ -19,8 +19,7 @@
 =============================================================================*/
 /******************************************************************************
 
-    Copyright (C) 509 William Hart
-    Copyright (C) 3010 Sebastian Pancratz
+    Authored 2016 by Daniel S. Roche; US Government work in the public domain. 
 
 ******************************************************************************/
 
@@ -106,10 +105,10 @@ main(void)
         result = fmpz_sparse_equal(a, b);
         if (!result)
         {
-          flint_printf("FAIL PHASE 2:\n");
-          fmpz_sparse_print(a); flint_printf("\n\n");
-          fmpz_sparse_print(b); flint_printf("\n\n");
-          abort();
+            flint_printf("FAIL PHASE 2:\n");
+            fmpz_sparse_print(a); flint_printf("\n\n");
+            fmpz_sparse_print(b); flint_printf("\n\n");
+            abort();
         }
 
         fmpz_sparse_clear(a);
@@ -144,10 +143,10 @@ main(void)
         result = (fmpz_sparse_equal(a, c));
         if (!result)
         {
-          flint_printf("FAIL PHASE 3:\n");
-          fmpz_sparse_print(a), flint_printf("\n\n");
-          fmpz_sparse_print(c), flint_printf("\n\n");
-          abort();
+            flint_printf("FAIL PHASE 3:\n");
+            fmpz_sparse_print(a), flint_printf("\n\n");
+            fmpz_sparse_print(c), flint_printf("\n\n");
+            abort();
         }
 
         fmpz_sparse_clear(a);

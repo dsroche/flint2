@@ -104,7 +104,7 @@ slong _fmpz_mod_poly_binary_roots(fmpz* roots, fmpz* expons,
     FLINT_ASSERT(fmpz_is_one(one));
     FLINT_ASSERT(k >= 0);
     
-    if ((len-1) >> k > 0)
+    if (k < FLINT_BITS && (len-1) >> k > 0)
     {
         /* degree exceeds 2^k, so every root must be present. */
         nroots = WORD(1) << k;
