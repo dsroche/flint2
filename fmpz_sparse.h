@@ -70,7 +70,7 @@ typedef fmpz_sparse_struct fmpz_sparse_t[1];
 typedef struct
 {
     fmpz_t q;
-    fmpz_t order;
+    ulong log2_order;
     int laurent;
     fmpz * sample_points;
     fmpz * evaluations;
@@ -106,6 +106,21 @@ FLINT_DLL void fmpz_sparse_clear(fmpz_sparse_t poly);
 FLINT_DLL void _fmpz_sparse_normalise(fmpz_sparse_t poly);
 
 FLINT_DLL void _fmpz_sparse_reserve(fmpz_sparse_t poly, slong terms);
+
+FMPZ_SPARSE_INLINE
+void _fmpz_sparse_set_length(fmpz_sparse_t poly, slong newlen)
+{
+    if (poly->length > newlen)
+    {
+        slong i;
+        for (i = newlen; i < poly->length; ++i)
+        {
+            _fmpz_demote(poly->coeffs + i);
+            _fmpz_demote(poly->expons + i);
+        }
+    }
+    poly->length = newlen;
+}
 
 /*  Polynomial parameters  ***************************************************/
 
@@ -225,13 +240,11 @@ void fmpz_sparse_set_si_si(fmpz_sparse_t poly,
     }
 }
 
-/*  BEGINNING OF WHITMAN'S WORK %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
 FLINT_DLL void fmpz_sparse_set_fmpz_poly(fmpz_sparse_t poly1, 
     const fmpz_poly_t poly2);
 
 FLINT_DLL void fmpz_sparse_get_fmpz_poly(fmpz_poly_t out, 
     const fmpz_sparse_t in);
-/*  ENDING OF WHITMAN'S WORK %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
 
 FLINT_DLL int fmpz_sparse_set_str(fmpz_sparse_t poly, const char * str);
 
@@ -248,10 +261,6 @@ void fmpz_sparse_swap(fmpz_sparse_t poly1, fmpz_sparse_t poly2)
     FLINT_GENERIC_SWAP(slong, poly1->length, poly2->length);
     FLINT_GENERIC_SWAP(slong, poly1->alloc, poly2->alloc);
 }
-
-/* FIXME */
-FLINT_DLL void fmpz_sparse_reverse(fmpz_sparse_t res, 
-    const fmpz_sparse_t poly, slong n);
 
 /* FIXME */
 FLINT_DLL void fmpz_sparse_truncate(fmpz_sparse_t poly, const fmpz_t deg);
@@ -868,7 +877,7 @@ FLINT_DLL void fmpz_sparse_bp_interp_add(fmpz_sparse_bp_interp_t res,
 
 FLINT_DLL void fmpz_sparse_bp_interp_pow(fmpz_sparse_bp_interp_t res, ulong pow);
 
-FLINT_DLL void fmpz_sparse_bp_interp(fmpz_sparse_t res,
+FLINT_DLL int fmpz_sparse_bp_interp(fmpz_sparse_t res,
     const fmpz_sparse_bp_interp_t evals);
 
 /* FIXME */
@@ -1022,8 +1031,17 @@ FLINT_DLL void fmpz_diff_prime(fmpz_t res, flint_rand_t state, slong support,
 FLINT_DLL slong fmpz_sparse_sumcheck(fmpz ** res, const fmpz_sparse_t poly1, 
     const fmpz_sparse_t poly2);
 
+/* FIXME FIXME TODO TODO temporary until git push by Whitman
 FLINT_DLL slong fmpz_sparse_sumset(fmpz ** res, flint_rand_t state, const 
     fmpz_sparse_t poly1, const fmpz_sparse_t poly2);
+*/
+FMPZ_SPARSE_INLINE
+slong fmpz_sparse_sumset(fmpz ** res, flint_rand_t state, const 
+    fmpz_sparse_t poly1, const fmpz_sparse_t poly2)
+{
+    FLINT_ASSERT(0);
+    return -1;
+}
 
 /* TODO: CRT would be nice, but we would need a fmpz_sparse_nmod type first. */
 

@@ -212,6 +212,8 @@ FLINT_DLL void fmpq_poly_reverse(fmpq_poly_t res, const fmpq_poly_t poly, slong 
 
 /*  Getting and setting coefficients  ****************************************/
 
+FLINT_DLL void fmpq_poly_get_coeff_fmpz(fmpz_t x, const fmpq_poly_t poly, slong n);
+
 FLINT_DLL void fmpq_poly_get_coeff_fmpq(fmpq_t x, const fmpq_poly_t poly, slong n);
 
 FLINT_DLL void fmpq_poly_get_coeff_mpq(mpq_t x, const fmpq_poly_t poly, slong n);
@@ -238,8 +240,6 @@ FLINT_DLL int _fmpq_poly_equal_trunc(const fmpz * poly1, const fmpz_t den1, slon
                            const fmpz * poly2, const fmpz_t den2, slong len2, slong n);
 
 FLINT_DLL int fmpq_poly_equal_trunc(const fmpq_poly_t poly1, const fmpq_poly_t poly2, slong n);
-
-FLINT_DLL int fmpq_poly_cmp(const fmpq_poly_t left, const fmpq_poly_t right);
 
 FMPQ_POLY_INLINE
 int fmpq_poly_is_zero(const fmpq_poly_t poly)
@@ -294,10 +294,6 @@ FLINT_DLL void _fmpq_poly_add_can(fmpz * rpoly, fmpz_t rden,
 
 FLINT_DLL void fmpq_poly_add_can(fmpq_poly_t res, 
                    const fmpq_poly_t poly1, const fmpq_poly_t poly2, int can);
-
-FLINT_DLL void _fmpq_poly_sub(fmpz * rpoly, fmpz_t rden, 
-                    const fmpz * poly1, const fmpz_t den1, slong len1,
-                    const fmpz * poly2, const fmpz_t den2, slong len2);
 
 FLINT_DLL void fmpq_poly_add_series(fmpq_poly_t res, 
                    const fmpq_poly_t poly1, const fmpq_poly_t poly2, slong n);
@@ -541,6 +537,14 @@ FLINT_DLL void _fmpq_poly_resultant(fmpz_t rnum, fmpz_t rden,
 
 FLINT_DLL void fmpq_poly_resultant(fmpq_t r, const fmpq_poly_t f, const fmpq_poly_t g);
 
+
+FLINT_DLL void _fmpq_poly_resultant_div(fmpz_t rnum, fmpz_t rden, 
+                          const fmpz *poly1, const fmpz_t den1, slong len1, 
+                          const fmpz *poly2, const fmpz_t den2, slong len2,
+                          const fmpz_t divisor, slong nbits);
+
+FLINT_DLL void fmpq_poly_resultant_div(fmpq_t r, const fmpq_poly_t f, const fmpq_poly_t g, const fmpz_t divisor, slong nbits);
+
 /*  Derivative and integral  *************************************************/
 
 FLINT_DLL void _fmpq_poly_derivative(fmpz * rpoly, fmpz_t rden, 
@@ -565,6 +569,17 @@ FLINT_DLL void  _fmpq_poly_sqrt_series(fmpz * rpoly, fmpz_t rden,
 
 FLINT_DLL void fmpq_poly_sqrt_series(fmpq_poly_t res, const fmpq_poly_t poly, slong n);
 
+/* Power sums ****************************************************************/
+
+FLINT_DLL void _fmpq_poly_power_sums(fmpz * res, fmpz_t rden, const fmpz * poly, slong len, slong n);
+
+FLINT_DLL void fmpq_poly_power_sums(fmpq_poly_t res, const fmpq_poly_t poly, slong n);
+
+FLINT_DLL void _fmpq_poly_power_sums_to_poly(fmpz * res, const fmpz * poly, const fmpz_t den, slong len);
+
+FLINT_DLL void fmpq_poly_power_sums_to_fmpz_poly(fmpz_poly_t res, const fmpq_poly_t Q);
+
+FLINT_DLL void fmpq_poly_power_sums_to_poly(fmpq_poly_t res, const fmpq_poly_t Q);
 
 /*  Transcendental functions  ************************************************/
 
@@ -612,6 +627,12 @@ FLINT_DLL void _fmpq_poly_cos_series(fmpz * g, fmpz_t gden,
                             const fmpz * h, const fmpz_t hden, slong hlen, slong n);
 
 FLINT_DLL void fmpq_poly_cos_series(fmpq_poly_t res, const fmpq_poly_t poly, slong n);
+
+FLINT_DLL void _fmpq_poly_sin_cos_series(fmpz * s, fmpz_t sden, fmpz * c, fmpz_t cden,
+                            const fmpz * h, const fmpz_t hden, slong hlen, slong n);
+
+FLINT_DLL void fmpq_poly_sin_cos_series(fmpq_poly_t res1, fmpq_poly_t res2,
+                            const fmpq_poly_t poly, slong n);
 
 FLINT_DLL void _fmpq_poly_sinh_series(fmpz * g, fmpz_t gden,
                             const fmpz * h, const fmpz_t hden, slong hlen, slong n);

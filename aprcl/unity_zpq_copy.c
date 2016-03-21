@@ -19,40 +19,20 @@
 =============================================================================*/
 /******************************************************************************
 
-    Copyright (C) 2013 William Hart
-
+    Copyright (C) 2015 Vladimir Glazachev
+   
 ******************************************************************************/
 
-#include <gmp.h>
-#include "flint.h"
-#include "ulong_extras.h"
+#include "aprcl.h"
 
-mp_limb_t
-n_powmod_ui_preinv(mp_limb_t a, mp_limb_t exp, mp_limb_t n, mp_limb_t ninv, ulong norm)
+void
+unity_zpq_copy(unity_zpq f, const unity_zpq g)
 {
-    mp_limb_t x;
+    ulong i;
 
-    if (n == (UWORD(1)<<norm) || (a == 0 && exp != 0)) return UWORD(0);
-
-    if (exp)
+    for (i = 0; i < f->p; i++)
     {
-       while ((exp & 1) == 0)
-       {
-          a = n_mulmod_preinv(a, a, n, ninv, norm);
-          exp >>= 1;
-       }
-
-       x = a;
-       
-       while (exp >>= 1)
-       {
-          a = n_mulmod_preinv(a, a, n, ninv, norm);
-          if (exp & 1) x = n_mulmod_preinv(x, a, n, ninv, norm);
-       }
-
-       return x;
-    } else
-       return (UWORD(1)<<norm);
+        fmpz_mod_poly_set(f->polys[i], g->polys[i]);
+    }
 }
-
 

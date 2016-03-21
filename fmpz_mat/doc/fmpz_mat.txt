@@ -523,6 +523,12 @@ void fmpz_mat_mul_classical(fmpz_mat_t C,
 
     The matrices must have compatible dimensions for matrix multiplication.
     No aliasing is allowed.
+    
+void fmpz_mat_mul_strassen(fmpz_mat_t C, const fmpz_mat_t A, const fmpz_mat_t B)
+
+    Sets $C = AB$. Dimensions must be compatible for matrix multiplication.
+    $C$ is not allowed to be aliased with $A$ or $B$. Uses Strassen
+    multiplication (the Strassen-Winograd variant).
 
 void _fmpz_mat_mul_multi_mod(fmpz_mat_t C,
             const fmpz_mat_t A, const fmpz_mat_t B, mp_bitcnt_t bits)
@@ -761,10 +767,10 @@ void fmpz_mat_charpoly(fmpz_poly_t cp, const fmpz_mat_t mat)
 
 *******************************************************************************
 
-void _fmpz_mat_minpoly_modular(fmpz * cp, const fmpz_mat_t mat)
+slong _fmpz_mat_minpoly_modular(fmpz * cp, const fmpz_mat_t mat)
 
     Sets \code{(cp, n+1)} to the modular polynomial of 
-    an $n \times n$ square matrix.
+    an $n \times n$ square matrix and returns its length.
 
 void fmpz_mat_minpoly_modular(fmpz_poly_t cp, const fmpz_mat_t mat)
 
@@ -772,7 +778,7 @@ void fmpz_mat_minpoly_modular(fmpz_poly_t cp, const fmpz_mat_t mat)
     Uses a modular method based on an average time $O~(n^3)$, worst case
     $O(n^4)$ method over $\mathbb{Z}/n\mathbb{Z}$.
 
-void _fmpz_mat_minpoly(fmpz * cp, const fmpz_mat_t mat)
+slong _fmpz_mat_minpoly(fmpz * cp, const fmpz_mat_t mat)
 
     Sets \code{cp} to the minimal polynomial of an $n \times n$ square
     matrix and returns its length.

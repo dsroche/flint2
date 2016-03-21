@@ -19,7 +19,7 @@
 =============================================================================*/
 /******************************************************************************
 
-    Copyright (C) 2006, 2007, 2008, 2009 William Hart
+    Copyright (C) 2006, 2007, 2008, 2009, 2016 William Hart
     Copyright (C) 2008, Peter Shrimpton
     Copyright (C) 2009, Tom Boothby
     Copyright (C) 2010, Fredrik Johansson
@@ -80,6 +80,8 @@ typedef struct {
 #else
 #define UWORD_MAX_PRIME UWORD(4294967291)
 #endif
+
+#define UWORD_HALF (UWORD_MAX / 2 + 1)
 
 typedef struct
 {
@@ -200,38 +202,59 @@ FLINT_DLL ulong n_lll_mod_preinv(ulong a_hi, ulong a_mi,
 FLINT_DLL ulong n_mulmod_precomp(ulong a, ulong b, 
                                            ulong n, double ninv);
 
-FLINT_DLL ulong n_mulmod2_preinv(ulong a, ulong b, 
-                                        ulong n, ulong ninv);
+ULONG_EXTRAS_INLINE
+ulong n_mulmod2_preinv(ulong a, ulong b, ulong n, ulong ninv)
+{
+    ulong p1, p2;
+
+    FLINT_ASSERT(n != 0);
+
+    umul_ppmm(p1, p2, a, b);
+    return n_ll_mod_preinv(p1, p2, n, ninv);
+}
+
+ULONG_EXTRAS_INLINE
+ulong n_mulmod2(ulong a, ulong b, ulong n)
+{
+    ulong p1, p2, ninv;
+
+    FLINT_ASSERT(n != 0);
+
+    ninv = n_preinvert_limb(n);
+    umul_ppmm(p1, p2, a, b);
+    return n_ll_mod_preinv(p1, p2, n, ninv);
+}
 
 FLINT_DLL ulong n_mulmod_preinv(ulong a, ulong b, 
                             ulong n, ulong ninv, ulong norm);
 
 FLINT_DLL ulong n_powmod_ui_precomp(ulong a, ulong exp, ulong n, double npre);
 
-FLINT_DLL ulong n_powmod_precomp(ulong a, 
-                     mp_limb_signed_t exp, ulong n, double npre);
+FLINT_DLL ulong n_powmod_precomp(ulong a, slong exp, ulong n, double npre);
 
 ULONG_EXTRAS_INLINE
-ulong n_powmod(ulong a, mp_limb_signed_t exp, ulong n)
+ulong n_powmod(ulong a, slong exp, ulong n)
 {
    double npre = n_precompute_inverse(n);
 
    return n_powmod_precomp(a, exp, n, npre);
 }
 
-FLINT_DLL ulong n_powmod2_preinv(ulong a, 
-                  mp_limb_signed_t exp, ulong n, ulong ninv);
+FLINT_DLL ulong n_powmod2_preinv(ulong a, slong exp, ulong n, ulong ninv);
 
-FLINT_DLL ulong n_powmod2_ui_preinv(ulong a, ulong exp,
-                                            ulong n, ulong ninv);
+FLINT_DLL ulong n_powmod2_ui_preinv(ulong a, ulong exp, ulong n, ulong ninv);
 
 FLINT_DLL ulong n_powmod_ui_preinv(ulong a, ulong exp, ulong n, 
-                                             ulong ninv, ulong norm);
+                                                       ulong ninv, ulong norm);
 
 ULONG_EXTRAS_INLINE
-ulong n_powmod2(ulong a, mp_limb_signed_t exp, ulong n)
+ulong n_powmod2(ulong a, slong exp, ulong n)
 {
-   ulong ninv = n_preinvert_limb(n);
+   ulong ninv;
+
+   FLINT_ASSERT(n != 0);
+
+   ninv = n_preinvert_limb(n);
 
    return n_powmod2_preinv(a, exp, n, ninv);
 }
@@ -239,18 +262,29 @@ ulong n_powmod2(ulong a, mp_limb_signed_t exp, ulong n)
 ULONG_EXTRAS_INLINE
 ulong n_addmod(ulong x, ulong y, ulong n)
 {
+    FLINT_ASSERT(x < n);
+    FLINT_ASSERT(y < n);
+    FLINT_ASSERT(n != 0);
+
     return (n - y > x ? x + y : x + y - n);
 }
 
 ULONG_EXTRAS_INLINE
 ulong n_submod(ulong x, ulong y, ulong n)
 {
+    FLINT_ASSERT(x < n);
+    FLINT_ASSERT(y < n);
+    FLINT_ASSERT(n != 0);
+
     return (y > x ? x - y + n : x - y);
 }
 
 ULONG_EXTRAS_INLINE
 ulong n_negmod(ulong x, ulong n)
 {
+    FLINT_ASSERT(x < n);
+    FLINT_ASSERT(n != 0);
+
     return n_submod(0, x, n);
 }
 
@@ -269,13 +303,23 @@ FLINT_DLL ulong n_gcd(ulong x, ulong y);
 
 FLINT_DLL ulong n_xgcd(ulong * a, ulong * b, ulong x, ulong y);
 
-FLINT_DLL ulong n_invmod(ulong x, ulong y);
-
 FLINT_DLL ulong n_gcdinv(ulong * a, ulong x, ulong y);
+
+ULONG_EXTRAS_INLINE
+ulong n_invmod(ulong x, ulong y)
+{
+   ulong r, g;
+
+   g = n_gcdinv(&r, x, y);
+   if (g != 1)
+      flint_throw(FLINT_IMPINV, "Cannot invert modulo %wd*%wd\n", g, g/y);
+
+   return r;
+}
 
 FLINT_DLL ulong n_revbin(ulong in, ulong bits);
 
-FLINT_DLL int n_jacobi(mp_limb_signed_t x, ulong y);
+FLINT_DLL int n_jacobi(slong x, ulong y);
 
 FLINT_DLL int n_jacobi_unsigned(ulong x, ulong y);
 
@@ -369,6 +413,15 @@ FLINT_DLL void n_factor(n_factor_t * factors, ulong n, int proved);
 
 FLINT_DLL ulong n_factor_pp1(ulong n, ulong B1, ulong c);
 
+FLINT_DLL int n_factor_pollard_brent_single(ulong *factor, ulong n, 
+                                            ulong ninv, ulong ai, 
+                                            ulong xi, ulong normbits,
+                                            ulong max_iters);
+
+FLINT_DLL int n_factor_pollard_brent(ulong *factor, flint_rand_t state, 
+                                     ulong n_in, ulong max_tries, 
+                                     ulong max_iters);
+
 FLINT_DLL int n_is_squarefree(ulong n);
 
 FLINT_DLL int n_moebius_mu(ulong n);
@@ -396,6 +449,74 @@ FLINT_DLL ulong n_root_estimate(double a, int n);
 FLINT_DLL ulong n_rootrem(ulong* remainder, ulong n, ulong root);
 
 FLINT_DLL ulong n_root(ulong n, ulong root);
+
+/***** ECM functions *********************************************************/
+
+typedef struct n_ecm_s {
+
+    ulong x, z;        /* the coordinates */
+    ulong a24;         /* value (a + 2)/4 */
+    ulong ninv;
+    ulong normbits;
+    ulong one;
+
+    unsigned char *GCD_table; /* checks whether baby step int is
+                           coprime to Primorial or not */
+
+    unsigned char **prime_table;
+
+} n_ecm_s;
+
+typedef n_ecm_s n_ecm_t[1];
+
+FLINT_DLL void n_factor_ecm_double(ulong *x, ulong *z, ulong x0,
+                                   ulong z0, ulong n, n_ecm_t n_ecm_inf);
+
+FLINT_DLL void n_factor_ecm_add(ulong *x, ulong *z, ulong x1,
+                                ulong z1, ulong x2, ulong z2, 
+                                ulong x0, ulong z0, ulong n, 
+                                n_ecm_t n_ecm_inf);
+
+FLINT_DLL void n_factor_ecm_mul_montgomery_ladder(ulong *x, ulong *z,
+                                                  ulong x0, ulong z0,
+                                                  ulong k, ulong n, 
+                                                  n_ecm_t n_ecm_inf);
+
+FLINT_DLL int n_factor_ecm_select_curve(ulong *f, ulong sig, ulong n,
+                                        n_ecm_t n_ecm_inf);
+
+FLINT_DLL int n_factor_ecm_stage_I(ulong *f, const ulong *prime_array,
+                                   ulong num, ulong B1, ulong n,
+                                   n_ecm_t n_ecm_inf);
+
+FLINT_DLL int n_factor_ecm_stage_II(ulong *f, ulong B1, ulong B2,
+                                    ulong P, ulong n, n_ecm_t n_ecm_inf);
+
+FLINT_DLL int n_factor_ecm(ulong *f, ulong curves, ulong B1,
+                           ulong B2, flint_rand_t state, ulong n);
+
+FLINT_DLL mp_limb_t n_mulmod_precomp_shoup(mp_limb_t w, mp_limb_t p);
+
+static __inline__
+mp_limb_t
+n_mulmod_shoup(mp_limb_t w, mp_limb_t t, mp_limb_t w_precomp, mp_limb_t p)
+{
+   mp_limb_t q, r, p_hi, p_lo;
+
+   umul_ppmm(p_hi, p_lo, w_precomp, t);
+   q = p_hi;
+
+   
+   r = w * t;
+   r -= q * p;
+
+   if (r >= p)
+   {
+      r -= p;
+   }
+
+    return r;
+}
 
 #ifdef __cplusplus
 }

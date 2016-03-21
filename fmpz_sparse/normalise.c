@@ -29,22 +29,29 @@ void _fmpz_sparse_normalise(fmpz_sparse_t poly)
 {
     /* A modified insertion sort collects terms with the same exponent. */
     /* TODO: incorporate quicksort for larger sizes */
-    slong cur = 1;
+
     /* nfree will hold the number of emptied terms not yet removed */
-    slong nfree = 0; 
-    for (; cur < poly->length; ++cur) {
-        slong i = cur-nfree-1;
+    slong cur = 1, nfree = 0, i; 
+
+    for (; cur < poly->length; ++cur) 
+    {
+        i = cur-nfree-1;
+
         /* find the position where cur belongs */
         for (; i >= 0 && fmpz_cmp(poly->expons + i, poly->expons + cur) < 0; --i);
-        if (i >= 0 && fmpz_equal(poly->expons + i, poly->expons + cur)) {
+
+        if (i >= 0 && fmpz_equal(poly->expons + i, poly->expons + cur))
+        {
             /* collision */
             fmpz_add(poly->coeffs + i, poly->coeffs + i, poly->coeffs + cur);
             fmpz_clear(poly->coeffs + cur);
             fmpz_clear(poly->expons + cur);
             ++nfree;
         }
-        else if (i+1 < cur) {
-            if (nfree == 0) {
+        else if (i+1 < cur) 
+        {
+            if (nfree == 0)
+            {
                 fmpz temp[2];
                 temp[0] = poly->coeffs[cur];
                 temp[1] = poly->expons[cur];
@@ -52,17 +59,21 @@ void _fmpz_sparse_normalise(fmpz_sparse_t poly)
                 poly->coeffs[i+1] = temp[0];
                 poly->expons[i+1] = temp[1];
             }
-            else {
+            else 
+            {
                 _fmpz_sparse_vec_shift(poly, i+1, cur-nfree, 1);
                 fmpz_swap(poly->coeffs+i+1, poly->coeffs+cur);
                 fmpz_swap(poly->expons+i+1, poly->expons+cur);
             }
         }
     }
-    poly->length -= nfree;
+
+    _fmpz_sparse_set_length(poly, poly->length - nfree);
     nfree = 0;
+
     /* 2nd pass: remove zero terms */
     for (cur=0; cur < poly->length && ! fmpz_is_zero(poly->coeffs + cur); ++cur);
+
     while (cur < poly->length) {
         slong start = cur;
         for (; cur < poly->length && fmpz_is_zero(poly->coeffs + cur); ++cur);
@@ -71,5 +82,6 @@ void _fmpz_sparse_normalise(fmpz_sparse_t poly)
         for (; cur < poly->length && ! fmpz_is_zero(poly->coeffs + cur); ++cur);
         _fmpz_sparse_vec_shift(poly, start, cur, -nfree);
     }
-    poly->length -= nfree;
+
+    _fmpz_sparse_set_length(poly, poly->length - nfree);
 }
