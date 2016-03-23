@@ -153,8 +153,7 @@ fmpz_heap_pop(heap_t heap)
         }
         else
             break;
-    }
-  
+    } 
 }
 
 void
@@ -209,8 +208,7 @@ fmpz_sparse_mul_heaps(fmpz_sparse_t res, const fmpz_sparse_t poly1, const fmpz_s
         _fmpz_sparse_reserve(res, poly1->length*poly2->length);
         
         fmpz_heap_init(heap, poly1->length);
-        
-        
+               
         for(i = 0; i < poly1->length; ++i)
         {
             fmpz_mul((heap->nodes + i)->coeffs, poly1->coeffs + i, poly2->coeffs);

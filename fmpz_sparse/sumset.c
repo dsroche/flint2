@@ -73,10 +73,6 @@ fmpz_diff_prime(fmpz_t res, flint_rand_t state, slong support, mp_bitcnt_t deg_b
   fmpz_randprime(res, state, bits, 0);
 }
 
-/* get prime roots to get p with subsequent q's for reduction and relaxation */
-/* void get_prime_roots(fmpz * p, fmpz * q) */
-
-
 slong
 fmpz_sparse_sumcheck(fmpz ** res, const fmpz_sparse_t poly1, const fmpz_sparse_t poly2)
 {
@@ -151,6 +147,15 @@ fmpz_sparse_sumset(fmpz ** res, flint_rand_t state, const fmpz_sparse_t poly1, c
   {
     res = NULL;
     return 0;
+  }
+
+  if(poly1->length ==1 && poly2->length == 1)
+  {
+    final = _fmpz_vec_init(1);
+    fmpz_add(final, poly1->expons+0, poly2->expons+0);
+      /*final = temp;*/
+    *res = final;
+    return 1; 
   }
 
   fmpz_sparse_init(f_1);

@@ -43,7 +43,7 @@ main(void)
 
     
     /* Check aliasing of a and b */
-    for (i = 0; i < 10 * flint_test_multiplier(); i++)
+    for (i = 0; i < 100 * flint_test_multiplier(); i++)
     {
         fmpz_sparse_t b, c;
         fmpz_t d, e;
