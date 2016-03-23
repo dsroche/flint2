@@ -52,22 +52,22 @@ main(void)
 
         fmpz_init(d);
         fmpz_init(e);
-        fmpz_randtest(d, state, 10);
-        fmpz_randtest(e, state, 10);
+        fmpz_randtest(d, state, 30);
+        fmpz_randtest(e, state, 30);
 
         fmpz_sparse_init(b);
         fmpz_sparse_init(c);
-        fmpz_sparse_randtest(b, state, n_randint(state, 10), d, 10);
-        fmpz_sparse_randtest(c, state, n_randint(state, 10), e, 10);
+        fmpz_sparse_randtest(b, state, n_randint(state, 100), d, 100);
+        fmpz_sparse_randtest(c, state, n_randint(state, 100), e, 100);
 
         vec1 = NULL;
         vec2 = NULL;
 
-        flint_printf("poly1: ");
+        /*flint_printf("poly1: ");
         fmpz_sparse_print(b);
         flint_printf("\npoly2: ");
         fmpz_sparse_print(c);
-        flint_printf("\n");
+        flint_printf("\n");*/
 
         len1 = fmpz_sparse_sumcheck(&vec1, b, c);
         len2 = fmpz_sparse_sumset(&vec2, state, b, c);
@@ -75,7 +75,10 @@ main(void)
         result = (len1 == len2 && _fmpz_vec_equal(vec1, vec2, len1));
         if (!result)
         {
-          flint_printf("FAIL:\nvector_1: ");
+          flint_printf("FAIL:\npoly_1: ");
+
+          fmpz_sparse_print(c), flint_printf("\n\npoly_2: ");
+          fmpz_sparse_print(b), flint_printf("\n\nvector_1: ");
           _fmpz_vec_print(vec1, len1), flint_printf("\n\nvector_2: ");
           _fmpz_vec_print(vec2, len2), flint_printf("\n\n");
           abort();

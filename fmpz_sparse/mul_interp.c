@@ -32,6 +32,7 @@ fmpz_sparse_mul_interp(fmpz_sparse_t res, flint_rand_t state, const fmpz_sparse_
 {
     fmpz_sparse_bp_interp_t f;
     fmpz_t h1, h2, d;
+    slong test;
 
     fmpz_init(h1);
     fmpz_init(h2);
@@ -50,7 +51,8 @@ fmpz_sparse_mul_interp(fmpz_sparse_t res, flint_rand_t state, const fmpz_sparse_
 
     fmpz_sparse_bp_interp_mul(f, poly2);
 
-    fmpz_sparse_bp_interp(res, f);
+    test = fmpz_sparse_bp_interp(res, f);
+    FLINT_ASSERT(test);
 
     fmpz_sparse_bp_interp_clear(f);
 

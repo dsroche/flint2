@@ -83,7 +83,6 @@ fmpz_sparse_sumcheck(fmpz ** res, const fmpz_sparse_t poly1, const fmpz_sparse_t
 
   if(len == 0)
   {
-    flint_printf("got zero\n");
     return 0;
   }
   test = _fmpz_vec_init(len);
@@ -149,13 +148,36 @@ fmpz_sparse_sumset(fmpz ** res, flint_rand_t state, const fmpz_sparse_t poly1, c
     return 0;
   }
 
-  if(poly1->length ==1 && poly2->length == 1)
+  if(poly1->length == 1 && poly2->length == 1)
   {
     final = _fmpz_vec_init(1);
     fmpz_add(final, poly1->expons+0, poly2->expons+0);
       /*final = temp;*/
     *res = final;
     return 1; 
+  }
+
+  if(poly1->length == 1)
+  {
+    final = _fmpz_vec_init(poly2->length);
+    len = poly2->length;
+
+    for(i = 0; i < len; i++)
+      fmpz_add(final + i, poly2->expons + i, poly1->expons+0);
+    _fmpz_vec_sort(final, len);
+    *res = final; 
+    return len;
+  }
+  else if(poly2->length == 1)
+  {
+    final = _fmpz_vec_init(poly1->length);
+    len = poly1->length;
+    
+    for(i = 0; i < len; i++)
+      fmpz_add(final + i, poly1->expons + i, poly2->expons+0);
+    _fmpz_vec_sort(final, len);
+    *res = final; 
+    return len;
   }
 
   fmpz_sparse_init(f_1);
@@ -213,7 +235,13 @@ fmpz_sparse_sumset(fmpz ** res, flint_rand_t state, const fmpz_sparse_t poly1, c
   for(i = 0; i < FLINT_MAX(22.1807097779182499013514, log(R)/0.693147180559945309417232121458 + 1); i++)
   {
     fmpz_diff_prime(temp, state, 2*Ss, fmpz_bits(p) + 1, .5);
+  
+    /*flint_printf("\nq: ");
+    fmpz_print(temp);
+    flint_printf("\n");*/
+
     q = fmpz_get_si(temp);
+    /*flint_printf("\nsi: %wd\n",q);*/
     
     fmpz_sparse_rem_cyc_nmod(f_nmod, f_1, q, R*R);
     fmpz_sparse_rem_cyc_nmod(g_nmod, g_1, q, R*R);
@@ -224,7 +252,7 @@ fmpz_sparse_sumset(fmpz ** res, flint_rand_t state, const fmpz_sparse_t poly1, c
     len = 0;
     for(j = 0; j < nmod_poly_length(h_nmod); ++j)
     {
-      if(nmod_poly_get_coeff_ui(h_nmod, i) != 0)
+      if(nmod_poly_get_coeff_ui(h_nmod, j) != 0)
         len++;
     }
 
@@ -233,7 +261,9 @@ fmpz_sparse_sumset(fmpz ** res, flint_rand_t state, const fmpz_sparse_t poly1, c
   }
   
   /* h_1 and h_2 */
-  fmpz_mul_si(L, degree, 16);
+  fmpz_add(L, poly1->expons+0, poly2->expons+0);
+  fmpz_mul_si(L, L, FLINT_MIN(poly1->length, poly2->length));
+  fmpz_add_ui(L, L, 1);
 
   fmpz_sparse_set(f_2, poly1);
   fmpz_sparse_set(g_2, poly2);
@@ -250,15 +280,18 @@ fmpz_sparse_sumset(fmpz ** res, flint_rand_t state, const fmpz_sparse_t poly1, c
   fmpz_sparse_rem_cyc(f_2, f_2, p);
   fmpz_sparse_rem_cyc(g_2, g_2, p);
 
-  fmpz_sparse_mul_classical(h_1, f_1, g_1);
-  fmpz_sparse_mul_classical(h_2, f_2, g_2);
+  fmpz_sparse_mul_interp(h_1, state, f_1, g_1, Ss);
+  fmpz_sparse_mul_interp(h_2, state, f_2, g_2, Ss);
+  /*fmpz_sparse_mul_classical(h_1, f_1, g_1);
+  fmpz_sparse_mul_classical(h_2, f_2, g_2);*/
 
   fmpz_sparse_rem_cyc(h_1, h_1, p);
   fmpz_sparse_rem_cyc(h_2, h_2, p);
 
-  flint_printf("L: ");
+  /*flint_printf("L: ");
   fmpz_print(L);
-  flint_printf("\n");
+  flint_printf(" Ss: %ld", Ss);
+  flint_printf("\n");*/
   fmpz_mul(temp, L, L);
   
   _fmpz_vec_scalar_mod_fmpz(h_1->coeffs, h_1->coeffs, h_1->length, temp);
@@ -273,16 +306,16 @@ fmpz_sparse_sumset(fmpz ** res, flint_rand_t state, const fmpz_sparse_t poly1, c
   R = 0;
   len = 0;
 
-  fmpz_fdiv_q_si(temp, temp, 2); 
+  /*fmpz_fdiv_q_si(temp, temp, 2); */
   while(i < h_1->length && R < h_2->length)
   {
     if(fmpz_equal(h_1->expons + i, h_2->expons + R))
     {
-      if(fmpz_cmp(h_2->coeffs + R, temp) >= 0)
+      /*if(fmpz_cmp(h_2->coeffs + R, temp) >= 0)
       {
         fmpz_sub(h_2->coeffs + R, h_2->coeffs + R, temp);
         fmpz_sub(h_2->coeffs + R, h_2->coeffs + R, temp);
-      }
+      }*/
       fmpz_cdiv_q(final + len, h_2->coeffs + R, h_1->coeffs + i);
       fmpz_sub_ui(final + len, final + len, 1);
       fmpz_cdiv_q(final + len, final + len, L);
@@ -298,6 +331,19 @@ fmpz_sparse_sumset(fmpz ** res, flint_rand_t state, const fmpz_sparse_t poly1, c
         i++;
     }
   }
+
+  /*print q, p, Ss, L, temp*/
+  flint_printf("q: %wd\n", q);
+  flint_printf("p: ");
+  fmpz_print(p);
+  flint_printf("Ss: %wd\n", Ss);
+  flint_printf("L: ");
+  fmpz_print(L);
+  flint_printf("\n", Ss);
+  flint_printf("L^2: ");
+  fmpz_print(temp);
+  flint_printf("\n", Ss);
+
 
   _fmpz_vec_sort(final, len);
   *res = final;
