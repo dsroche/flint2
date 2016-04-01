@@ -136,9 +136,9 @@ int main(int argc, char** argv)
     for (i=0; i<NUMEX; ++i)
     {
         fmpz_sparse_clear(orig+i);
-        fmpz_sparse_bp_interp_clear(interps+i);
     }
-    fmpz_sparse_clear(res);
+    _fmpz_vec_clear(res, len1);
+    _fmpz_vec_clear(check, len2);
     fmpz_clear(H);
     fmpz_clear(D);
 

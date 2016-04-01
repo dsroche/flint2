@@ -43,7 +43,7 @@ main(void)
 
     
     /* Check aliasing of a and b */
-    for (i = 0; i < 100 * flint_test_multiplier(); i++)
+    for (i = 0; i < 10 * flint_test_multiplier(); i++)
     {
         fmpz_sparse_t b, c;
         fmpz_t d, e;
@@ -57,8 +57,8 @@ main(void)
 
         fmpz_sparse_init(b);
         fmpz_sparse_init(c);
-        fmpz_sparse_randtest(b, state, n_randint(state, 100), d, 100);
-        fmpz_sparse_randtest(c, state, n_randint(state, 100), e, 100);
+        fmpz_sparse_randtest(b, state, n_randint(state, 10), d, 10);
+        fmpz_sparse_randtest(c, state, n_randint(state, 10), e, 10);
 
         vec1 = NULL;
         vec2 = NULL;

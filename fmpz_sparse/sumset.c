@@ -97,9 +97,9 @@ fmpz_sparse_sumcheck(fmpz ** res, const fmpz_sparse_t poly1, const fmpz_sparse_t
   
   _fmpz_vec_sort(test,len);
 
-  flint_printf("test vec: ");
+  /*flint_printf("test vec: ");
   _fmpz_vec_print(test,len);
-  flint_printf("\n");
+  flint_printf("\n");*/
 
   j = 1;
   for(i = 0; i < len - 1; i++)
@@ -142,6 +142,7 @@ fmpz_sparse_sumset(fmpz ** res, flint_rand_t state, const fmpz_sparse_t poly1, c
   fmpz_t L, p, temp, degree;
   fmpz * final;
 
+  q = 0;
   if(fmpz_sparse_is_zero(poly1) || fmpz_sparse_is_zero(poly2))
   {
     res = NULL;
@@ -333,7 +334,7 @@ fmpz_sparse_sumset(fmpz ** res, flint_rand_t state, const fmpz_sparse_t poly1, c
   }
 
   /*print q, p, Ss, L, temp*/
-  flint_printf("q: %wd\n", q);
+  /*flint_printf("q: %wd\n", q);
   flint_printf("p: ");
   fmpz_print(p);
   flint_printf("Ss: %wd\n", Ss);
@@ -342,7 +343,7 @@ fmpz_sparse_sumset(fmpz ** res, flint_rand_t state, const fmpz_sparse_t poly1, c
   flint_printf("\n", Ss);
   flint_printf("L^2: ");
   fmpz_print(temp);
-  flint_printf("\n", Ss);
+  flint_printf("\n", Ss);*/
 
 
   _fmpz_vec_sort(final, len);
