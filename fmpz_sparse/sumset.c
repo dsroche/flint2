@@ -135,7 +135,6 @@ fmpz_sparse_sumcheck(fmpz ** res, const fmpz_sparse_t poly1, const fmpz_sparse_t
 slong
 fmpz_sparse_sumset(fmpz ** res, flint_rand_t state, const fmpz_sparse_t poly1, const fmpz_sparse_t poly2) 
 {
-  /*TODO degree is a fmpz*/
   fmpz_sparse_t f_1, g_1, f_2, g_2, h_1, h_2;
   nmod_poly_t f_nmod, g_nmod, h_nmod;
   slong len, Ss, R, i, j, q;
@@ -153,7 +152,6 @@ fmpz_sparse_sumset(fmpz ** res, flint_rand_t state, const fmpz_sparse_t poly1, c
   {
     final = _fmpz_vec_init(1);
     fmpz_add(final, poly1->expons+0, poly2->expons+0);
-      /*final = temp;*/
     *res = final;
     return 1; 
   }
