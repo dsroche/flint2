@@ -26,7 +26,6 @@
 #include "fmpz_sparse.h"
 #include "fmpz_vec.h"
 #include "fmpz_mod_poly.h"
-#include "bp_interp.c"
 
 static const double LN_2 = 0.693147180559945309417232121458;
 
@@ -35,10 +34,10 @@ _fmpz_sparse_mul_coeffs(fmpz_sparse_t res, flint_rand_t state,
     const fmpz_sparse_t poly1, const fmpz_sparse_t poly2, const fmpz * expons,
     slong len)
 {
-  fmpz * qq, * ww, * vv, * coeffs, * mod_expons, * eval1, * eval2, * coeffs_mod_q, * poly;
+  fmpz_mod_poly_t poly;
+  fmpz * qq, * ww, * vv, * coeffs, * mod_expons, * eval1, * eval2, * coeffs_mod_q;
   fmpz_t p, C, H, T, D, temp, q_total;
   slong p_bits, q_prod_bits, n, num_primes, i, j, k;
-  fmpz_poly_struct ** poly_tree;
 
   fmpz_init(p);
   fmpz_init(C);
@@ -73,7 +72,6 @@ _fmpz_sparse_mul_coeffs(fmpz_sparse_t res, flint_rand_t state,
   mod_expons = _fmpz_vec_init(len);
   eval1 = _fmpz_vec_init(len);
   eval2 = _fmpz_vec_init(len);
-  poly = _fmpz_vec_init(len);
 
   num_primes = _fmpz_sparse_prim_roots(p, qq, ww, state, n, p_bits, q_prod_bits);
   
@@ -90,10 +88,6 @@ _fmpz_sparse_mul_coeffs(fmpz_sparse_t res, flint_rand_t state,
   
     for(j = 0; j < len; j++)
     {
-      /*
-      * eval f at each vv + j
-      * eval g at each vv + j
-      * */
       fmpz_sparse_evaluate_mod(eval1 + j, poly1, vv + j, qq + i);
       fmpz_sparse_evaluate_mod(eval2 + j, poly2, vv + j, qq + i);
     }
@@ -103,21 +97,12 @@ _fmpz_sparse_mul_coeffs(fmpz_sparse_t res, flint_rand_t state,
       fmpz_mul(eval1 + j, eval1 + j, eval2 + j);
     }
 
-    /* 
-     * transposed vandermonde calculates coeffs mod q
-     *    go to bp_interp
-     *      use void _fmpz_mod_poly_transposed_vandermonde(fmpz* coeffs_mod_q,
-     *          const fmpz* vv, const fmpz* evals_prod, slong len, 
-     *          const fmpz* poly, const fmpz_t qq + i)
-     * */
-    /*TODO use 35.28 and the test code to implement _fmpz_mod_poly_tree from vv*/
-    poly_tree = _fmpz_mod_poly_tree_alloc(len);
-    _fmpz_mod_poly_tree_build(poly_tree, vv, len, qq + i);
-    
-    /*_fmpz_mod_poly_transposed_vandermonde(coeffs_mod_q, vv, eval1, len, TODO poly or &poly_tree, qq + i);*/
-    /*_fmpz_mod_poly_transposed_vandermonde(coeffs_mod_q, vv, eval1, len, *poly_tree, qq + i);*/
-    
-    _fmpz_mod_poly_tree_free(poly_tree, len);
+    fmpz_mod_poly_init(poly, qq + i);
+    _fmpz_mod_poly_build_roots(poly, vv, len);
+
+    _fmpz_mod_poly_transposed_vandermonde(coeffs_mod_q, vv, eval1, len, poly->coeffs, qq + i);
+
+    fmpz_mod_poly_clear(poly);
 
     for(k = 0; k < len; k++)
     {
@@ -148,7 +133,6 @@ _fmpz_sparse_mul_coeffs(fmpz_sparse_t res, flint_rand_t state,
   _fmpz_vec_clear(coeffs_mod_q, len);
   _fmpz_vec_clear(eval1, len);
   _fmpz_vec_clear(eval2, len);
-  _fmpz_vec_clear(poly,len);
 
   fmpz_clear(p);
   fmpz_clear(C);

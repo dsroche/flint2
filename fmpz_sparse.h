@@ -48,6 +48,7 @@
 #include "fmpz_vec.h"
 #include "nmod_poly.h"
 #include "fmpz_poly.h"
+#include "fmpz_mod_poly.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -1040,6 +1041,18 @@ FLINT_DLL slong fmpz_sparse_sumcheck(fmpz ** res, const fmpz_sparse_t poly1,
 
 FLINT_DLL slong fmpz_sparse_sumset(fmpz ** res, flint_rand_t state, const 
     fmpz_sparse_t poly1, const fmpz_sparse_t poly2);
+
+FLINT_DLL void _fmpz_mod_poly_powmod_x_2exp(fmpz* res,
+    const fmpz* poly, slong len, ulong k, const fmpz_t p);
+
+FLINT_DLL slong _fmpz_mod_poly_binary_roots(fmpz* roots, fmpz* expons,
+    const fmpz* poly, slong len, const fmpz_t theta, slong k, const fmpz_t p);
+
+FLINT_DLL void _fmpz_mod_poly_transposed_vandermonde(fmpz* xx,
+    const fmpz* vv, const fmpz* bb, slong len, const fmpz* poly, const fmpz_t p);
+
+FLINT_DLL void _fmpz_mod_poly_build_roots(fmpz_mod_poly_t res, 
+    const fmpz * roots, slong len);
 
 /* TODO: CRT would be nice, but we would need a fmpz_sparse_nmod type first. */
 

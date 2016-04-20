@@ -63,9 +63,8 @@ fmpz_sparse_mul_OS(fmpz_sparse_t res, flint_rand_t state, const fmpz_sparse_t po
   fmpz_mul(C, C, g_height);
 
   fmpz_van_prime(p, state, length, fmpz_bits(C), .125);  
-    /*GET PRIM ROOTS (changes values of a value p, array q, array w)*/
 
-  fmpz_sparse_zero(res);
+  _fmpz_sparse_mul_coeffs(res, state, poly1, poly2, test, length);
 
   fmpz_clear(f_height);
   fmpz_clear(g_height);
