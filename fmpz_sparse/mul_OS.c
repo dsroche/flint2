@@ -30,9 +30,9 @@
 void
 fmpz_sparse_mul_OS(fmpz_sparse_t res, flint_rand_t state, const fmpz_sparse_t poly1, const fmpz_sparse_t poly2)
 {
-  /*fmpz * test;
+  fmpz * test;
   slong length;
-  fmpz_t f_height, g_height, C, p;
+  fmpz_t f_height, g_height, f_deg, g_deg, C, p;
 
   fmpz_init(f_height);
   fmpz_init(g_height);
@@ -40,19 +40,19 @@ fmpz_sparse_mul_OS(fmpz_sparse_t res, flint_rand_t state, const fmpz_sparse_t po
   fmpz_init(g_deg);
   fmpz_init(C);
   fmpz_init(p);
-
-  test = NULL;*/
+  
+  test = NULL;
 
   flint_printf("\nthere is no god\n");
   length = fmpz_sparse_sumset(&test, state, poly1, poly2);
 
   /*SPARSE_MUL_COEFFS*/
   /*C = F-height*g_height*MAX_DEGREE(f, g)*/
-  fmpz_sparse_get_height(f_height, poly1);
-  fmpz_sparse_get_height(g_height, poly2);
+  fmpz_sparse_height(f_height, poly1);
+  fmpz_sparse_height(g_height, poly2);
 
-  fmpz_sparse_get_degree(f_deg, poly1);
-  fmpz_sparse_get_degree(g_deg, poly2);
+  fmpz_sparse_degree(f_deg, poly1);
+  fmpz_sparse_degree(g_deg, poly2);
 
   if(fmpz_cmp(f_deg, g_deg) > 0)
     fmpz_set(C, f_deg);
@@ -65,8 +65,6 @@ fmpz_sparse_mul_OS(fmpz_sparse_t res, flint_rand_t state, const fmpz_sparse_t po
   fmpz_van_prime(p, state, length, fmpz_bits(C), .125);  
     /*GET PRIM ROOTS (changes values of a value p, array q, array w)*/
 
-    
-  /*CHINESE REMAINDER THEOREM*/
   fmpz_sparse_zero(res);
 
   fmpz_clear(f_height);
