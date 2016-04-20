@@ -76,7 +76,6 @@ main(void)
         if (!result)
         {
           flint_printf("FAIL:\npoly_1: ");
-
           fmpz_sparse_print(c), flint_printf("\n\npoly_2: ");
           fmpz_sparse_print(b), flint_printf("\n\nvector_1: ");
           _fmpz_vec_print(vec1, len1), flint_printf("\n\nvector_2: ");
@@ -86,13 +85,15 @@ main(void)
 
         fmpz_sparse_clear(b);
         fmpz_sparse_clear(c);
-        if(len1 > 1)
-          _fmpz_vec_clear(vec1, len1);
-        if(len2 > 1)
-          _fmpz_vec_clear(vec2, len2);
         fmpz_clear(d);
+        if(len1 > 0)
+          _fmpz_vec_clear(vec1, len1);
+        if(len2 > 0)
+          _fmpz_vec_clear(vec2, len2);
         fmpz_clear(e);
     }
+
+    
 
     FLINT_TEST_CLEANUP(state);
     

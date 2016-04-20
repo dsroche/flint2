@@ -144,7 +144,6 @@ fmpz_sparse_sumset(fmpz ** res, flint_rand_t state, const fmpz_sparse_t poly1, c
   q = 0;
   if(fmpz_sparse_is_zero(poly1) || fmpz_sparse_is_zero(poly2))
   {
-    res = NULL;
     return 0;
   }
 
@@ -347,7 +346,6 @@ fmpz_sparse_sumset(fmpz ** res, flint_rand_t state, const fmpz_sparse_t poly1, c
   _fmpz_vec_sort(final, len);
   *res = final;
 
-  return len;
 
   fmpz_clear(L);
   fmpz_clear(temp);
@@ -355,10 +353,13 @@ fmpz_sparse_sumset(fmpz ** res, flint_rand_t state, const fmpz_sparse_t poly1, c
   fmpz_clear(degree);
   nmod_poly_clear(f_nmod);
   nmod_poly_clear(g_nmod);
+  nmod_poly_clear(h_nmod);
   fmpz_sparse_clear(f_1);
   fmpz_sparse_clear(g_1);
   fmpz_sparse_clear(f_2);
   fmpz_sparse_clear(g_2);
   fmpz_sparse_clear(h_1);
   fmpz_sparse_clear(h_2);
+  
+  return len;
 }
