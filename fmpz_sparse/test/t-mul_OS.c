@@ -45,35 +45,46 @@ main(void)
     /* Check aliasing of a and b */
     for (i = 0; i < 10 * flint_test_multiplier(); i++)
     {
-        fmpz_sparse_t a, b, c;
-        fmpz_t d, e;
+        fmpz_sparse_t a, b, c, f;
+        fmpz_t d, e, res, m;
 
         fmpz_init(d);
         fmpz_init(e);
+
         fmpz_randtest(d, state, 10);
         fmpz_randtest(e, state, 10);
 
         fmpz_sparse_init(a);
         fmpz_sparse_init(b);
         fmpz_sparse_init(c);
+        fmpz_sparse_init(f);
         fmpz_sparse_randtest(b, state, n_randint(state, 10), d, 10);
         fmpz_sparse_randtest(c, state, n_randint(state, 10), e, 10);
         
         fmpz_sparse_mul_OS(a, state, b, c);
-        fmpz_sparse_mul_OS(b, state, b, c);
+        fmpz_sparse_mul_classical(f, b, c);
 
-        result = (fmpz_sparse_equal(a, b));
+        result = (fmpz_sparse_equal(a, f));
         if (!result)
         {
+          fmpz_t a_m;
           flint_printf("FAIL PHASE 1:\n");
           fmpz_sparse_print(a), flint_printf("\n\n");
-          fmpz_sparse_print(b), flint_printf("\n\n");
+          fmpz_sparse_print(f), flint_printf("\n\n");
+          fmpz_init(res);
+          fmpz_init(a_m);
+          fmpz_init(m);
+          fmpz_set_ui(a_m, 21592);
+          fmpz_set_ui(m, 27737);
+          fmpz_sparse_evaluate_mod(res, f, a_m, m);
+          flint_printf("\nres: "), fmpz_print(res);
           abort();
         }
 
         fmpz_sparse_clear(a);
         fmpz_sparse_clear(b);
         fmpz_sparse_clear(c);
+        fmpz_sparse_clear(f);
         fmpz_clear(d);
         fmpz_clear(e);
     }
@@ -96,9 +107,9 @@ main(void)
         fmpz_sparse_randtest(c, state, n_randint(state, 10), e, 10);
 
         fmpz_sparse_mul_OS(a, state, b, c);
-        fmpz_sparse_mul_OS(c, state, b, c);
+        fmpz_sparse_mul_OS(b, state, b, c);
 
-        result = (fmpz_sparse_equal(a, c));
+        result = (fmpz_sparse_equal(a, b));
         if (!result)
         {
           flint_printf("FAIL PHASE 2:\n");

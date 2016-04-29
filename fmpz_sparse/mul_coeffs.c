@@ -27,6 +27,7 @@
 #include "fmpz_vec.h"
 #include "fmpz_mod_poly.h"
 
+/*TODO write t-canned.c from a canned example in Dan's slides*/
 static const double LN_2 = 0.693147180559945309417232121458;
 
 FLINT_DLL void 
@@ -36,13 +37,12 @@ _fmpz_sparse_mul_coeffs(fmpz_sparse_t res, flint_rand_t state,
 {
   fmpz_mod_poly_t poly;
   fmpz * qq, * ww, * vv, * coeffs, * mod_expons, * eval1, * eval2, * coeffs_mod_q;
-  fmpz_t p, C, H, T, D, temp, q_total;
+  fmpz_t p, C, H, D, temp, q_total;
   slong p_bits, q_prod_bits, n, num_primes, i, j, k;
 
   fmpz_init(p);
   fmpz_init(C);
   fmpz_init(H);
-  fmpz_init(T);
   fmpz_init(D);
   fmpz_init(temp);
   fmpz_init(q_total);
@@ -57,9 +57,9 @@ _fmpz_sparse_mul_coeffs(fmpz_sparse_t res, flint_rand_t state,
   fmpz_sparse_height(temp, poly2);
   fmpz_mul(C, temp, H);
 
-  p_bits = 2*fmpz_bits(T) + log(fmpz_bits(D))/LN_2 + 1;
+  p_bits = 2*FLINT_CLOG2(len) + FLINT_CLOG2(fmpz_bits(D)) + 1;
 
-  q_prod_bits = fmpz_bits(C) + log(FLINT_MAX(poly1->length, poly2->length))/LN_2 + 1;
+  q_prod_bits = fmpz_bits(C) + FLINT_CLOG2(FLINT_MAX(poly1->length, poly2->length)) + 1;
 
   n = (q_prod_bits + p_bits - 1)/p_bits + 1;
 
@@ -85,6 +85,7 @@ _fmpz_sparse_mul_coeffs(fmpz_sparse_t res, flint_rand_t state,
   flint_printf("\n");
   
   _fmpz_vec_scalar_mod_fmpz(mod_expons, expons, len, p);
+  fmpz_one(q_total);
 
   for(i = 0; i < num_primes; i++)
   {
@@ -102,6 +103,7 @@ _fmpz_sparse_mul_coeffs(fmpz_sparse_t res, flint_rand_t state,
     for(j = 0; j < len; j++)
     {
       fmpz_mul(eval1 + j, eval1 + j, eval2 + j);
+      fmpz_mod(eval1 + j, eval1 + j, qq + i);
     }
 
     fmpz_mod_poly_init(poly, qq + i);
@@ -124,9 +126,7 @@ _fmpz_sparse_mul_coeffs(fmpz_sparse_t res, flint_rand_t state,
 
     fmpz_mod_poly_clear(poly);
 
-    fmpz_one(q_total);
-
-    flint_printf("\ncoeffs_mod_q: "), _fmpz_vec_print(coeffs_mod_q, len);
+    flint_printf("\ncoeffs_mod_q from trans_vandermonde: "), _fmpz_vec_print(coeffs_mod_q, len);
     flint_printf("\n");
 
     for(k = 0; k < len; k++)
@@ -149,17 +149,24 @@ _fmpz_sparse_mul_coeffs(fmpz_sparse_t res, flint_rand_t state,
       flint_printf("\ncoeffs_mod_q + k: "), fmpz_print(coeffs_mod_q + k);
       flint_printf("\nqq + i: "), fmpz_print(qq + i);
       flint_printf("\n");*/
-      fmpz_CRT(coeffs + k, coeffs + k, q_total, coeffs_mod_q + k, qq + i, 1);
+      fmpz_CRT(coeffs + k, coeffs + k, q_total, coeffs_mod_q + k, qq + i, 0);
     }
+    flint_printf("\ncoeffs: "), _fmpz_vec_print(coeffs, len);
+    flint_printf("\n");
     fmpz_mul(q_total, q_total, qq + i);
   }
 
+  flint_printf("\nfinal coeffs: "), _fmpz_vec_print(coeffs, len);
+  flint_printf("\n");
+
+  _fmpz_sparse_reserve(res, len);
+
   for(i = 0; i < len; i++)
   {
-    fmpz_set(res->coeffs + i, coeffs + i);
+    fmpz_set(res->coeffs + i, coeffs + len - i - 1);
     fmpz_set(res->expons + i, expons + len - i - 1);
   }
-
+  res->length = len;
 
   _fmpz_vec_clear(qq, n);
   _fmpz_vec_clear(ww, n);
@@ -172,7 +179,6 @@ _fmpz_sparse_mul_coeffs(fmpz_sparse_t res, flint_rand_t state,
   fmpz_clear(p);
   fmpz_clear(C);
   fmpz_clear(H);
-  fmpz_clear(T);
   fmpz_clear(D);
   fmpz_clear(temp);
   fmpz_clear(q_total);
