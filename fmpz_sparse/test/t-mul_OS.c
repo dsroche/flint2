@@ -58,7 +58,7 @@ main(void)
         fmpz_sparse_init(c);
         fmpz_sparse_randtest(b, state, n_randint(state, 10), d, 10);
         fmpz_sparse_randtest(c, state, n_randint(state, 10), e, 10);
-
+        
         fmpz_sparse_mul_OS(a, state, b, c);
         fmpz_sparse_mul_OS(b, state, b, c);
 

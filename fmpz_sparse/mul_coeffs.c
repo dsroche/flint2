@@ -75,9 +75,16 @@ _fmpz_sparse_mul_coeffs(fmpz_sparse_t res, flint_rand_t state,
 
   num_primes = _fmpz_sparse_prim_roots(p, qq, ww, state, n, p_bits, q_prod_bits);
   
-  _fmpz_vec_scalar_mod_fmpz(mod_expons, expons, len, p);
+  flint_printf("p: "), fmpz_print(p);
+  flint_printf("\n");
 
-  fmpz_one(q_total);
+  flint_printf("qq: "), _fmpz_vec_print(qq, num_primes);
+  flint_printf("\n");
+
+  flint_printf("ww: "), _fmpz_vec_print(ww, num_primes);
+  flint_printf("\n");
+  
+  _fmpz_vec_scalar_mod_fmpz(mod_expons, expons, len, p);
 
   for(i = 0; i < num_primes; i++)
   {
@@ -100,9 +107,27 @@ _fmpz_sparse_mul_coeffs(fmpz_sparse_t res, flint_rand_t state,
     fmpz_mod_poly_init(poly, qq + i);
     _fmpz_mod_poly_build_roots(poly, vv, len);
 
+
+    flint_printf("\ntree coeffs: "), _fmpz_vec_print(poly->coeffs, poly->length);
+    flint_printf("\n");
+
+    flint_printf("vv: "), _fmpz_vec_print(vv, len);
+    flint_printf("\n");
+    
+    flint_printf("eval1: "), _fmpz_vec_print(eval1, len);
+    flint_printf("\n");
+    
+    flint_printf("q: "), fmpz_print(qq+i);
+    flint_printf("\n");
+    
     _fmpz_mod_poly_transposed_vandermonde(coeffs_mod_q, vv, eval1, len, poly->coeffs, qq + i);
 
     fmpz_mod_poly_clear(poly);
+
+    fmpz_one(q_total);
+
+    flint_printf("\ncoeffs_mod_q: "), _fmpz_vec_print(coeffs_mod_q, len);
+    flint_printf("\n");
 
     for(k = 0; k < len; k++)
     {
@@ -119,10 +144,20 @@ _fmpz_sparse_mul_coeffs(fmpz_sparse_t res, flint_rand_t state,
        * If sign = 0, it is assumed that $0 \le r_1 < m_1$ and $0 \le r_2 < m_2$.
        * Otherwise,it is assumed that $-m_1 \le r_1 < m_1$ and $0 \le r_2 < m_2$.
        * */
-      /*TODO coeffs_mod_q or coeffs or res->coeffs? ??? TODO*/
+      /*flint_printf("\ncoeffs + k: "), fmpz_print(coeffs + k);
+      flint_printf("\nq_total: "), fmpz_print(q_total);
+      flint_printf("\ncoeffs_mod_q + k: "), fmpz_print(coeffs_mod_q + k);
+      flint_printf("\nqq + i: "), fmpz_print(qq + i);
+      flint_printf("\n");*/
       fmpz_CRT(coeffs + k, coeffs + k, q_total, coeffs_mod_q + k, qq + i, 1);
-      fmpz_mul(q_total, q_total, qq + i);
     }
+    fmpz_mul(q_total, q_total, qq + i);
+  }
+
+  for(i = 0; i < len; i++)
+  {
+    fmpz_set(res->coeffs + i, coeffs + i);
+    fmpz_set(res->expons + i, expons + len - i - 1);
   }
 
 

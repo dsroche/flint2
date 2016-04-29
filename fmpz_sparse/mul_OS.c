@@ -43,8 +43,22 @@ fmpz_sparse_mul_OS(fmpz_sparse_t res, flint_rand_t state, const fmpz_sparse_t po
   
   test = NULL;
 
-  flint_printf("\nthere is no god\n");
+  flint_printf("\nbegin sumset\n");
+  flint_printf("\nPoly1: "), fmpz_sparse_print(poly1);
+  flint_printf("\nPoly2: "), fmpz_sparse_print(poly2);
+  flint_printf("\n");
+
   length = fmpz_sparse_sumset(&test, state, poly1, poly2);
+  /*length = fmpz_sparse_sumcheck(&test, poly1, poly2);*/
+  flint_printf("\nsumset worked length: %w\n", length);
+  _fmpz_vec_print(test,length);
+  flint_printf("\n");
+
+  if(length == 0)
+  {
+    fmpz_sparse_zero(res);
+    return;
+  }
 
   /*SPARSE_MUL_COEFFS*/
   /*C = F-height*g_height*MAX_DEGREE(f, g)*/
@@ -61,10 +75,15 @@ fmpz_sparse_mul_OS(fmpz_sparse_t res, flint_rand_t state, const fmpz_sparse_t po
 
   fmpz_mul(C, C, f_height);
   fmpz_mul(C, C, g_height);
+  flint_printf("\nC is calculated\n");
 
+  /*van_prime result is not even used*/
   fmpz_van_prime(p, state, length, fmpz_bits(C), .125);  
+  flint_printf("\nvan_prime worked: "), fmpz_print(p);
+  flint_printf("\n");
 
   _fmpz_sparse_mul_coeffs(res, state, poly1, poly2, test, length);
+  flint_printf("\nmul_coeffs worked\n");
 
   fmpz_clear(f_height);
   fmpz_clear(g_height);
