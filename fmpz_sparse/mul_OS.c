@@ -77,10 +77,10 @@ fmpz_sparse_mul_OS(fmpz_sparse_t res, flint_rand_t state, const fmpz_sparse_t po
   fmpz_mul(C, C, g_height);
   flint_printf("\nC is calculated\n");
 
-  /*van_prime result is not even used*/
+  /*van_prime result is not even used
   fmpz_van_prime(p, state, length, fmpz_bits(C), .125);  
   flint_printf("\nvan_prime worked: "), fmpz_print(p);
-  flint_printf("\n");
+  flint_printf("\n");*/
 
   _fmpz_sparse_mul_coeffs(res, state, poly1, poly2, test, length);
   flint_printf("\nmul_coeffs worked\n");
