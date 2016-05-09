@@ -75,29 +75,24 @@ _fmpz_sparse_mul_coeffs(fmpz_sparse_t res, flint_rand_t state,
 
   num_primes = _fmpz_sparse_prim_roots(p, qq, ww, state, n, p_bits, q_prod_bits);
   
-  flint_printf("p: "), fmpz_print(p);
-  flint_printf("\n");
-
-  flint_printf("qq: "), _fmpz_vec_print(qq, num_primes);
-  flint_printf("\n");
-
-  flint_printf("ww: "), _fmpz_vec_print(ww, num_primes);
-  flint_printf("\n");
-  
   _fmpz_vec_scalar_mod_fmpz(mod_expons, expons, len, p);
   fmpz_one(q_total);
-
+  
   for(i = 0; i < num_primes; i++)
   {
     for(j = 0; j < len; j++)
     {
       fmpz_powm(vv + j, ww + i, mod_expons + j, qq + i);
     }
-  
+
+    fmpz_one(C);
+
     for(j = 0; j < len; j++)
     {
-      fmpz_sparse_evaluate_mod(eval1 + j, poly1, vv + j, qq + i);
-      fmpz_sparse_evaluate_mod(eval2 + j, poly2, vv + j, qq + i);
+      fmpz_sparse_evaluate_mod(eval1 + j, poly1, C, qq + i);
+      fmpz_sparse_evaluate_mod(eval2 + j, poly2, C, qq + i);
+      fmpz_mul(C, C, ww + i);
+      fmpz_mod(C, C, qq + i);
     }
 
     for(j = 0; j < len; j++)
@@ -109,25 +104,9 @@ _fmpz_sparse_mul_coeffs(fmpz_sparse_t res, flint_rand_t state,
     fmpz_mod_poly_init(poly, qq + i);
     _fmpz_mod_poly_build_roots(poly, vv, len);
 
-
-    flint_printf("\ntree coeffs: "), _fmpz_vec_print(poly->coeffs, poly->length);
-    flint_printf("\n");
-
-    flint_printf("vv: "), _fmpz_vec_print(vv, len);
-    flint_printf("\n");
-    
-    flint_printf("eval1: "), _fmpz_vec_print(eval1, len);
-    flint_printf("\n");
-    
-    flint_printf("q: "), fmpz_print(qq+i);
-    flint_printf("\n");
-    
     _fmpz_mod_poly_transposed_vandermonde(coeffs_mod_q, vv, eval1, len, poly->coeffs, qq + i);
 
     fmpz_mod_poly_clear(poly);
-
-    flint_printf("\ncoeffs_mod_q from trans_vandermonde: "), _fmpz_vec_print(coeffs_mod_q, len);
-    flint_printf("\n");
 
     for(k = 0; k < len; k++)
     {
@@ -144,20 +123,19 @@ _fmpz_sparse_mul_coeffs(fmpz_sparse_t res, flint_rand_t state,
        * If sign = 0, it is assumed that $0 \le r_1 < m_1$ and $0 \le r_2 < m_2$.
        * Otherwise,it is assumed that $-m_1 \le r_1 < m_1$ and $0 \le r_2 < m_2$.
        * */
-      /*flint_printf("\ncoeffs + k: "), fmpz_print(coeffs + k);
-      flint_printf("\nq_total: "), fmpz_print(q_total);
-      flint_printf("\ncoeffs_mod_q + k: "), fmpz_print(coeffs_mod_q + k);
-      flint_printf("\nqq + i: "), fmpz_print(qq + i);
-      flint_printf("\n");*/
       fmpz_CRT(coeffs + k, coeffs + k, q_total, coeffs_mod_q + k, qq + i, 0);
     }
-    flint_printf("\ncoeffs: "), _fmpz_vec_print(coeffs, len);
-    flint_printf("\n");
     fmpz_mul(q_total, q_total, qq + i);
   }
 
-  flint_printf("\nfinal coeffs: "), _fmpz_vec_print(coeffs, len);
-  flint_printf("\n");
+  for(i = 0; i < len; i++)
+  {
+    fmpz_cdiv_q_ui(C, q_total, 2);
+    if(fmpz_cmp(coeffs + i, C) > 0)
+    {
+      fmpz_sub(coeffs + i, coeffs + i, q_total);
+    }
+  }
 
   _fmpz_sparse_reserve(res, len);
 
@@ -167,6 +145,8 @@ _fmpz_sparse_mul_coeffs(fmpz_sparse_t res, flint_rand_t state,
     fmpz_set(res->expons + i, expons + len - i - 1);
   }
   res->length = len;
+
+  _fmpz_sparse_normalise(res);
 
   _fmpz_vec_clear(qq, n);
   _fmpz_vec_clear(ww, n);

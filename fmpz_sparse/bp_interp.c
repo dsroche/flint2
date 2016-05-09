@@ -227,6 +227,7 @@ void _fmpz_mod_poly_transposed_vandermonde(fmpz* xx,
      * (poly, len+1) is a polynomial whose roots are the vv entries.
      * Entries in xx are reduced in the symmetric range [-p/2 .. p/2].
      */
+
     fmpz *D, *Q;
     slong i;
 
