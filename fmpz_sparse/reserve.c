@@ -29,8 +29,15 @@ void _fmpz_sparse_reserve(fmpz_sparse_t poly, slong terms)
 {
     if (terms > poly->alloc) {
         if (terms < 2*poly->alloc) terms = 2*poly->alloc;
+
         poly->coeffs = (fmpz*) flint_realloc(poly->coeffs, terms*sizeof(fmpz));
+        flint_mpn_zero((mp_ptr) (poly->coeffs + poly->alloc), 
+                terms - poly->alloc);
+
         poly->expons = (fmpz*) flint_realloc(poly->expons, terms*sizeof(fmpz));
+        flint_mpn_zero((mp_ptr) (poly->expons + poly->alloc), 
+                terms - poly->alloc);
+
         poly->alloc = terms;
     }
 }

@@ -25,23 +25,14 @@
 
 #include "fmpz_sparse.h"
 #include "fmpz_vec.h"
-#include "math.h"
+#include "ulong_extras.h"
 
 void
 fmpz_sparse_mul_OS(fmpz_sparse_t res, flint_rand_t state, const fmpz_sparse_t poly1, const fmpz_sparse_t poly2)
 {
   fmpz * test;
   slong length;
-  fmpz_t f_height, g_height, f_deg, g_deg, C, p;
-
-  fmpz_init(f_height);
-  fmpz_init(g_height);
-  fmpz_init(f_deg);
-  fmpz_init(g_deg);
-  fmpz_init(C);
-  fmpz_init(p);
-  
-  test = NULL;
+  ulong p, pinv, x, eval_actual, eval_check;
 
   if(fmpz_sparse_is_zero(poly1) || fmpz_sparse_is_zero(poly2))
   {
@@ -56,41 +47,42 @@ fmpz_sparse_mul_OS(fmpz_sparse_t res, flint_rand_t state, const fmpz_sparse_t po
     return;
   }
 
-  length = fmpz_sparse_sumset(&test, state, poly1, poly2);
-  /*length = fmpz_sparse_sumcheck(&test, poly1, poly2);*/
-
-  if(length == 0)
-  {
-    fmpz_sparse_zero(res);
-    return;
+  if (res == poly1) {
+    fmpz_sparse_t temp;
+    fmpz_sparse_init2(temp, fmpz_sparse_terms(poly1));
+    fmpz_sparse_set(temp, poly1);
+    poly1 = temp;
   }
 
-  /*SPARSE_MUL_COEFFS*/
-  /*C = F-height*g_height*MAX_DEGREE(f, g)*/
-  fmpz_sparse_height(f_height, poly1);
-  fmpz_sparse_height(g_height, poly2);
+  if (res == poly2) {
+    fmpz_sparse_t temp;
+    fmpz_sparse_init2(temp, fmpz_sparse_terms(poly2));
+    fmpz_sparse_set(temp, poly2);
+    poly2 = temp;
+  }
 
-  fmpz_sparse_degree(f_deg, poly1);
-  fmpz_sparse_degree(g_deg, poly2);
+  do
+  {
+    test = NULL;
+    length = fmpz_sparse_sumset(&test, state, poly1, poly2);
+    FLINT_ASSERT(length > 1);
 
-  if(fmpz_cmp(f_deg, g_deg) > 0)
-    fmpz_set(C, f_deg);
-  else
-    fmpz_set(C, g_deg);
+    _fmpz_sparse_mul_coeffs(res, state, poly1, poly2, test, length);
+    _fmpz_vec_clear(test, length);
+    
+    /* check the result mod a random prime */
+    p = n_randprime(state, FLINT_BITS, 0);
+    pinv = n_preinvert_limb(p);
+    x = n_randint(state, p);
+    eval_actual = n_mulmod2_preinv(
+        fmpz_sparse_evaluate_mod_ui(poly1, x, p),
+        fmpz_sparse_evaluate_mod_ui(poly2, x, p),
+        p, pinv);
+    eval_check = fmpz_sparse_evaluate_mod_ui(res, x, p);
 
-  fmpz_mul(C, C, f_height);
-  fmpz_mul(C, C, g_height);
-
-  /*van_prime result is not even used
-  fmpz_van_prime(p, state, length, fmpz_bits(C), .125);  
-  flint_printf("\nvan_prime worked: "), fmpz_print(p);
-  flint_printf("\n");*/
-
-  _fmpz_sparse_mul_coeffs(res, state, poly1, poly2, test, length);
-
-  fmpz_clear(f_height);
-  fmpz_clear(g_height);
-  fmpz_clear(f_deg);
-  fmpz_clear(g_deg);
-  fmpz_clear(C);
+    if (eval_actual != eval_check) {
+      flint_printf("DETECTED mul_OS failure %wu %wu %wu\n", poly1->length, poly2->length, length);
+    }
+  }
+  while (eval_actual != eval_check);
 }
