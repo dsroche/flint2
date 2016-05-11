@@ -1,0 +1,8 @@
+Add/delete lines from this file as necessary. Goal: empty file!
+
+* Fix indentation
+* Fix all headers to look like the rest of Flint and use LGPL instead of
+  GPL.
+* Fix all the FIXMEs and TODOs (feel free to make more sub-bullets from
+  this one)
+* Remove all the WHITMANS WORK comments
