@@ -1,0 +1,165 @@
+/*=============================================================================
+
+        This file is part of FLINT.
+
+        FLINT is free software; you can redistribute it and/or modify
+        it under the terms of the GNU General Public License as published by
+        the Free Software Foundation; either version 2 of the License, or
+        (at your option) any later version.
+          
+        FLINT is distributed in the hope that it will be useful,
+        but WITHOUT ANY WARRANTY; without even the implied warranty of
+        MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+        GNU General Public License for more details.
+
+        You should have received a copy of the GNU General Public License
+        along with FLINT; if not, write to the Free Software
+        Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301 USA
+
+=============================================================================*/
+/******************************************************************************
+
+        Authored 2015 by A. Whitman Groves; US Government work in the public domain. 
+
+******************************************************************************/
+
+#include "fmpz_spoly.h"
+#include "fmpz_vec.h"
+#include "fmpz_mod_poly.h"
+
+/*TODO write t-canned.c from a canned example in Dan's slides*/
+static const double LN_2 = 0.693147180559945309417232121458;
+
+FLINT_DLL void 
+_fmpz_spoly_mul_coeffs(fmpz_spoly_t res, flint_rand_t state,
+    const fmpz_spoly_t poly1, const fmpz_spoly_t poly2, const fmpz * expons,
+    slong len)
+{
+  fmpz_mod_poly_t poly;
+  fmpz * qq, * ww, * vv, * coeffs, * mod_expons, * eval1, * eval2, * coeffs_mod_q;
+  fmpz_t p, C, H, D, temp, q_total;
+  slong p_bits, q_prod_bits, n, num_primes, i, j, k;
+
+  fmpz_init(p);
+  fmpz_init(C);
+  fmpz_init(H);
+  fmpz_init(D);
+  fmpz_init(temp);
+  fmpz_init(q_total);
+
+  fmpz_spoly_degree(D, poly1);
+  fmpz_spoly_degree(temp, poly2);
+
+  if(fmpz_cmp(temp, D) > 0)
+    fmpz_set(D, temp);
+
+  fmpz_spoly_height(H, poly1);
+  fmpz_spoly_height(temp, poly2);
+  fmpz_mul(C, temp, H);
+
+  p_bits = 2*FLINT_CLOG2(len) + FLINT_CLOG2(fmpz_bits(D)) + 1;
+
+  q_prod_bits = fmpz_bits(C) + FLINT_CLOG2(FLINT_MAX(poly1->length, poly2->length)) + 1;
+
+  n = (q_prod_bits + p_bits - 1)/p_bits + 1;
+
+  qq = _fmpz_vec_init(n);
+  ww = _fmpz_vec_init(n);
+
+  vv = _fmpz_vec_init(len);
+  coeffs = _fmpz_vec_init(len);
+  coeffs_mod_q = _fmpz_vec_init(len);
+  mod_expons = _fmpz_vec_init(len);
+  eval1 = _fmpz_vec_init(len);
+  eval2 = _fmpz_vec_init(len);
+
+  num_primes = _fmpz_spoly_prim_roots(p, qq, ww, state, n, p_bits, q_prod_bits);
+  
+  _fmpz_vec_scalar_mod_fmpz(mod_expons, expons, len, p);
+  fmpz_one(q_total);
+  
+  for(i = 0; i < num_primes; i++)
+  {
+    for(j = 0; j < len; j++)
+    {
+      fmpz_powm(vv + j, ww + i, mod_expons + j, qq + i);
+    }
+
+    fmpz_one(C);
+
+    for(j = 0; j < len; j++)
+    {
+      fmpz_spoly_evaluate_mod(eval1 + j, poly1, C, qq + i);
+      fmpz_spoly_evaluate_mod(eval2 + j, poly2, C, qq + i);
+      fmpz_mul(C, C, ww + i);
+      fmpz_mod(C, C, qq + i);
+    }
+
+    for(j = 0; j < len; j++)
+    {
+      fmpz_mul(eval1 + j, eval1 + j, eval2 + j);
+      fmpz_mod(eval1 + j, eval1 + j, qq + i);
+    }
+
+    fmpz_mod_poly_init(poly, qq + i);
+    _fmpz_mod_poly_build_roots(poly, vv, len);
+
+    _fmpz_mod_poly_transposed_vandermonde(coeffs_mod_q, vv, eval1, len, poly->coeffs, qq + i);
+
+    fmpz_mod_poly_clear(poly);
+
+    for(k = 0; k < len; k++)
+    {
+      /*CRT
+       * void fmpz_CRT(fmpz_t out, const fmpz_t r1, const fmpz_t m1,
+       * fmpz_t r2, fmpz_t m2, int sign)
+       * Use the Chinese Remainder Theorem to set \code{out} to the unique value
+       * $0 \le x < M$ (if sign = 0) or $-M/2 < x \le M/2$ (if sign = 1)
+       * congruent to $r_1$ modulo $m_1$ and $r_2$ modulo $m_2$,
+       * where where $M = m_1 \times m_2$.
+       * It is assumed that $m_1$ and $m_2$ are positive integers greater
+       * than $1$ and coprime.
+       * 
+       * If sign = 0, it is assumed that $0 \le r_1 < m_1$ and $0 \le r_2 < m_2$.
+       * Otherwise,it is assumed that $-m_1 \le r_1 < m_1$ and $0 \le r_2 < m_2$.
+       * */
+      fmpz_CRT(coeffs + k, coeffs + k, q_total, coeffs_mod_q + k, qq + i, 0);
+    }
+    fmpz_mul(q_total, q_total, qq + i);
+  }
+
+  for(i = 0; i < len; i++)
+  {
+    fmpz_cdiv_q_ui(C, q_total, 2);
+    if(fmpz_cmp(coeffs + i, C) > 0)
+    {
+      fmpz_sub(coeffs + i, coeffs + i, q_total);
+    }
+  }
+
+  _fmpz_spoly_reserve(res, len);
+
+  for(i = 0; i < len; i++)
+  {
+    fmpz_set(res->coeffs + i, coeffs + len - i - 1);
+    fmpz_set(res->expons + i, expons + len - i - 1);
+  }
+  res->length = len;
+
+  _fmpz_spoly_normalise(res);
+
+  _fmpz_vec_clear(qq, n);
+  _fmpz_vec_clear(ww, n);
+  _fmpz_vec_clear(vv, len);
+  _fmpz_vec_clear(coeffs, len);
+  _fmpz_vec_clear(coeffs_mod_q, len);
+  _fmpz_vec_clear(eval1, len);
+  _fmpz_vec_clear(eval2, len);
+
+  fmpz_clear(p);
+  fmpz_clear(C);
+  fmpz_clear(H);
+  fmpz_clear(D);
+  fmpz_clear(temp);
+  fmpz_clear(q_total);
+}
