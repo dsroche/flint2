@@ -137,8 +137,7 @@ int main(int argc, char** argv)
     {
         fmpz_spoly_clear(orig+i);
     }
-    _fmpz_vec_clear(res, len1);
-    _fmpz_vec_clear(check, len2);
+    fmpz_spoly_clear(res);
     fmpz_clear(H);
     fmpz_clear(D);
 

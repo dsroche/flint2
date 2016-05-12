@@ -963,6 +963,9 @@ FLINT_DLL void fmpz_spoly_evaluate_mod(fmpz_t res, const fmpz_spoly_t poly,
 FLINT_DLL ulong fmpz_spoly_evaluate_mod_ui(const fmpz_spoly_t poly, 
     ulong a, ulong m);
 
+FLINT_DLL void fmpz_spoly_evaluate_powers(fmpz* res, slong len,
+    const fmpz_spoly_t poly, const fmpz_t w, const fmpz_t p);
+
 /*  Composition  *************************************************************/
 
 /* FIXME */
@@ -1048,17 +1051,14 @@ FLINT_DLL void _fmpz_mod_poly_powmod_x_2exp(fmpz* res,
 FLINT_DLL slong _fmpz_mod_poly_binary_roots(fmpz* roots, fmpz* expons,
     const fmpz* poly, slong len, const fmpz_t theta, slong k, const fmpz_t p);
 
-FLINT_DLL void _fmpz_mod_poly_transposed_vandermonde(fmpz* xx,
-    const fmpz* vv, const fmpz* bb, slong len, const fmpz* poly, const fmpz_t p);
-
 FLINT_DLL void _fmpz_mod_poly_build_roots(fmpz_mod_poly_t res, 
     const fmpz * roots, slong len);
 
-FLINT_DLL void _fmpz_spoly_transp_vandermonde_precomp(fmpz* bb, 
+FLINT_DLL void _fmpz_spoly_transp_vandermonde_precomp(fmpz* bb, slong blen,
     const fmpz* vv_inv, fmpz_poly_struct * const * tree, const fmpz* tree_root,
     const fmpz* xx, slong len, const fmpz_t p);
 
-FLINT_DLL void _fmpz_spoly_transp_vandermonde(fmpz* bb,
+FLINT_DLL void _fmpz_spoly_transp_vandermonde(fmpz* bb, slong blen,
     const fmpz* vv, const fmpz* xx, slong len, const fmpz_t p);
 
 FLINT_DLL void _fmpz_spoly_transp_vandermonde_inv_precomp(fmpz* xx,

@@ -41,7 +41,7 @@ main(void)
     flint_printf("transp_vandermonde....");
     fflush(stdout);
 
-    for (i = 0; i < 100 * flint_test_multiplier(); i++)
+    for (i = 0; i < 20 * flint_test_multiplier(); i++)
     {
         fmpz_t p;
         fmpz* vv;
@@ -50,17 +50,28 @@ main(void)
         fmpz* bb_check;
         fmpz* xx_check;
         fmpz_t temp;
-        slong len, j, k;
+        slong len, blen, j, k;
 
         fmpz_init(p);
         fmpz_init(temp);
 
         len = n_randbits(state, n_randint(state, UWORD(10)));
+        if (i % 3 == 0) blen = len;
+        else if (i % 3 == 1)
+        {
+            if (len == 0) len = 1;
+            blen = len + n_randint(state, len);
+        }
+        else
+        {
+            if (len == 0) len = 1;
+            blen = 2 * len + n_randint(state, 2 * len);
+        }
 
         vv = _fmpz_vec_init(len);
         xx = _fmpz_vec_init(len);
-        bb = _fmpz_vec_init(len);
-        bb_check = _fmpz_vec_init(len);
+        bb = _fmpz_vec_init(blen);
+        bb_check = _fmpz_vec_init(blen);
         xx_check = _fmpz_vec_init(len);
 
         do
@@ -88,7 +99,7 @@ main(void)
         }
 
         /* quadratic computation of result */
-        for (j = 0; j < len; ++j)
+        for (j = 0; j < blen; ++j)
         {
             fmpz_zero(bb + j);
             for (k = 0; k < len; ++k) {
@@ -99,9 +110,9 @@ main(void)
             fmpz_mod(bb + j, bb + j, p);
         }
 
-        _fmpz_spoly_transp_vandermonde(bb_check, vv, xx, len, p);
+        _fmpz_spoly_transp_vandermonde(bb_check, blen, vv, xx, len, p);
 
-        result = _fmpz_vec_equal(bb_check, bb, len);
+        result = _fmpz_vec_equal(bb_check, bb, blen);
 
         if (!result)
         {
@@ -110,8 +121,8 @@ main(void)
             flint_printf("p: "); fmpz_print(p); flint_printf("\n");
             _fmpz_vec_print(vv, len); flint_printf("\n\n");
             _fmpz_vec_print(xx, len); flint_printf("\n\n");
-            _fmpz_vec_print(bb_check, len); flint_printf("\n\n");
-            _fmpz_vec_print(bb, len); flint_printf("\n\n");
+            _fmpz_vec_print(bb_check, blen); flint_printf("\n\n");
+            _fmpz_vec_print(bb, blen); flint_printf("\n\n");
             abort();
         }
 
@@ -135,8 +146,8 @@ main(void)
         fmpz_clear(temp);
         _fmpz_vec_clear(vv, len);
         _fmpz_vec_clear(xx, len);
-        _fmpz_vec_clear(bb, len);
-        _fmpz_vec_clear(bb_check, len);
+        _fmpz_vec_clear(bb, blen);
+        _fmpz_vec_clear(bb_check, blen);
         _fmpz_vec_clear(xx_check, len);
     }
 

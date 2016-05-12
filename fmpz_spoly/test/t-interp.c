@@ -36,7 +36,6 @@ main(void)
 {
     int i, result;
     FLINT_TEST_INIT(state);
-    flint_randseed(state, UWORD(3), UWORD(2)); /* TODO remove */
 
     flint_printf("interp....");
     fflush(stdout);
@@ -52,15 +51,13 @@ main(void)
       /*random fmpz*/
       fmpz_init(d);
       fmpz_init(h);
-      /* fmpz_randtest(d, state, 100); TODO too hard */
-      fmpz_randtest(d, state, 6);
+      fmpz_randtest(d, state, 20);
 
       /*random fmpz_spoly*/
       fmpz_spoly_init(a);
       fmpz_spoly_init(b);
       fmpz_spoly_init(c);
-      /* fmpz_spoly_randtest(a, state, n_randint(state, 100), d, 200); TODO too hard */
-      fmpz_spoly_randtest(a, state, n_randint(state, 4), d, 7);
+      fmpz_spoly_randtest(a, state, n_randint(state, 10), d, 20);
 
       /*calculate height of coefficients*/
       fmpz_spoly_height(h, a);

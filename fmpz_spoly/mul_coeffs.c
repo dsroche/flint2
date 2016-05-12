@@ -35,7 +35,6 @@ _fmpz_spoly_mul_coeffs(fmpz_spoly_t res, flint_rand_t state,
     const fmpz_spoly_t poly1, const fmpz_spoly_t poly2, const fmpz * expons,
     slong len)
 {
-  fmpz_mod_poly_t poly;
   fmpz * qq, * ww, * vv, * coeffs, * mod_expons, * eval1, * eval2, * coeffs_mod_q;
   fmpz_t p, C, H, D, temp, q_total;
   slong p_bits, q_prod_bits, n, num_primes, i, j, k;
@@ -85,15 +84,8 @@ _fmpz_spoly_mul_coeffs(fmpz_spoly_t res, flint_rand_t state,
       fmpz_powm(vv + j, ww + i, mod_expons + j, qq + i);
     }
 
-    fmpz_one(C);
-
-    for(j = 0; j < len; j++)
-    {
-      fmpz_spoly_evaluate_mod(eval1 + j, poly1, C, qq + i);
-      fmpz_spoly_evaluate_mod(eval2 + j, poly2, C, qq + i);
-      fmpz_mul(C, C, ww + i);
-      fmpz_mod(C, C, qq + i);
-    }
+    fmpz_spoly_evaluate_powers(eval1, len, poly1, ww + i, qq + i);
+    fmpz_spoly_evaluate_powers(eval2, len, poly2, ww + i, qq + i);
 
     for(j = 0; j < len; j++)
     {
@@ -101,12 +93,7 @@ _fmpz_spoly_mul_coeffs(fmpz_spoly_t res, flint_rand_t state,
       fmpz_mod(eval1 + j, eval1 + j, qq + i);
     }
 
-    fmpz_mod_poly_init(poly, qq + i);
-    _fmpz_mod_poly_build_roots(poly, vv, len);
-
-    _fmpz_mod_poly_transposed_vandermonde(coeffs_mod_q, vv, eval1, len, poly->coeffs, qq + i);
-
-    fmpz_mod_poly_clear(poly);
+    _fmpz_spoly_transp_vandermonde_inv(coeffs_mod_q, vv, eval1, len, qq + i);
 
     for(k = 0; k < len; k++)
     {

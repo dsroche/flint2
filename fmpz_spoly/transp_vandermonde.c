@@ -27,7 +27,8 @@
 #include "fmpz_poly.h"
 #include "fmpz_mod_poly.h"
 
-void _fmpz_spoly_transp_vandermonde_precomp(fmpz* bb, const fmpz* vv_inv, 
+void _fmpz_spoly_transp_vandermonde_precomp(fmpz* bb, slong blen,
+        const fmpz* vv_inv, 
         fmpz_poly_struct * const * tree, const fmpz* tree_root,
         const fmpz* xx, slong len, const fmpz_t p)
 {
@@ -42,6 +43,9 @@ void _fmpz_spoly_transp_vandermonde_precomp(fmpz* bb, const fmpz* vv_inv,
 
     fmpz_poly_init(t1);
     fmpz_poly_init(t2);
+
+    FLINT_ASSERT (len >= 2);
+    FLINT_ASSERT (blen >= len);
 
     /* calculate sum_i( xx[i]/(1 - vv[i]*x) = -xx[i]*vv_inv[i]/(x - vv_inv[i]) ) */
 
@@ -87,7 +91,7 @@ void _fmpz_spoly_transp_vandermonde_precomp(fmpz* bb, const fmpz* vv_inv,
     }
 
     /* now divide computed numerator by the product tree root */
-    _fmpz_mod_poly_div_series(bb, A[0].coeffs, len, tree_root, len + 1, p, len);
+    _fmpz_mod_poly_div_series(bb, A[0].coeffs, len, tree_root, len + 1, p, blen);
 
     /* clean-up */
     for (i = 0; i < len; ++i)
@@ -100,40 +104,69 @@ void _fmpz_spoly_transp_vandermonde_precomp(fmpz* bb, const fmpz* vv_inv,
     fmpz_poly_clear(t2);
 }
 
-void _fmpz_spoly_transp_vandermonde(fmpz* bb,
+static const int FLINT_TVAND_XOVER = 20;
+
+void _fmpz_spoly_transp_vandermonde(fmpz* bb, slong blen,
         const fmpz* vv, const fmpz* xx, slong len, const fmpz_t p)
 {
-    fmpz_poly_struct ** tree;
-    fmpz* vv_inv;
-    fmpz_poly_t root;
-    slong ind;
+    FLINT_ASSERT(blen >= len);
+    FLINT_ASSERT(bb != vv);
+    FLINT_ASSERT(bb != xx);
 
-    if (len == 0) return;
-    else if (len == 1) 
+    if (len == 0)
     {
-        fmpz_mod(bb + 0, xx + 0, p);
-        return;
+        _fmpz_vec_zero(bb, blen);
     }
-
-    vv_inv = _fmpz_vec_init(len);
-    for (ind = 0; ind < len; ++ind)
+    else if (len < FLINT_TVAND_XOVER)
     {
-        fmpz_invmod(vv_inv + ind, vv + ind, p);
+        slong i, j;
+        fmpz* row = _fmpz_vec_init(len);
+        _fmpz_vec_set(row, xx, len);
+
+        for (i = 0; ; ++i)
+        {
+            _fmpz_vec_sum(bb + i, row, len);
+            fmpz_mod(bb + i, bb + i, p);
+
+            if (i + 1 == blen) break;
+            
+            for (j = 0; j < len; ++j)
+            {
+                fmpz_mul(row + j, row + j, vv + j);
+                fmpz_mod(row + j, row + j, p);
+            }
+        }
+
+        _fmpz_vec_clear(row, len);
     }
+    else
+    {
+        fmpz_poly_struct ** tree;
+        fmpz* vv_inv;
+        fmpz_poly_t root;
+        slong ind;
 
-    tree = _fmpz_mod_poly_tree_alloc(len);
-    _fmpz_mod_poly_tree_build(tree, vv_inv, len, p);
+        vv_inv = _fmpz_vec_init(len);
+        for (ind = 0; ind < len; ++ind)
+        {
+            fmpz_invmod(vv_inv + ind, vv + ind, p);
+        }
 
-    fmpz_poly_init2(root, len + 1);
-    ind = FLINT_CLOG2(len) - 1;
-    FLINT_ASSERT(len ==
-            fmpz_poly_degree(tree[ind] + 0) + fmpz_poly_degree(tree[ind] + 1));
-    fmpz_poly_mul(root, tree[ind] + 0, tree[ind] + 1);
-    fmpz_poly_scalar_mod_fmpz(root, root, p);
+        tree = _fmpz_mod_poly_tree_alloc(len);
+        _fmpz_mod_poly_tree_build(tree, vv_inv, len, p);
 
-    _fmpz_spoly_transp_vandermonde_precomp(bb, vv_inv, tree, root->coeffs, xx, len, p);
+        fmpz_poly_init2(root, len + 1);
+        ind = FLINT_CLOG2(len) - 1;
+        FLINT_ASSERT(len ==
+                fmpz_poly_degree(tree[ind] + 0) + fmpz_poly_degree(tree[ind] + 1));
+        fmpz_poly_mul(root, tree[ind] + 0, tree[ind] + 1);
+        fmpz_poly_scalar_mod_fmpz(root, root, p);
 
-    _fmpz_mod_poly_tree_free(tree, len);
-    _fmpz_vec_clear(vv_inv, len);
-    fmpz_poly_clear(root);
+        _fmpz_spoly_transp_vandermonde_precomp(bb, blen, 
+                vv_inv, tree, root->coeffs, xx, len, p);
+
+        _fmpz_mod_poly_tree_free(tree, len);
+        _fmpz_vec_clear(vv_inv, len);
+        fmpz_poly_clear(root);
+    }
 }
