@@ -81,7 +81,7 @@ void _fmpz_spoly_transp_vandermonde_inv(fmpz* xx,
     if (len == 0) return;
     else if (len == 1) 
     {
-        fmpz_set(xx + 0, vv + 0);
+        fmpz_mods(xx + 0, bb + 0, p);
         return;
     }
 
@@ -89,12 +89,14 @@ void _fmpz_spoly_transp_vandermonde_inv(fmpz* xx,
     _fmpz_mod_poly_tree_build(tree, vv, len, p);
 
     fmpz_poly_init2(root, len + 1);
-    ind = FLINT_CLOG2(len);
+    ind = FLINT_CLOG2(len) - 1;
     FLINT_ASSERT(len ==
             fmpz_poly_degree(tree[ind] + 0) + fmpz_poly_degree(tree[ind] + 1));
     fmpz_poly_mul(root, tree[ind] + 0, tree[ind] + 1);
+    fmpz_poly_scalar_mod_fmpz(root, root, p);
 
     _fmpz_spoly_transp_vandermonde_inv_precomp(xx, tree, root->coeffs, bb, len, p);
 
     _fmpz_mod_poly_tree_free(tree, len);
+    fmpz_poly_clear(root);
 }
