@@ -218,50 +218,6 @@ slong _fmpz_mod_poly_binary_roots(fmpz* roots, fmpz* expons,
     return nroots;
 }
 
-void _fmpz_mod_poly_transposed_vandermonde(fmpz* xx,
-        const fmpz* vv, const fmpz* bb, slong len, const fmpz* poly, const fmpz_t p)
-{
-    /* Solves the Vandermonde system V(vv)^T * xx = bb mod p
-     * for the vector xx.
-     * len is the size of xx, vv, and bb.
-     * (poly, len+1) is a polynomial whose roots are the vv entries.
-     * Entries in xx are reduced in the symmetric range [-p/2 .. p/2].
-     */
-
-    fmpz *D, *Q;
-    slong i;
-
-    if (len <= 0) return;
-
-    D = _fmpz_vec_init(3*len);
-    Q = D + len;
-
-    /* D = reversal of bb */
-    for (i=0; i<len; ++i) fmpz_set(D + i, bb + (len-i-1));
-
-    /* Q = poly*D / x^len. TODO: make this faster using mullow? */
-    _fmpz_mod_poly_mul(Q, poly, len+1, D, len, p);
-    Q = Q + len;
-
-    /* xx = evals of Q at points in vv */
-    _fmpz_mod_poly_evaluate_fmpz_vec(xx, Q, len, vv, len, p);
-
-    /* overwrite D with evals of (d poly/dx) at points in vv */
-    /* TODO: re-use subproduct tree to make this faster? */
-    _fmpz_mod_poly_derivative(Q, poly, len+1, p);
-    _fmpz_mod_poly_evaluate_fmpz_vec(D, Q, len, vv, len, p);
-
-    /* pairwise divide the two sets of evaluations */
-    for (i=0; i<len; ++i)
-    {
-        fmpz_invmod(D+i, D+i, p);
-        fmpz_mul(xx+i, xx+i, D+i);
-    }
-    _fmpz_vec_scalar_smod_fmpz(xx, xx, len, p);
-
-    _fmpz_vec_clear(D, 3*len);
-}
-
 int fmpz_spoly_bp_interp(fmpz_spoly_t res,
         const fmpz_spoly_bp_interp_t evals)
 {
@@ -312,8 +268,8 @@ int fmpz_spoly_bp_interp(fmpz_spoly_t res,
     /* solve transposed Vandermode to get coeffs */
     /* Varndermonde(roots)^T * x = evals, truncated to length t */
 
-    _fmpz_mod_poly_transposed_vandermonde(res->coeffs,
-            roots, evals->evaluations, t, G->coeffs, evals->q);
+    _fmpz_spoly_transp_vandermonde_inv(res->coeffs,
+            roots, evals->evaluations, t, evals->q);
 
     /* sort terms and remove zero coeffs */
     _fmpz_spoly_normalise(res);

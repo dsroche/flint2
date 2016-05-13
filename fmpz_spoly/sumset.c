@@ -270,7 +270,7 @@ fmpz_spoly_sumset(fmpz ** res, flint_rand_t state, const fmpz_spoly_t poly1, con
   fmpz_spoly_rem_cyc(g_2, g_2, p);
 
   fmpz_spoly_mul_interp(h_1, state, f_1, g_1, Ss);
-  fmpz_spoly_mul_interp(h_2, state, f_2, g_2, Ss);
+  _fmpz_spoly_mul_coeffs(h_2, state, f_2, g_2, h_1->expons, h_1->length);
 
   fmpz_spoly_rem_cyc(h_1, h_1, p);
   fmpz_spoly_rem_cyc(h_2, h_2, p);
