@@ -43,7 +43,7 @@ main(void)
 
     
     /* Check aliasing of a and b */
-    for (i = 0; i < 10 * flint_test_multiplier(); i++)
+    for (i = 0; i < 60 * flint_test_multiplier(); i++)
     {
         fmpz_spoly_t b, c;
         fmpz_t d, e;
@@ -57,17 +57,11 @@ main(void)
 
         fmpz_spoly_init(b);
         fmpz_spoly_init(c);
-        fmpz_spoly_randtest(b, state, n_randint(state, 10), d, 10);
-        fmpz_spoly_randtest(c, state, n_randint(state, 10), e, 10);
+        fmpz_spoly_randtest(b, state, n_randint(state, 10), d, 30);
+        fmpz_spoly_randtest(c, state, n_randint(state, 10), e, 30);
 
         vec1 = NULL;
         vec2 = NULL;
-
-        /*flint_printf("poly1: ");
-        fmpz_spoly_print(b);
-        flint_printf("\npoly2: ");
-        fmpz_spoly_print(c);
-        flint_printf("\n");*/
 
         len1 = fmpz_spoly_sumcheck(&vec1, b, c);
         len2 = fmpz_spoly_sumset(&vec2, state, b, c);
