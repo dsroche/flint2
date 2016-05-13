@@ -481,7 +481,6 @@ FLINT_DLL int fmpz_spoly_equal_fmpz_poly(const fmpz_spoly_t spoly,
 
 /*  Addition and subtraction  ************************************************/
 
-/*  BEGINNING OF WHITMAN'S WORK %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
 FLINT_DLL void _fmpz_spoly_add(fmpz * res_c, fmpz * res_e, slong * res_len, 
     const fmpz * poly1_c, const fmpz * poly1_e, slong len1, const fmpz * poly2_c, 
     const fmpz * poly2_e, slong len2);
@@ -495,13 +494,11 @@ FLINT_DLL void _fmpz_spoly_sub(fmpz * res_c, fmpz * res_e, slong * res_len,
 
 FLINT_DLL void fmpz_spoly_sub(fmpz_spoly_t res,
     const fmpz_spoly_t poly1, const fmpz_spoly_t poly2);
-/*  END OF WHITMAN'S WORK %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
 
 FLINT_DLL void fmpz_spoly_neg(fmpz_spoly_t res, const fmpz_spoly_t poly);
 
 /*  Scalar multiplication and division  **************************************/
 
-/*  BEGINNING OF WHITMAN'S WORK %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
 FLINT_DLL void fmpz_spoly_scalar_mul_ui(fmpz_spoly_t res,
         const fmpz_spoly_t poly, ulong c);
 
@@ -510,7 +507,6 @@ FLINT_DLL void fmpz_spoly_scalar_mul_si(fmpz_spoly_t res,
 
 FLINT_DLL void fmpz_spoly_scalar_mul(fmpz_spoly_t res,
     const fmpz_spoly_t poly, const fmpz_t c);
-/*  END OF WHITMAN'S WORK %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
 
 /* FIXME */
 FLINT_DLL void fmpz_spoly_scalar_addmul(fmpz_spoly_t poly1,
@@ -568,7 +564,6 @@ FLINT_DLL void fmpz_spoly_bit_unpack(fmpz_spoly_t res,
 
 /*  Multiplication  **********************************************************/
 
-/*  BEGINNING OF WHITMAN'S WORK %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
 FLINT_DLL void fmpz_spoly_new_mul_classical(fmpz_spoly_t res,
         const fmpz_spoly_t poly1, const fmpz_spoly_t poly2);
 
@@ -580,7 +575,6 @@ FLINT_DLL void fmpz_spoly_mul_OS(fmpz_spoly_t res, flint_rand_t state,
 
 FLINT_DLL void fmpz_spoly_mul_interp(fmpz_spoly_t res, flint_rand_t state, 
     const fmpz_spoly_t poly1, const fmpz_spoly_t poly2, slong terms);
-/*  END OF WHITMAN'S WORK %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
 
 FLINT_DLL void fmpz_spoly_mul_classical(fmpz_spoly_t res,
     const fmpz_spoly_t poly1, const fmpz_spoly_t poly2);
@@ -630,7 +624,6 @@ FLINT_DLL void fmpz_spoly_pow_trunc(fmpz_spoly_t res,
 
 /*  Shifting  ****************************************************************/
 
-/*  BEGINNING OF WHITMAN'S WORK %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
 FMPZ_SPOLY_INLINE
 void fmpz_spoly_shift_left(fmpz_spoly_t res,
     const fmpz_spoly_t poly, const fmpz_t n)
@@ -641,7 +634,6 @@ void fmpz_spoly_shift_left(fmpz_spoly_t res,
         fmpz_add(res->expons+i, poly->expons+i, n);
     }
 }
-/*  END OF WHITMAN'S WORK %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
 
 /* FIXME */
 FLINT_DLL void fmpz_spoly_shift_left_si(fmpz_spoly_t res,

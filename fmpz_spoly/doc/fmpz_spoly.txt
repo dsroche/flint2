@@ -2,25 +2,25 @@
 
     This file is part of FLINT.
 
-    FLINT is free softwareyou can redistribute it and/or modify
+    FLINT is free software you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
-    the Free Software Foundationeither version 2 of the License, or
+    the Free Software Foundation either version 2 of the License, or
     (at your option) any later version.
      
     FLINT is distributed in the hope that it will be useful,
-    but WITHOUT ANY WARRANTYwithout even the implied warranty of
+    but WITHOUT ANY WARRANTY without even the implied warranty of
     MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
     GNU General Public License for more details.
 
     You should have received a copy of the GNU General Public License
-    along with FLINTif not, write to the Free Software
+    along with FLINT if not, write to the Free Software
     Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301 USA
 
 =============================================================================*/
 /******************************************************************************
 
-    Authored 2016 by Daniel S. RocheUS Government work in the public domain. 
-    Authored 2016 by A. Whitman GrovesUS Government work in the public domain. 
+    Authored 2016 by Daniel S. Roche US Government work in the public domain. 
+    Authored 2016 by A. Whitman Groves US Government work in the public domain. 
 
 ******************************************************************************/
 
@@ -33,20 +33,36 @@
 void fmpz_spoly_init(fmpz_spoly_t poly)
 
     Initializes a \code{poly} for use, setting it to zero.
-    A corresponding call to \code{fmpz_spoly_clear} must be
+    A corresponding call to\\ \code{fmpz_spoly_clear()} must be
     made later in order to free the memory used by the polynomial.
 
 void fmpz_spoly_init2(fmpz_spoly_t poly, slong alloc)
+
+    Initializes a \code{poly} with space for at least \code{alloc}
+    terms and sets the length to zero. The allocated coefficients are
+    all set to zero.
 
 void fmpz_spoly_realloc(fmpz_spoly_t poly, slong alloc)
 
 void fmpz_spoly_clear(fmpz_spoly_t poly)
 
+    Clears the given \code{poly}, releasing any memory used. It must be
+    reinitialized in order to be used again.
+
 void _fmpz_spoly_normalise(fmpz_spoly_t poly)
+
+    Set the length of \code{poly} so that the terms are sorted in
+    decreasing order by their exponent. If all coefficients are zero,
+    the length is set to zero. This function is mainly used internally,
+    as all functions guarantee normalization.
 
 void _fmpz_spoly_reserve(fmpz_spoly_t poly, slong terms)
 
+    Allocates memory for \code{terms} coefficients and exponents of \code{poly}.
+
 void _fmpz_spoly_set_length(fmpz_spoly_t poly, slong newlen)
+
+    Sets length of \code{poly} to \code{newlen}.
 
 *******************************************************************************
 
@@ -56,11 +72,18 @@ void _fmpz_spoly_set_length(fmpz_spoly_t poly, slong newlen)
 
 slong fmpz_spoly_terms(const fmpz_spoly_t poly)
 
+    Returns the number of terms in \code{poly}.
+
 const fmpz * fmpz_spoly_degree_ptr(const fmpz_spoly_t poly)
 
 void fmpz_spoly_degree(fmpz_t res, const fmpz_spoly_t poly)
 
+    Sets \code{res} to the degree of \code{poly}, which is the exponent
+    of its first term.
+
 slong fmpz_spoly_degree_si(const fmpz_spoly_t poly)
+
+    Returns the degree of \code{poly}.
 
 void fmpz_spoly_lowdeg(fmpz_t res, const fmpz_spoly_t poly)
 
@@ -76,10 +99,16 @@ int fmpz_spoly_is_poly(const fmpz_spoly_t poly)
 
 void fmpz_spoly_zero(fmpz_spoly_t poly)
 
+    Sets \code{poly} to the zero polynomial.
+
 void fmpz_spoly_one(fmpz_spoly_t poly)
+
+    Sets \code{poly} to the constant polynomial one.
 
 void fmpz_spoly_set(fmpz_spoly_t poly1, 
     const fmpz_spoly_t poly2)
+
+    Sets \code{poly1} to equal \code{poly2}
 
 void fmpz_spoly_set_fmpz_fmpz(fmpz_spoly_t poly, 
     const fmpz_t coeff, const fmpz_t expon)
@@ -106,6 +135,9 @@ char * fmpz_spoly_get_str(const fmpz_spoly_t poly)
 char * fmpz_spoly_get_str_pretty(const fmpz_spoly_t poly, const char * x)
 
 void fmpz_spoly_swap(fmpz_spoly_t poly1, fmpz_spoly_t poly2)
+
+    Swaps \code{poly1} and \code{poly2}. This is done efficiently
+    without copying data by swapping pointers, etc.
 
 void fmpz_spoly_truncate(fmpz_spoly_t poly, const fmpz_t deg)
 
