@@ -52,12 +52,12 @@
  */
 
 #define bits     512
-#define lenlo    50
-#define lenhi    98
-#define lenh     8
+#define lenlo    5
+#define lenhi    95
+#define lenh     45
 #define deglo    400
-#define deghi    4000
-#define degh     600
+#define deghi    7400
+#define degh     3500
 #define cols     ((lenhi + 1 - lenlo + (lenh - 1)) / lenh)
 #define rows     ((deghi + 1 - deglo + (degh - 1)) / degh)
 #define cpumin   10
@@ -118,8 +118,8 @@ main(void)
                  */
                 {
                   fmpz_init_set_ui(degree, deg);
-                  fmpz_spoly_randtest(f, state, deg - (len*deg)/deglo, degree, bits);
-                  fmpz_spoly_randtest(g, state, deg - (len*deg)/deglo, degree, bits);
+                  fmpz_spoly_randtest(f, state, deg - (len*deg*4)/deglo, degree, bits);
+                  fmpz_spoly_randtest(g, state, deg - (len*deg*4)/deglo, degree, bits);
                 }
                 
               loop:
@@ -160,13 +160,13 @@ main(void)
                 X[i][j] = 1;
             else
                 X[i][j] = 2;
-            flint_printf("len = %d, deg = %d\n", deg - (len*deg)/deglo, deg), fflush(stdout);
+            flint_printf("len = %d, deg = %d\n", deg - (len*deg*4)/deglo, deg), fflush(stdout);
         }
         {
            slong sum = 0, c;
            for (c = 0; c < nalgs; c++)
               sum += s[c];
-           flint_printf("len = %d, deg = %d, time = %wdms\n", deg - (len*deg)/deglo, deg, sum), fflush(stdout);
+           flint_printf("len = %d, deg = %d, time = %wdms\n", deg - (len*deg*4)/deglo, deg, sum), fflush(stdout);
         }
     }
     
