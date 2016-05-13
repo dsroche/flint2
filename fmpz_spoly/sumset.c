@@ -196,9 +196,6 @@ fmpz_spoly_sumset(fmpz ** res, flint_rand_t state, const fmpz_spoly_t poly1, con
   fmpz_spoly_set(g_1, poly2);
  
   /*TODO 
-   * Make a special case for if their is a polynomial of 1 term involved
-   * Debug the crap out of it
-   * Make some slight optimizations
    * Try to do some rough benchmarking (once base case multiply is implemented)
    * Do some FIXME's and replace some "poly->expon + i" with "fmpz_spoly_get_coeff"
    */

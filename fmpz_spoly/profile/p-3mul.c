@@ -126,17 +126,17 @@ main(void)
 
                 timeit_start(t[0]);
                 for (l = 0; l < loops; l++)
-                    fmpz_spoly_add(h, f, g);
+                    fmpz_spoly_mul_classical(h, f, g);
                 timeit_stop(t[0]);
                 
                 timeit_start(t[1]);
                 for (l = 0; l < loops; l++)
-                    fmpz_spoly_sub(h, f, g);
+                    fmpz_spoly_mul_heaps(h, f, g);
                 timeit_stop(t[1]);
 
                 timeit_start(t[2]);
                 for (l = 0; l < loops; l++)
-                    fmpz_spoly_mul_heaps(h, f, g);
+                    fmpz_spoly_mul_OS(h, state, f, g);
                 timeit_stop(t[2]);
                 
                 for (c = 0; c < nalgs; c++)

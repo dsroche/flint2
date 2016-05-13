@@ -97,19 +97,6 @@ _fmpz_spoly_mul_coeffs(fmpz_spoly_t res, flint_rand_t state,
 
     for(k = 0; k < len; k++)
     {
-      /*CRT
-       * void fmpz_CRT(fmpz_t out, const fmpz_t r1, const fmpz_t m1,
-       * fmpz_t r2, fmpz_t m2, int sign)
-       * Use the Chinese Remainder Theorem to set \code{out} to the unique value
-       * $0 \le x < M$ (if sign = 0) or $-M/2 < x \le M/2$ (if sign = 1)
-       * congruent to $r_1$ modulo $m_1$ and $r_2$ modulo $m_2$,
-       * where where $M = m_1 \times m_2$.
-       * It is assumed that $m_1$ and $m_2$ are positive integers greater
-       * than $1$ and coprime.
-       * 
-       * If sign = 0, it is assumed that $0 \le r_1 < m_1$ and $0 \le r_2 < m_2$.
-       * Otherwise,it is assumed that $-m_1 \le r_1 < m_1$ and $0 \le r_2 < m_2$.
-       * */
       fmpz_CRT(coeffs + k, coeffs + k, q_total, coeffs_mod_q + k, qq + i, 0);
     }
     fmpz_mul(q_total, q_total, qq + i);
