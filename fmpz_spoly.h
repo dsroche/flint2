@@ -96,11 +96,7 @@ extern const fmpz_t FMPZ_SPOLY_NEGATIVE_ONE;
 
 FLINT_DLL void fmpz_spoly_init(fmpz_spoly_t poly);
 
-/*  BEGINNING OF WHITMAN'S WORK %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
 FLINT_DLL void fmpz_spoly_init2(fmpz_spoly_t poly, slong alloc);
-
-FLINT_DLL void fmpz_spoly_realloc(fmpz_spoly_t poly, slong alloc);
-/*  ENDING OF WHITMAN'S WORK %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
 
 FLINT_DLL void fmpz_spoly_clear(fmpz_spoly_t poly);
 
@@ -251,9 +247,6 @@ FLINT_DLL int fmpz_spoly_set_str(fmpz_spoly_t poly, const char * str);
 
 FLINT_DLL char * fmpz_spoly_get_str(const fmpz_spoly_t poly);
 
-/* FIXME */
-FLINT_DLL char * fmpz_spoly_get_str_pretty(const fmpz_spoly_t poly, const char * x);
-
 FMPZ_SPOLY_INLINE
 void fmpz_spoly_swap(fmpz_spoly_t poly1, fmpz_spoly_t poly2)
 {
@@ -280,9 +273,6 @@ FLINT_DLL void fmpz_spoly_randtest(fmpz_spoly_t res, flint_rand_t state,
      slong terms, const fmpz_t degree, mp_bitcnt_t bits);
 
 FLINT_DLL void fmpz_spoly_laurent_randtest(fmpz_spoly_t res, flint_rand_t state,
-     slong terms, const fmpz_t degree, mp_bitcnt_t bits);
-
-FLINT_DLL void fmpz_spoly_new_randtest(fmpz_spoly_t res, flint_rand_t state, 
      slong terms, const fmpz_t degree, mp_bitcnt_t bits);
 
 /* FIXME */
@@ -481,7 +471,6 @@ FLINT_DLL int fmpz_spoly_equal_fmpz_poly(const fmpz_spoly_t spoly,
 
 /*  Addition and subtraction  ************************************************/
 
-/*  BEGINNING OF WHITMAN'S WORK %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
 FLINT_DLL void _fmpz_spoly_add(fmpz * res_c, fmpz * res_e, slong * res_len, 
     const fmpz * poly1_c, const fmpz * poly1_e, slong len1, const fmpz * poly2_c, 
     const fmpz * poly2_e, slong len2);
@@ -495,13 +484,11 @@ FLINT_DLL void _fmpz_spoly_sub(fmpz * res_c, fmpz * res_e, slong * res_len,
 
 FLINT_DLL void fmpz_spoly_sub(fmpz_spoly_t res,
     const fmpz_spoly_t poly1, const fmpz_spoly_t poly2);
-/*  END OF WHITMAN'S WORK %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
 
 FLINT_DLL void fmpz_spoly_neg(fmpz_spoly_t res, const fmpz_spoly_t poly);
 
 /*  Scalar multiplication and division  **************************************/
 
-/*  BEGINNING OF WHITMAN'S WORK %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
 FLINT_DLL void fmpz_spoly_scalar_mul_ui(fmpz_spoly_t res,
         const fmpz_spoly_t poly, ulong c);
 
@@ -510,7 +497,6 @@ FLINT_DLL void fmpz_spoly_scalar_mul_si(fmpz_spoly_t res,
 
 FLINT_DLL void fmpz_spoly_scalar_mul(fmpz_spoly_t res,
     const fmpz_spoly_t poly, const fmpz_t c);
-/*  END OF WHITMAN'S WORK %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
 
 /* FIXME */
 FLINT_DLL void fmpz_spoly_scalar_addmul(fmpz_spoly_t poly1,
@@ -568,7 +554,6 @@ FLINT_DLL void fmpz_spoly_bit_unpack(fmpz_spoly_t res,
 
 /*  Multiplication  **********************************************************/
 
-/*  BEGINNING OF WHITMAN'S WORK %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
 FLINT_DLL void fmpz_spoly_new_mul_classical(fmpz_spoly_t res,
         const fmpz_spoly_t poly1, const fmpz_spoly_t poly2);
 
@@ -580,7 +565,6 @@ FLINT_DLL void fmpz_spoly_mul_OS(fmpz_spoly_t res, flint_rand_t state,
 
 FLINT_DLL void fmpz_spoly_mul_interp(fmpz_spoly_t res, flint_rand_t state, 
     const fmpz_spoly_t poly1, const fmpz_spoly_t poly2, slong terms);
-/*  END OF WHITMAN'S WORK %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
 
 FLINT_DLL void fmpz_spoly_mul_classical(fmpz_spoly_t res,
     const fmpz_spoly_t poly1, const fmpz_spoly_t poly2);
@@ -630,7 +614,6 @@ FLINT_DLL void fmpz_spoly_pow_trunc(fmpz_spoly_t res,
 
 /*  Shifting  ****************************************************************/
 
-/*  BEGINNING OF WHITMAN'S WORK %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
 FMPZ_SPOLY_INLINE
 void fmpz_spoly_shift_left(fmpz_spoly_t res,
     const fmpz_spoly_t poly, const fmpz_t n)
@@ -641,7 +624,6 @@ void fmpz_spoly_shift_left(fmpz_spoly_t res,
         fmpz_add(res->expons+i, poly->expons+i, n);
     }
 }
-/*  END OF WHITMAN'S WORK %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
 
 /* FIXME */
 FLINT_DLL void fmpz_spoly_shift_left_si(fmpz_spoly_t res,
@@ -649,11 +631,11 @@ FLINT_DLL void fmpz_spoly_shift_left_si(fmpz_spoly_t res,
 
 /* FIXME */
 FLINT_DLL void fmpz_spoly_shift_right(fmpz_spoly_t res,
-    const fmpz_spoly_t poly, const fmpz_t n, int trunc_poly);
+    const fmpz_spoly_t poly, const fmpz_t n);
 
 /* FIXME */
 FLINT_DLL void fmpz_spoly_shift_right_si(fmpz_spoly_t res,
-    const fmpz_spoly_t poly, slong n, int trunc_poly);
+    const fmpz_spoly_t poly, slong n);
 
 FLINT_DLL void _fmpz_spoly_vec_shift(fmpz_spoly_t poly, 
     slong start, slong end, slong dist);
@@ -996,15 +978,6 @@ int fmpz_spoly_print_pretty(const fmpz_spoly_t poly, const char *x)
 }
 
 FLINT_DLL int fmpz_spoly_fread(FILE * file, fmpz_spoly_t poly);
-
-/* FIXME */
-FMPZ_SPOLY_INLINE
-int fmpz_spoly_fread_pretty(FILE * file,
-    fmpz_spoly_t poly, char ** x)
-{
-    /* FIXME this is just a placeholder! */
-    return -1;
-}
 
 FMPZ_SPOLY_INLINE
 int fmpz_spoly_read(fmpz_spoly_t poly)
