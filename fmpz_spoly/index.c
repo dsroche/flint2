@@ -32,9 +32,23 @@ slong _fmpz_spoly_index(const fmpz_spoly_t poly, const fmpz_t e)
     while (left <= right) {
         slong mid = (left + right) / 2;
         int cmp = fmpz_cmp(e, poly->expons + mid);
-        if (cmp > 0) right = mid-1;
-        else if (cmp < 0) left = mid+1;
+        if (cmp > 0) right = mid - 1;
+        else if (cmp < 0) left = mid + 1;
         else return mid;
     }
-    return -1L - left; /* not found; return negative index. */
+    return WORD(-1) - left; /* not found; return negative index. */
+}
+
+slong _fmpz_spoly_index_si(const fmpz_spoly_t poly, slong e)
+{
+    slong left = 0;
+    slong right = poly->length - 1;
+    while (left <= right) {
+        slong mid = (left + right) / 2;
+        int cmp = fmpz_cmp_si(poly->expons + mid, e);
+        if (cmp < 0) right = mid - 1;
+        else if (cmp > 0) left = mid + 1;
+        else return mid;
+    }
+    return WORD(-1) - left; /* not found; return negative index. */
 }

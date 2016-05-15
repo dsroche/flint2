@@ -25,30 +25,52 @@
 
 #include "fmpz_spoly.h"
 
+#define FMPZ_SPOLY_SET_COEFF_MACRO(COEFF_IS_ZERO, SET_COEFF, SET_EXPON) \
+    if (ind < 0) { \
+        if (! (COEFF_IS_ZERO)) { \
+            /* nonzero coeff, not in the polynomial; we have to insert it. */ \
+            _fmpz_spoly_reserve(poly, poly->length+1); \
+            ind = WORD(-1) - ind; \
+            _fmpz_spoly_vec_shift(poly, ind, poly->length, 1); \
+            SET_COEFF(poly->coeffs+ind, c); \
+            SET_EXPON(poly->expons+ind, e); \
+            ++ poly->length; \
+        } \
+    } \
+    else if (COEFF_IS_ZERO) { \
+        /* zero coeff, in the polynomial; we have to remove it. */ \
+        fmpz_clear(poly->coeffs+ind); \
+        fmpz_clear(poly->expons+ind); \
+        _fmpz_spoly_vec_shift(poly, ind+1, poly->length, WORD(-1)); \
+        poly->length -= 1; \
+    } \
+    else { \
+        /* nonzero coeff, in the polynomial; just change it. */ \
+        SET_COEFF(poly->coeffs + ind, c); \
+    }
+
+void fmpz_spoly_set_coeff_si_si(fmpz_spoly_t poly, slong c, slong e)
+{
+    slong ind = _fmpz_spoly_index_si(poly, e);
+    FMPZ_SPOLY_SET_COEFF_MACRO((c == 0), fmpz_set_si, fmpz_set_si)
+}
+
+void fmpz_spoly_set_coeff_si_fmpz(fmpz_spoly_t poly, slong c, const fmpz_t e)
+{
+    slong ind = _fmpz_spoly_index(poly, e);
+    FMPZ_SPOLY_SET_COEFF_MACRO((c == 0), fmpz_set_si, fmpz_set)
+}
+
+void fmpz_spoly_set_coeff_fmpz_si(fmpz_spoly_t poly, const fmpz_t c, slong e)
+{
+    slong ind = _fmpz_spoly_index_si(poly, e);
+    FMPZ_SPOLY_SET_COEFF_MACRO(fmpz_is_zero(c), fmpz_set, fmpz_set_si)
+}
+
 void fmpz_spoly_set_coeff(fmpz_spoly_t poly, const fmpz_t c, const fmpz_t e)
 {
-    slong ind;
-    ind = _fmpz_spoly_index(poly, e);
-    if (ind < 0) {
-        if (! fmpz_is_zero(c)) {
-            /* nonzero coeff, not in the polynomial; we have to insert it. */
-            _fmpz_spoly_reserve(poly, poly->length+1);
-            ind = -1 - ind;
-            _fmpz_spoly_vec_shift(poly, ind, poly->length, 1);
-            fmpz_set(poly->coeffs+ind, c);
-            fmpz_set(poly->expons+ind, e);
-            ++ poly->length;
-        }
-    }
-    else if (fmpz_is_zero(c)) {
-        /* zero coeff, in the polynomial; we have to remove it. */
-        fmpz_clear(poly->coeffs+ind);
-        fmpz_clear(poly->expons+ind);
-        _fmpz_spoly_vec_shift(poly, ind+1, poly->length, -1);
-        poly->length -= 1;
-    }
-    else {
-        /* nonzero coeff, in the polynomial; just change it. */
-        fmpz_set(poly->coeffs + ind, c);
-    }
+    slong ind = _fmpz_spoly_index(poly, e);
+    FMPZ_SPOLY_SET_COEFF_MACRO(fmpz_is_zero(c), fmpz_set, fmpz_set)
 }
+
+#undef FMPZ_SPOLY_SET_COEFF_MACRO

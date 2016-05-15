@@ -25,9 +25,31 @@
 
 #include "fmpz_spoly.h"
 
+slong fmpz_spoly_get_coeff_si_si(const fmpz_spoly_t poly, slong e)
+{
+    slong ind = _fmpz_spoly_index_si(poly, e);
+    if (ind < 0) return WORD(0);
+    else return fmpz_get_si(poly->coeffs + ind);
+}
+
+slong fmpz_spoly_get_coeff_si_fmpz(const fmpz_spoly_t poly, const fmpz_t e)
+{
+    slong ind = _fmpz_spoly_index(poly, e);
+    if (ind < 0) return WORD(0);
+    else return fmpz_get_si(poly->coeffs + ind);
+}
+
+void fmpz_spoly_get_coeff_fmpz_si(fmpz_t res, const fmpz_spoly_t poly, slong e)
+{
+    slong ind = _fmpz_spoly_index_si(poly, e);
+    if (ind < 0) fmpz_zero(res);
+    else fmpz_set(res, poly->coeffs + ind);
+}
+
 void fmpz_spoly_get_coeff(fmpz_t res, const fmpz_spoly_t poly, const fmpz_t e)
 {
     slong ind = _fmpz_spoly_index(poly, e);
     if (ind < 0) fmpz_zero(res);
     else fmpz_set(res, poly->coeffs + ind);
 }
+

@@ -186,6 +186,9 @@ void fmpz_spoly_get_coeff_fmpz_si(fmpz_t res,
 void fmpz_spoly_get_coeff(fmpz_t res,
     const fmpz_spoly_t poly, const fmpz_t e)
 
+void fmpz_spoly_set_coeff_si_si(fmpz_spoly_t poly, 
+    slong c, slong e)
+
 void fmpz_spoly_set_coeff_si_fmpz(fmpz_spoly_t poly, 
     slong c, const fmpz_t e)
 
@@ -194,9 +197,6 @@ void fmpz_spoly_set_coeff_fmpz_si(fmpz_spoly_t poly,
 
 void fmpz_spoly_set_coeff(fmpz_spoly_t poly, 
     const fmpz_t c, const fmpz_t e)
-
-void fmpz_spoly_set_coeff_si_si(fmpz_spoly_t poly, 
-    slong c, slong e)
 
 fmpz* fmpz_spoly_get_coeff_ptr(fmpz_spoly_t poly, const fmpz_t e)
 
@@ -218,6 +218,8 @@ slong fmpz_spoly_get_term_coeff_si(const fmpz_spoly_t poly, slong i)
 slong fmpz_spoly_get_term_expon_si(const fmpz_spoly_t poly, slong i)
 
 slong _fmpz_spoly_index(const fmpz_spoly_t poly, const fmpz_t e)
+
+slong _fmpz_spoly_index_si(const fmpz_spoly_t poly, slong e)
 
 *******************************************************************************
 

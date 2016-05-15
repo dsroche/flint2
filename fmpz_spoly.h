@@ -285,26 +285,27 @@ FLINT_DLL void fmpz_spoly_randtest_not_zero(fmpz_spoly_t res,
 
 /*  Getting and setting coefficients  ****************************************/
 
-/* FIXME */
+FLINT_DLL slong _fmpz_spoly_index(const fmpz_spoly_t poly, const fmpz_t e);
+
+FLINT_DLL slong _fmpz_spoly_index_si(const fmpz_spoly_t poly, slong e);
+
 FLINT_DLL slong fmpz_spoly_get_coeff_si_si(const fmpz_spoly_t poly, 
     slong e);
 
-/* FIXME */
 FLINT_DLL slong fmpz_spoly_get_coeff_si_fmpz(const fmpz_spoly_t poly, 
     const fmpz_t e);
 
-/* FIXME */
 FLINT_DLL void fmpz_spoly_get_coeff_fmpz_si(fmpz_t res,
     const fmpz_spoly_t poly, slong e);
 
 FLINT_DLL void fmpz_spoly_get_coeff(fmpz_t res,
     const fmpz_spoly_t poly, const fmpz_t e);
 
-/* FIXME */
+FLINT_DLL void fmpz_spoly_set_coeff_si_si(fmpz_spoly_t poly, slong c, slong e);
+
 FLINT_DLL void fmpz_spoly_set_coeff_si_fmpz(fmpz_spoly_t poly, 
     slong c, const fmpz_t e);
 
-/* FIXME */
 FLINT_DLL void fmpz_spoly_set_coeff_fmpz_si(fmpz_spoly_t poly, 
     const fmpz_t c, slong e);
 
@@ -312,27 +313,20 @@ FLINT_DLL void fmpz_spoly_set_coeff(fmpz_spoly_t poly,
     const fmpz_t c, const fmpz_t e);
 
 FMPZ_SPOLY_INLINE
-void fmpz_spoly_set_coeff_si_si(fmpz_spoly_t poly, 
-    slong c, slong e)
+fmpz* fmpz_spoly_get_coeff_ptr(fmpz_spoly_t poly, const fmpz_t e)
 {
-    /* TODO this is stupidly inefficient. */
-    fmpz_t zc;
-    fmpz_t ze;
-
-    fmpz_init_set_si(zc, c);
-    fmpz_init_set_si(ze, e);
-
-    fmpz_spoly_set_coeff(poly, zc, ze);
-
-    fmpz_clear(zc);
-    fmpz_clear(ze);
+    slong ind = _fmpz_spoly_index(poly, e);
+    if (ind < 0) return NULL;
+    else return poly->coeffs + ind;
 }
 
-/* FIXME */
-FLINT_DLL fmpz* fmpz_spoly_get_coeff_ptr(fmpz_spoly_t poly, const fmpz_t e);
-
-/* FIXME */
-FLINT_DLL fmpz* fmpz_spoly_get_coeff_ptr_si(fmpz_spoly_t poly, slong e);
+FMPZ_SPOLY_INLINE
+fmpz* fmpz_spoly_get_coeff_ptr_si(fmpz_spoly_t poly, slong e)
+{
+    slong ind = _fmpz_spoly_index_si(poly, e);
+    if (ind < 0) return NULL;
+    else return poly->coeffs + ind;
+}
 
 FMPZ_SPOLY_INLINE 
 void fmpz_spoly_get_term(fmpz_t coeff, fmpz_t expon, 
@@ -384,8 +378,6 @@ slong fmpz_spoly_get_term_expon_si(const fmpz_spoly_t poly, slong i)
     FLINT_ASSERT(i >= 0 && i < poly->length);
     return fmpz_get_si(poly->expons + i);
 }
-
-FLINT_DLL slong _fmpz_spoly_index(const fmpz_spoly_t poly, const fmpz_t e);
 
 /*  Comparison  **************************************************************/
 
@@ -983,12 +975,6 @@ FMPZ_SPOLY_INLINE
 int fmpz_spoly_read(fmpz_spoly_t poly)
 {
     return fmpz_spoly_fread(stdin, poly);
-}
-
-FMPZ_SPOLY_INLINE
-int fmpz_spoly_read_pretty(fmpz_spoly_t poly, char ** x)
-{
-    return fmpz_spoly_fread_pretty(stdin, poly, x);
 }
 
 FMPZ_SPOLY_INLINE
