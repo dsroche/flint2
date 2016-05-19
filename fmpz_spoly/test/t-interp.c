@@ -64,7 +64,7 @@ main(void)
       fmpz_mul_ui(h, h, UWORD(2));
       
       /*initialize interpolation struct and eval random fmpz_spoly*/
-      fmpz_spoly_bp_interp_init(f, a->length, h, d, state);
+      fmpz_spoly_bp_interp_init(f, state, a->length, h, d);
       fmpz_spoly_bp_interp_eval(f, a);
       
       /*b gets result*/
