@@ -1067,6 +1067,12 @@ void nmod_poly_rem(nmod_poly_t R, const nmod_poly_t A, const nmod_poly_t B)
 
     Computes the remainder $R$ on polynomial division of $A$ by $B$.
 
+void nmod_poly_rem_cyc(nmod_poly_t res, const nmod_poly_t poly, ulong n)
+
+    Computes the remainder $res$ on polynomial division of $poly$ by
+    $(x^n - 1)$. This essentially means reducing all exponents modulo
+    $n$ and combining like terms.
+
 void _nmod_poly_inv_series_basecase(mp_ptr Qinv,
                                     mp_srcptr Q, slong Qlen, slong n, nmod_t mod)
 
