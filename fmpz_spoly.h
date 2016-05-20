@@ -457,7 +457,6 @@ int fmpz_spoly_equal_fmpz(const fmpz_spoly_t poly, const fmpz_t c)
     return fmpz_spoly_is_term_fmpz_si(poly, c, 0);
 }
 
-/* FIXME */
 FLINT_DLL int fmpz_spoly_equal_fmpz_poly(const fmpz_spoly_t spoly, 
     const fmpz_poly_t dpoly);
 
@@ -526,7 +525,7 @@ FLINT_DLL void fmpz_spoly_scalar_fdiv_2exp(fmpz_spoly_t res,
 FLINT_DLL void fmpz_spoly_scalar_tdiv_2exp(fmpz_spoly_t res,
     const fmpz_spoly_t poly, ulong exp);
 
-/* FIXME */
+/* FIXME*/
 FLINT_DLL void fmpz_spoly_scalar_mod(fmpz_spoly_t res,
     const fmpz_spoly_t poly, const fmpz_t c);
 

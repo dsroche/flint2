@@ -5,4 +5,3 @@ Add/delete lines from this file as necessary. Goal: empty file!
   GPL.
 * Fix all the FIXMEs and TODOs (feel free to make more sub-bullets from
   this one)
-* Remove all the WHITMANS WORK comments
