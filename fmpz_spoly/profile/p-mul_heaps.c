@@ -32,9 +32,10 @@
 
 int main(int argc, char** argv)
 {
-    fmpz_spoly_struct orig[NUMEX];
-    fmpz_spoly_bp_interp_struct interps[NUMEX];
+    fmpz_spoly_struct f[NUMEX];
+    fmpz_spoly_struct g[NUMEX];
     fmpz_spoly_t res;
+    fmpz_spoly_t check;
     fmpz_t D, H;
     timeit_t timer;
     ulong T, hbits, dbits;
@@ -62,18 +63,19 @@ int main(int argc, char** argv)
 
     for (i=0; i<NUMEX; ++i)
     {
-        fmpz_spoly_init(orig+i);
-        fmpz_spoly_randtest(orig+i, state, T, D, hbits-1);
-        fmpz_spoly_bp_interp_init(interps+i, state, T, H, D);
+        fmpz_spoly_init(f+i);
+        fmpz_spoly_randtest(f+i, state, T, D, hbits-1);
+        fmpz_spoly_init(g+i);
+        fmpz_spoly_randtest(g+i, state, T, D, hbits-1);
     }
     fmpz_spoly_init(res);
+    fmpz_spoly_init(check);
 
     /* warm up and check time */
     timeit_start(timer);
     for (i=0; i<NUMEX; ++i)
     {
-        fmpz_spoly_bp_interp_eval(interps+i, orig+i);
-        fmpz_spoly_bp_interp(res, interps+i);
+        fmpz_spoly_mul_heaps(res, f + i, g + i);
     }
     timeit_stop(timer);
 
@@ -86,8 +88,7 @@ int main(int argc, char** argv)
         {
             for (i=0; i<NUMEX; ++i)
             {
-                fmpz_spoly_bp_interp_eval(interps+i, orig+i);
-                fmpz_spoly_bp_interp(res, interps+i);
+                fmpz_spoly_mul_heaps(res, f + i, g + i);
             }
         }
         timeit_stop(timer);
@@ -99,27 +100,15 @@ int main(int argc, char** argv)
     /* cool down and check results */
     for (i=0; i<NUMEX; ++i)
     {
-        fmpz_spoly_bp_interp_eval(interps+i, orig+i);
-        fmpz_spoly_bp_interp(res, interps+i);
-        if (!fmpz_spoly_equal(res, orig+i))
+        fmpz_spoly_mul_heaps(res, f + i, g + i);
+        fmpz_spoly_mul_heaps(check, f + i, g + i);
+        if (!fmpz_spoly_equal(res, check))
         {
             flint_printf("FAIL\n");
-            fmpz_spoly_print(orig+i); flint_printf("\n\n");
+            fmpz_spoly_print(f + i); flint_printf("\n\n");
+            fmpz_spoly_print(g + i); flint_printf("\n\n");
             fmpz_spoly_print(res); flint_printf("\n\n");
-            fmpz_print(D); flint_printf("\n"); /* FIXME */
-            { 
-                fmpz_t order, t; 
-                fmpz_init(order);  fmpz_init(t);
-                fmpz_setbit(order, interps[i].log2_order); 
-                fmpz_print(order); flint_printf("\n");
-                fmpz_powm(t, interps[i].sample_points + 1, order, interps[i].q);
-                if (fmpz_is_one(t)) flint_printf("good\n");
-                fmpz_divexact_ui(order, order, UWORD(2));
-                fmpz_powm(t, interps[i].sample_points + 1, order, interps[i].q);
-                if (!fmpz_is_one(t)) flint_printf("great\n");
-                fmpz_clear(order); fmpz_clear(t);
-            }
-            fmpz_print(interps[i].q); flint_printf("\n");
+            fmpz_spoly_print(check); flint_printf("\n\n");
             retval = 1;
         }
     }
@@ -135,9 +124,11 @@ int main(int argc, char** argv)
     FLINT_TEST_CLEANUP(state);
     for (i=0; i<NUMEX; ++i)
     {
-        fmpz_spoly_clear(orig+i);
+        fmpz_spoly_clear(f + i);
+        fmpz_spoly_clear(g + i);
     }
     fmpz_spoly_clear(res);
+    fmpz_spoly_clear(check);
     fmpz_clear(H);
     fmpz_clear(D);
 

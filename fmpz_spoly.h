@@ -82,10 +82,12 @@ typedef fmpz_spoly_bp_interp_struct fmpz_spoly_bp_interp_t[1];
 
 typedef struct
 {
-    mp_ptr shifts;
-    nmod_t * cmods;
-    nmod_t * emods;
-    nmod_poly_struct * evaluations;
+    nmod_t* moduli;
+    ulong* shifts;
+    slong* counts;
+    nmod_t** expmods;
+    nmod_poly_struct** evals;
+    slong len;
 } fmpz_spoly_sp_interp_struct;
 
 typedef fmpz_spoly_sp_interp_struct fmpz_spoly_sp_interp_t[1];
@@ -577,7 +579,10 @@ void fmpz_spoly_sqr(fmpz_spoly_t res, const fmpz_spoly_t poly)
     fmpz_spoly_mul(res, poly, poly);
 }
 
-FLINT_DLL void _fmpz_spoly_mul_coeffs(fmpz_spoly_t res, flint_rand_t state, 
+FLINT_DLL void _fmpz_spoly_mul_coeffs(fmpz_spoly_t res,
+    const fmpz_spoly_t poly1, const fmpz_spoly_t poly2);
+
+FLINT_DLL void _fmpz_spoly_mul_coeffs_slow(fmpz_spoly_t res, flint_rand_t state, 
     const fmpz_spoly_t poly1, const fmpz_spoly_t poly2, const fmpz * expons,
     slong len);
 
@@ -842,8 +847,8 @@ FLINT_DLL void fmpz_spoly_primitive_part(fmpz_spoly_t res, const fmpz_spoly_t po
 
 /*  Sparse interpolation ****************************************************/
 
-FLINT_DLL void fmpz_spoly_bp_interp_init(fmpz_spoly_bp_interp_t res,
-    slong terms, const fmpz_t height, const fmpz_t degree, flint_rand_t rs);
+FLINT_DLL void fmpz_spoly_bp_interp_init(fmpz_spoly_bp_interp_t res, 
+    flint_rand_t state, slong terms, const fmpz_t height, const fmpz_t degree);
 
 FLINT_DLL void fmpz_spoly_bp_interp_clear(fmpz_spoly_bp_interp_t res);
 
@@ -861,9 +866,9 @@ FLINT_DLL void fmpz_spoly_bp_interp_pow(fmpz_spoly_bp_interp_t res, ulong pow);
 FLINT_DLL int fmpz_spoly_bp_interp(fmpz_spoly_t res,
     const fmpz_spoly_bp_interp_t evals);
 
-/* FIXME */
-FLINT_DLL void fmpz_spoly_sp_interp_init(fmpz_spoly_sp_interp_t res,
-    slong terms, const fmpz_t height, const fmpz_t degree);
+FLINT_DLL void _fmpz_spoly_sp_interp_init(fmpz_spoly_sp_interp_t res,
+    flint_rand_t state, slong terms, const fmpz_t height, const fmpz_t degree,
+    slong factor);
 
 /* FIXME */
 FLINT_DLL void fmpz_spoly_sp_interp_clear(fmpz_spoly_sp_interp_t res);

@@ -28,8 +28,8 @@
 #include "fmpz_vec.h"
 #include "fmpz_spoly.h"
 
-void fmpz_spoly_bp_interp_init(fmpz_spoly_bp_interp_t res,
-        slong terms, const fmpz_t height, const fmpz_t degree, flint_rand_t rs)
+void fmpz_spoly_bp_interp_init(fmpz_spoly_bp_interp_t res, flint_rand_t state,
+        slong terms, const fmpz_t height, const fmpz_t degree)
 {
     fmpz_t k; /* we will have q = order*k + 1 */
     fmpz_t w;
@@ -85,7 +85,7 @@ void fmpz_spoly_bp_interp_init(fmpz_spoly_bp_interp_t res,
     fmpz_init2(test, fmpz_size(res->q));
     fmpz_fdiv_q_2exp(order, order, UWORD(1)); /* actual order / 2 */
     do {
-        fmpz_randm(w, rs, res->q);
+        fmpz_randm(w, state, res->q);
         fmpz_powm(w, w, k, res->q);
         fmpz_powm(test, w, order, res->q);
         fmpz_add_ui(test, test, UWORD(1));

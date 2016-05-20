@@ -67,8 +67,11 @@ fmpz_spoly_mul_OS(fmpz_spoly_t res, flint_rand_t state, const fmpz_spoly_t poly1
     length = fmpz_spoly_sumset(&test, state, poly1, poly2);
     FLINT_ASSERT(length > 1);
 
-    _fmpz_spoly_mul_coeffs(res, state, poly1, poly2, test, length);
+    _fmpz_spoly_reserve(res, length);
+    _fmpz_poly_reverse(res->expons, test, length, length);
+    _fmpz_spoly_set_length(res, length);
     _fmpz_vec_clear(test, length);
+    _fmpz_spoly_mul_coeffs(res, poly1, poly2);
     
     /* check the result mod a random prime */
     p = n_randprime(state, FLINT_BITS, 0);
