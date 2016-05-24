@@ -46,7 +46,6 @@ fmpz_spoly_equal_fmpz_poly(const fmpz_spoly_t spoly,
 
     if (fmpz_spoly_is_zero(spoly) ^ (fmpz_poly_length(dpoly) == 0))
     {
-        flint_printf("zero\n\n");
         return 0;
     }
 
@@ -55,7 +54,6 @@ fmpz_spoly_equal_fmpz_poly(const fmpz_spoly_t spoly,
 
     if(fmpz_cmp(temp, i) != 0)
     {
-        flint_printf("degree\n\n");
         return 0;
     }
 
@@ -69,7 +67,6 @@ fmpz_spoly_equal_fmpz_poly(const fmpz_spoly_t spoly,
         {
             if(fmpz_cmp_si(j, terms) > 0)
             {
-                flint_printf("terms\n\n");
                 return 0;
             }
 
@@ -77,7 +74,6 @@ fmpz_spoly_equal_fmpz_poly(const fmpz_spoly_t spoly,
 
             if(fmpz_cmp(foo, temp) != 0)
             {
-                flint_printf("cmp\n\n");
                 return 0;
             }
 
@@ -86,6 +82,5 @@ fmpz_spoly_equal_fmpz_poly(const fmpz_spoly_t spoly,
 
         fmpz_sub_ui(i, i, 1);
     }
-    flint_printf("clean\n\n");
     return 1;
 }

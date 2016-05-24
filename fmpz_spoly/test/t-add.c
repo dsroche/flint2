@@ -40,8 +40,68 @@ main(void)
     flint_printf("add....");
     fflush(stdout);
 
+    /* Check correctness */
+    for (i = 0; i < 100 * flint_test_multiplier(); i++)
+    {
+        fmpz_spoly_t a, b, c, c2;
+        fmpz_t d, e;
+        fmpz_t p, x, ax, bx, cx;
+
+        fmpz_init(d);
+        fmpz_init(e);
+        fmpz_randtest(d, state, 100);
+        fmpz_randtest(e, state, 100);
+
+        fmpz_spoly_init(a);
+        fmpz_spoly_init(b);
+        fmpz_spoly_init(c);
+        fmpz_spoly_init(c2);
+        fmpz_spoly_randtest(a, state, n_randint(state, 100), d, 1000);
+        fmpz_spoly_randtest(b, state, n_randint(state, 100), d, 1000);
+        
+        result = 1;
+        fmpz_spoly_add(c, a, b);
+        fmpz_spoly_sub(c2, c, a);
+        result = result && fmpz_spoly_equal(c2, b);
+        fmpz_spoly_sub(c2, c, b);
+        result = result && fmpz_spoly_equal(c2, a);
+
+        fmpz_init(p);
+        fmpz_init(x);
+        fmpz_randprime(p, state, 100, 0);
+        fmpz_randm(x, state, p);
+        fmpz_spoly_evaluate_mod(ax, a, x, p);
+        fmpz_spoly_evaluate_mod(bx, b, x, p);
+        fmpz_spoly_evaluate_mod(cx, c, x, p);
+        fmpz_add(ax, ax, bx);
+        fmpz_mod(ax, ax, p);
+        result = result && fmpz_equal(ax, cx);
+
+        if (! result)
+        {
+            flint_printf("FAIL PHASE 0 (i = %d):\n", i);
+            fmpz_spoly_print(a), flint_printf("\n\n");
+            fmpz_spoly_print(b), flint_printf("\n\n");
+            fmpz_spoly_print(c), flint_printf("\n\n");
+            abort();
+        }
+
+        fmpz_spoly_clear(a);
+        fmpz_spoly_clear(b);
+        fmpz_spoly_clear(c);
+        fmpz_spoly_clear(c2);
+        fmpz_clear(d);
+        fmpz_clear(e);
+        fmpz_clear(p);
+        fmpz_clear(x);
+        fmpz_clear(ax);
+        fmpz_clear(bx);
+        fmpz_clear(cx);
+    }
+
+
     /* Check aliasing of a and c */
-    for (i = 0; i < 1000 * flint_test_multiplier(); i++)
+    for (i = 0; i < 100 * flint_test_multiplier(); i++)
     {
         fmpz_spoly_t a, b, c;
         fmpz_t d, e;
@@ -80,7 +140,7 @@ main(void)
     
     
     /* Check aliasing of b and c */
-    for (i = 0; i < 1000 * flint_test_multiplier(); i++)
+    for (i = 0; i < 100 * flint_test_multiplier(); i++)
     {
         fmpz_spoly_t a, b, c;
 
