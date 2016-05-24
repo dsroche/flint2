@@ -27,7 +27,7 @@
 #include "fmpz_spoly.h"
 #include "profiler.h"
 
-#define NUMEX (3)
+#define NUMEX (10)
 #define MINCPU (1000)
 
 int main(int argc, char** argv)

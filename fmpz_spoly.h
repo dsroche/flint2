@@ -1015,9 +1015,6 @@ FLINT_DLL void _fmpz_mod_poly_powmod_x_2exp(fmpz* res,
 FLINT_DLL slong _fmpz_mod_poly_binary_roots(fmpz* roots, fmpz* expons,
     const fmpz* poly, slong len, const fmpz_t theta, slong k, const fmpz_t p);
 
-FLINT_DLL void _fmpz_mod_poly_build_roots(fmpz_mod_poly_t res, 
-    const fmpz * roots, slong len);
-
 FLINT_DLL void _fmpz_spoly_transp_vandermonde_precomp(fmpz* bb, slong blen,
     const fmpz* vv_inv, fmpz_poly_struct * const * tree, const fmpz* tree_root,
     const fmpz* xx, slong len, const fmpz_t p);
