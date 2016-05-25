@@ -33,7 +33,7 @@
 int
 main(void)
 {
-    /**int i;
+    int i;
     FLINT_TEST_INIT(state);
 
     flint_printf("init/init2/realloc/clear....");
@@ -54,7 +54,9 @@ main(void)
         fmpz_spoly_t a;
 
         fmpz_spoly_init2(a, n_randint(state, 100));
+        /* FIXME
         fmpz_spoly_realloc(a, n_randint(state, 100));
+        */
         fmpz_spoly_clear(a);
     }
 
@@ -75,6 +77,6 @@ main(void)
 
     FLINT_TEST_CLEANUP(state);
     
-    flint_printf("PASS\n");*/
+    flint_printf("PASS\n");
     return 0;
 }

@@ -46,13 +46,10 @@ main(void)
     for (i = 0; i < 1000 * flint_test_multiplier(); i++)
     {
         fmpz_spoly_t a, b;
-        fmpz_t c, n1;
+        fmpz_t c;
         ulong n;
 
-        fmpz_init(n1);
-        fmpz_randtest_not_zero(n1, state, 10);
-        
-        n = fmpz_get_ui(n1);
+        n = n_randtest_bits(state, 10);
 
         fmpz_init(c);
         fmpz_randtest(c, state, 200);
@@ -70,11 +67,10 @@ main(void)
             flint_printf("FAIL (1):\n");
             fmpz_spoly_print(a), flint_printf("\n\n");
             fmpz_spoly_print(b), flint_printf("\n\n");
-            flint_printf("n1 = "), fmpz_print(n1) , flint_printf("\n\n");
+            flint_printf("n = %wu\n\n", n);
             abort();
         }
 
-        fmpz_clear(n1);
         fmpz_clear(c);
         fmpz_spoly_clear(a);
         fmpz_spoly_clear(b);
@@ -86,7 +82,8 @@ main(void)
         fmpz_spoly_t a, b;
         fmpz_t c;
         ulong n;
-        n = (ulong) n_randbits(state, FLINT_BITS - 1);
+
+        n = n_randtest_bits(state, 10);
 
         fmpz_init(c);
         fmpz_randtest(c, state, 100);
@@ -105,6 +102,7 @@ main(void)
             flint_printf("FAIL (2):\n");
             fmpz_spoly_print(a), flint_printf("\n\n");
             fmpz_spoly_print(b), flint_printf("\n\n");
+            flint_printf("n = %wu\n\n", n);
             abort();
         }
 

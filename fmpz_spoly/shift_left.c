@@ -6,7 +6,7 @@
     it under the terms of the GNU General Public License as published by
     the Free Software Foundation; either version 2 of the License, or
     (at your option) any later version.
-
+     
     FLINT is distributed in the hope that it will be useful,
     but WITHOUT ANY WARRANTY; without even the implied warranty of
     MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
@@ -19,29 +19,27 @@
 =============================================================================*/
 /******************************************************************************
 
-    Authored 2015 by A. Whitman Groves and Daniel S. Roche; US Government work in the public domain. 
+    Authored 2015 by Daniel S. Roche; US Government work in the public domain. 
 
 ******************************************************************************/
 
 #include "fmpz_spoly.h"
 
-void 
-_fmpz_mod_poly_build_roots(fmpz_mod_poly_t res, const fmpz * roots, slong len)
+void fmpz_spoly_shift_left(fmpz_spoly_t res,
+    const fmpz_spoly_t poly, const fmpz_t n)
 {
-  fmpz_poly_struct ** tree;
-  slong i, j;
+    int i;
+    slong newlen = poly->length;
+    
+    if (res != poly)
+    {
+        _fmpz_spoly_reserve(res, newlen);
+        _fmpz_vec_set(res->coeffs, poly->coeffs, newlen);
+        _fmpz_spoly_set_length(res, newlen);
+    }
 
-  tree = _fmpz_mod_poly_tree_alloc(len);
-
-  _fmpz_mod_poly_tree_build(tree, roots, len, &(res->p));
-
-  for(i = 0, j = WORD(2); j < len; i++, j*=2);
-
-  j = j/2 + 1;
-
-  fmpz_mod_poly_fit_length(res, len + 1);
-
-  _fmpz_mod_poly_mul(res->coeffs, tree[i][0].coeffs, j, tree[i][1].coeffs, len + 2 - j, &(res->p));
-
-  _fmpz_mod_poly_set_length(res, len+1);
+    for (i = 0; i < newlen; ++i)
+    {
+        fmpz_add(res->expons+i, poly->expons+i, n);
+    }
 }

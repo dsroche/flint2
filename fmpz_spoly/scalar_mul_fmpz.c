@@ -20,6 +20,7 @@
 /******************************************************************************
 
     Authored 2015 by A. Whitman Groves; US Government work in the public domain. 
+    Authored 2016 by Daniel S. Roche; US Government work in the public domain. 
 
 ******************************************************************************/
 
@@ -37,30 +38,23 @@ fmpz_spoly_scalar_mul(fmpz_spoly_t poly1, const fmpz_spoly_t poly2,
     if (fmpz_is_zero(x) || (poly2->length == 0))
     {
         fmpz_spoly_zero(poly1);
-        return;
     }
-
-    if (fmpz_is_one(x))
+    else if (fmpz_is_one(x))
     {
-      fmpz_spoly_set(poly1, poly2);
-      return;
-    }
-
-    if (poly1 == poly2)
-    {
-      fmpz_spoly_t temp;
-      fmpz_spoly_init(temp);
-      fmpz_spoly_scalar_mul(temp, poly2, x);
-      poly1->length = poly2->length;
-      fmpz_spoly_set(poly1, temp);
-      fmpz_spoly_clear(temp);
+        fmpz_spoly_set(poly1, poly2);
     }
     else
     {
-      fmpz_spoly_init2(poly1, poly2->length);
-      poly1->length = poly2->length;
-    
-      _fmpz_vec_scalar_mul_fmpz(poly1->coeffs, poly2->coeffs, poly2->length, x);
-      _fmpz_vec_set(poly1->expons, poly2->expons, poly2->length);
+        slong t2 = fmpz_spoly_terms(poly2);
+
+        if (poly1 != poly2)
+        {
+            _fmpz_spoly_reserve(poly1, t2);
+            _fmpz_vec_set(poly1->expons, poly2->expons, t2);
+        }
+
+        _fmpz_vec_scalar_mul_fmpz(poly1->coeffs, poly2->coeffs, t2, x);
+
+        _fmpz_spoly_set_length(poly1, t2);
     }
 }

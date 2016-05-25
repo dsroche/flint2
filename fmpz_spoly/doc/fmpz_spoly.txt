@@ -85,6 +85,8 @@ slong fmpz_spoly_degree_si(const fmpz_spoly_t poly)
 
     Returns the degree of \code{poly}.
 
+const fmpz * fmpz_spoly_lowdeg_ptr(const fmpz_spoly_t poly)
+
 void fmpz_spoly_lowdeg(fmpz_t res, const fmpz_spoly_t poly)
 
 slong fmpz_spoly_lowdeg_si(const fmpz_spoly_t poly)
