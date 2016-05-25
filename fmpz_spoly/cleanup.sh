@@ -20,7 +20,7 @@ exec 4<<DELETEFILES
 TODO.txt
 ourtest
 Makefile
-# cleanup.sh
+cleanup.sh
 DELETEFILES
 
 while read -u4 filename; do
