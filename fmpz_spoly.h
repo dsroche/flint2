@@ -611,16 +611,8 @@ FLINT_DLL void fmpz_spoly_pow_trunc(fmpz_spoly_t res,
 
 /*  Shifting  ****************************************************************/
 
-FMPZ_SPOLY_INLINE
-void fmpz_spoly_shift_left(fmpz_spoly_t res,
-    const fmpz_spoly_t poly, const fmpz_t n)
-{
-    int i;
-    for (i=0; i<poly->length; ++i)
-    {
-        fmpz_add(res->expons+i, poly->expons+i, n);
-    }
-}
+FLINT_DLL void fmpz_spoly_shift_left(fmpz_spoly_t res,
+    const fmpz_spoly_t poly, const fmpz_t n);
 
 /* FIXME */
 FLINT_DLL void fmpz_spoly_shift_left_si(fmpz_spoly_t res,
