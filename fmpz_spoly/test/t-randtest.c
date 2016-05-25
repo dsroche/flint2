@@ -49,6 +49,7 @@ main(void)
                 
         fmpz_init(bits);
         fmpz_init(degree);
+        fmpz_init(abs_degree);
         fmpz_randtest(degree, state, 100);
         fmpz_abs(abs_degree, degree);
         
@@ -67,41 +68,51 @@ main(void)
         result = (terms == a->length || terms - fmpz_get_si(abs_degree) >= 1);
         if(!result)
         {
-          flint_printf("FAIL (undesired length):\n");
-          flint_printf("DESIRED: %lu RECEIVED: %lu and %d\n", terms, a->length, fmpz_cmp_si(abs_degree, terms));
+            flint_printf("FAIL (undesired length):\n");
+            flint_printf("DESIRED: %lu RECEIVED: %lu and %d\n", terms, a->length, fmpz_cmp_si(abs_degree, terms));
         }
 
         result = (fmpz_equal(abs_degree, a->expons) || terms == 0);
         if (!result)
         {
-          flint_printf("FAIL (undesired degree):\n");
-          flint_printf("DESIRED: ");
-          fmpz_print(abs_degree);
-          flint_printf(" RECEIVED: ");
-          fmpz_print(a->expons);
-          flint_printf("\n");
+            flint_printf("FAIL (undesired degree):\n");
+            flint_printf("DESIRED: ");
+            fmpz_print(abs_degree);
+            flint_printf(" RECEIVED: ");
+            fmpz_print(a->expons);
+            flint_printf("\n");
         }
 
         _fmpz_vec_height(bits, a->coeffs, a->length);
         result = (abs(height - fmpz_bits(bits)) < 15 || terms == 0);
         if(!result)
         {
-          flint_printf("FAIL (undesired height):\n");
-          flint_printf("DESIRED: %lu RECEIVED: %lu\n", height, fmpz_bits(bits));
+            flint_printf("FAIL (undesired height):\n");
+            flint_printf("DESIRED: %lu RECEIVED: %lu\n", height, fmpz_bits(bits));
         }
 
         result = 1;
         for(j = 0; j < a->length -1; ++j)
         {
-          if(fmpz_cmp(a->expons + j, a->expons + j + 1) < 0)
-            result = 0;
+            if(fmpz_cmp(a->expons + j, a->expons + j + 1) <= 0)
+                result = 0;
         }
         
         if(!result)
         {
-          flint_printf("FAIL (unsorted fmpz_spoly):\n");
-          fmpz_spoly_print(a), flint_printf("\n\n");
-          abort();
+            flint_printf("FAIL (unsorted fmpz_spoly):\n");
+            fmpz_spoly_print(a), flint_printf("\n\n");
+            flint_printf("terms: %wd\n", terms);
+            flint_printf("degree: "); fmpz_print(degree); flint_printf("\n");
+            flint_printf("height: %wd\n", height);
+            {
+                slong j;
+                for (j = 0; j < fmpz_spoly_terms(a); ++j)
+                {
+                    fmpz_print(a->expons + j); flint_printf("\n");
+                }
+            }
+            abort();
         }
 
         fmpz_spoly_clear(a);
