@@ -14,6 +14,13 @@ function usage {
 
 [[ $# -eq 0 ]] || usage 1
 
+read -p "WARNING: This script will delete stuff! You really want to do it? [y/N]?" -n1 yn
+[[ -z $yn ]] && yn=n || echo
+if [[ ! $yn = y ]]; then
+    echo "ABORTING"
+    exit
+fi
+
 cd "$srcdir"
 
 exec 4<<DELETEFILES
