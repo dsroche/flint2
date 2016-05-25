@@ -56,6 +56,12 @@ main(void)
         fmpz_spoly_init(a);
         fmpz_spoly_init(b);
         fmpz_spoly_randtest(a, state, n_randint(state, 100), c, 200);
+        fmpz_spoly_set(b, a);
+
+        /* FIXME
+        fmpz_set_ui(n, 100);
+        fmpz_spoly_randtest(
+        */
 
         fmpz_spoly_scalar_addmul(b, a, n);
         fmpz_spoly_scalar_addmul(a, a, n);

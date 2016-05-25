@@ -150,24 +150,31 @@ slong fmpz_spoly_degree_si(const fmpz_spoly_t poly)
     else return -1;
 }
 
+FMPZ_SPOLY_INLINE
+const fmpz * fmpz_spoly_lowdeg_ptr(const fmpz_spoly_t poly)
+{
+    if (poly->length == 0) return FMPZ_SPOLY_NEGATIVE_ONE;
+    else return poly->expons + (poly->length - 1);
+}
+
 FMPZ_SPOLY_INLINE 
 void fmpz_spoly_lowdeg(fmpz_t res, const fmpz_spoly_t poly)
 {
-    if (poly->length > 0) fmpz_set(res, poly->expons + (poly->length-1));
+    if (poly->length > 0) fmpz_set(res, poly->expons + (poly->length - 1));
     else fmpz_set_si(res, 1);
 }
 
 FMPZ_SPOLY_INLINE 
 slong fmpz_spoly_lowdeg_si(const fmpz_spoly_t poly)
 {
-    if (poly->length > 0) return fmpz_get_si(poly->expons + (poly->length-1));
+    if (poly->length > 0) return fmpz_get_si(poly->expons + (poly->length - 1));
     else return 1;
 }
 
 FMPZ_SPOLY_INLINE
 int fmpz_spoly_is_poly(const fmpz_spoly_t poly)
 {
-    return poly->length == 0 || fmpz_sgn(poly->expons + (poly->length-1)) >= 0;
+    return poly->length == 0 || fmpz_sgn(poly->expons + (poly->length - 1)) >= 0;
 }
 
 /*  Assignment and basic manipulation  ***************************************/
@@ -416,8 +423,8 @@ int fmpz_spoly_is_term(const fmpz_spoly_t poly,
 {
     return (poly->length == 0 && fmpz_is_zero(c)) ||
         (poly->length == 1 && 
-         fmpz_equal(poly->coeffs+0, c) && 
-         fmpz_equal(poly->expons+0, e)
+         fmpz_equal(poly->coeffs + 0, c) && 
+         fmpz_equal(poly->expons + 0, e)
         );
 }
 
@@ -427,8 +434,8 @@ int fmpz_spoly_is_term_fmpz_si(const fmpz_spoly_t poly,
 {
     return (poly->length == 0 && fmpz_is_zero(c)) ||
         (poly->length == 1 && 
-         fmpz_equal(poly->coeffs+0, c) && 
-         fmpz_equal_si(poly->expons+0, e)
+         fmpz_equal(poly->coeffs + 0, c) && 
+         fmpz_equal_si(poly->expons + 0, e)
         );
 }
 
@@ -438,8 +445,8 @@ int fmpz_spoly_is_term_si_fmpz(const fmpz_spoly_t poly,
 {
     return (poly->length == 0 && (c == 0)) ||
         (poly->length == 1 && 
-         fmpz_equal_si(poly->coeffs+0, c) && 
-         fmpz_equal(poly->expons+0, e)
+         fmpz_equal_si(poly->coeffs + 0, c) && 
+         fmpz_equal(poly->expons + 0, e)
         );
 }
 
@@ -448,8 +455,8 @@ int fmpz_spoly_is_term_si_si(const fmpz_spoly_t poly, slong c, slong e)
 {
     return (poly->length == 0 && (c == 0)) ||
         (poly->length == 1 && 
-         fmpz_equal_si(poly->coeffs+0, c) && 
-         fmpz_equal_si(poly->expons+0, e)
+         fmpz_equal_si(poly->coeffs + 0, c) && 
+         fmpz_equal_si(poly->expons + 0, e)
         );
 }
 
@@ -690,7 +697,7 @@ FMPZ_SPOLY_INLINE
 slong fmpz_spoly_max_ebits(const fmpz_spoly_t poly)
 {
     fmpz * lead = poly->expons + 0;
-    fmpz * trail = poly->expons + (poly->length-1);
+    fmpz * trail = poly->expons + (poly->length - 1);
     if (poly->length == 0) return 0;
     else if (poly->length == 1 || fmpz_cmpabs(lead, trail) >= 0)
     {
