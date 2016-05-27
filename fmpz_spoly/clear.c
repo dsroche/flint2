@@ -29,16 +29,15 @@
 void
 fmpz_spoly_clear(fmpz_spoly_t poly)
 {
-  
-  if(poly->coeffs)
-  {
-    slong i;
-    for (i=0; i<poly->length; ++i) 
+    if(poly->coeffs)
     {
-      _fmpz_demote(poly->coeffs + i);
-      _fmpz_demote(poly->expons + i);
+        slong i;
+        for (i=0; i<poly->length; ++i) 
+        {
+            _fmpz_demote(poly->coeffs + i);
+            _fmpz_demote(poly->expons + i);
+        }
+        flint_free(poly->coeffs);
+        flint_free(poly->expons);
     }
-    flint_free(poly->coeffs);
-    flint_free(poly->expons);
-  }
 }

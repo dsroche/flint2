@@ -118,6 +118,7 @@ main(void)
         fmpz_spoly_clear(a);
         fmpz_clear(degree);
         fmpz_clear(abs_degree);
+        fmpz_clear(bits);
     }
 
     FLINT_TEST_CLEANUP(state);

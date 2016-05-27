@@ -472,16 +472,8 @@ FLINT_DLL int fmpz_spoly_equal_fmpz_poly(const fmpz_spoly_t spoly,
 
 /*  Addition and subtraction  ************************************************/
 
-FLINT_DLL void _fmpz_spoly_add(fmpz * res_c, fmpz * res_e, slong * res_len, 
-    const fmpz * poly1_c, const fmpz * poly1_e, slong len1, const fmpz * poly2_c, 
-    const fmpz * poly2_e, slong len2);
-
 FLINT_DLL void fmpz_spoly_add(fmpz_spoly_t res,
     const fmpz_spoly_t poly1, const fmpz_spoly_t poly2);
-
-FLINT_DLL void _fmpz_spoly_sub(fmpz * res_c, fmpz * res_e, slong * res_len,
-    const fmpz * poly1_c, const fmpz * poly1_e, slong len1, const fmpz * poly2_c,
-    const fmpz * poly2_e, slong len2);
 
 FLINT_DLL void fmpz_spoly_sub(fmpz_spoly_t res,
     const fmpz_spoly_t poly1, const fmpz_spoly_t poly2);

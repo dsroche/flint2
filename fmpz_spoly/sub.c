@@ -25,8 +25,7 @@
 
 #include "fmpz_spoly.h"
 
-void 
-_fmpz_spoly_sub(fmpz * res_c, fmpz * res_e, slong * res_len, const fmpz * poly1_c, 
+static slong _fmpz_spoly_sub(fmpz * res_c, fmpz * res_e, const fmpz * poly1_c, 
     const fmpz * poly1_e, slong len1, const fmpz * poly2_c, const fmpz * poly2_e,
     slong len2)
 {
@@ -34,94 +33,97 @@ _fmpz_spoly_sub(fmpz * res_c, fmpz * res_e, slong * res_len, const fmpz * poly1_
 
     while(i < len1 && j < len2)
     {
-      fmpz_init(res_c + k);
-      fmpz_init(res_e + k);
-      
-      if(fmpz_cmp(poly1_e + i, poly2_e + j) > 0)
-      {
-        fmpz_set(res_c + k, poly1_c + i);
-        fmpz_set(res_e + k, poly1_e + i);
-        i++;
-      } 
-      else if(fmpz_cmp(poly1_e + i, poly2_e + j) < 0)
-      {
-        fmpz_neg(res_c + k, poly2_c + j);
-        fmpz_set(res_e + k, poly2_e + j);
-        j++;
-      }
-      else
-      {
-        fmpz_sub(res_c + k, poly1_c + i, poly2_c + j); 
-        fmpz_set(res_e + k, poly1_e + i);
-        i++;
-        j++;
-
-        if(fmpz_is_zero(res_c + k))
+        if(fmpz_cmp(poly1_e + i, poly2_e + j) > 0)
         {
-          k--;
+            fmpz_set(res_c + k, poly1_c + i);
+            fmpz_set(res_e + k, poly1_e + i);
+            i++;
+            k++;
+        } 
+        else if(fmpz_cmp(poly1_e + i, poly2_e + j) < 0)
+        {
+            fmpz_neg(res_c + k, poly2_c + j);
+            fmpz_set(res_e + k, poly2_e + j);
+            j++;
+            k++;
         }
-      }
-
-      k++;
+        else if (fmpz_equal(poly1_c + i, poly2_c + j))
+        {
+            i++;
+            j++;
+        }
+        else
+        {
+            fmpz_sub(res_c + k, poly1_c + i, poly2_c + j); 
+            fmpz_set(res_e + k, poly1_e + i);
+            i++;
+            j++;
+            k++;
+        }
     }
 
     if(i < len1)
-      for(; i < len1; i++)
-      {
-        fmpz_init(res_c + k);
-        fmpz_init(res_e + k);
-        fmpz_set(res_c + k, poly1_c + i);
-        fmpz_set(res_e + k, poly1_e + i);
-        k++;
-      }
+    {
+        for(; i < len1; i++)
+        {
+            fmpz_set(res_c + k, poly1_c + i);
+            fmpz_set(res_e + k, poly1_e + i);
+            k++;
+        }
+    }
     
     if(j < len2)
-      for(; j < len2; j++)
-      {
-        fmpz_init(res_c + k);
-        fmpz_init(res_e + k);
-        fmpz_neg(res_c + k, poly2_c + j);
-        fmpz_set(res_e + k, poly2_e + j);
-        k++;
-      }
+    {
+        for(; j < len2; j++)
+        {
+            fmpz_neg(res_c + k, poly2_c + j);
+            fmpz_set(res_e + k, poly2_e + j);
+            k++;
+        }
+    }
 
-    *res_len = k;
+    return k;
 }
 
 void
 fmpz_spoly_sub(fmpz_spoly_t res, const fmpz_spoly_t poly1,
     const fmpz_spoly_t poly2)
 {
-  slong max_length = poly1->length + poly2->length;
+    slong max_length = poly1->length + poly2->length;
 
-  if (poly1 == res || poly2 == res) 
-  {
-    fmpz_spoly_t temp;
-    fmpz_spoly_init2(temp, max_length);
+    if (poly1 == res || poly2 == res) 
+    {
+        slong newlen;
+        fmpz_spoly_t temp;
+        fmpz_spoly_init2(temp, max_length);
 
-    _fmpz_spoly_sub(temp->coeffs, temp->expons, &temp->length, poly1->coeffs,
-        poly1->expons, poly1->length, poly2->coeffs, poly2->expons, poly2->length);
+        newlen = _fmpz_spoly_sub(temp->coeffs, temp->expons, poly1->coeffs,
+                poly1->expons, poly1->length, poly2->coeffs, poly2->expons, poly2->length);
+        _fmpz_spoly_set_length(temp, newlen);
 
-    fmpz_spoly_set(res, temp);
-    fmpz_spoly_clear(temp);
-  }
-  else if (fmpz_spoly_equal(poly1, poly2))
-  {
-    fmpz_spoly_zero(res);
-  }
-  else if(poly1->length == 0)
-  {
-    fmpz_spoly_neg(res, poly2);
-  }
-  else if(poly2->length == 0)
-  {
-    fmpz_spoly_set(res, poly1);
-  }
-  else
-  {
-    fmpz_spoly_zero(res);
-    _fmpz_spoly_reserve(res, max_length);
-    _fmpz_spoly_sub(res->coeffs, res->expons, &res->length, poly1->coeffs, 
-        poly1->expons, poly1->length, poly2->coeffs, poly2->expons, poly2->length);
-  }
+        fmpz_spoly_swap(res, temp);
+        fmpz_spoly_clear(temp);
+    }
+    else if (fmpz_spoly_equal(poly1, poly2))
+    {
+        fmpz_spoly_zero(res);
+    }
+    else if(poly1->length == 0)
+    {
+        fmpz_spoly_neg(res, poly2);
+    }
+    else if(poly2->length == 0)
+    {
+        fmpz_spoly_set(res, poly1);
+    }
+    else
+    {
+        slong newlen;
+        fmpz_spoly_zero(res);
+        _fmpz_spoly_reserve(res, max_length);
+
+        newlen = _fmpz_spoly_sub(res->coeffs, res->expons, poly1->coeffs, 
+                poly1->expons, poly1->length, poly2->coeffs, poly2->expons, poly2->length);
+        _fmpz_spoly_set_length(res, newlen);
+    }
 }

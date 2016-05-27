@@ -28,38 +28,28 @@
 
 void fmpz_spoly_get_fmpz_poly(fmpz_poly_t out, const fmpz_spoly_t in)
 {
-    slong i, j;
-    
     if(fmpz_spoly_is_zero(in))
     {
-      fmpz_poly_zero(out);
-      return;
+        fmpz_poly_zero(out);
+        return;
     }
     else if(fmpz_sgn(in->expons) == -1)
     {
-      fmpz_poly_zero(out);
-      return;
-    }
-    else if(in->length == 1)
-    {
-      fmpz_poly_fit_length(out, 1);
-      fmpz_set(out->coeffs, in->coeffs);
-      out->length = 1;
-      return;
+        fmpz_poly_zero(out);
+        return;
     }
     else
     {
-      i = 0;
-      j = fmpz_get_si(in->expons);
-      
-      fmpz_poly_fit_length(out, j+1); 
-      
-      while (i < in->length && fmpz_cmp_si(in->expons + i, 0) >= 0)
-      {
-        fmpz_set(out->coeffs + fmpz_get_si(in->expons + i), in->coeffs + i);
-        i++;
-      }
+        slong i;
+        slong deg = fmpz_spoly_degree_si(in);
+        
+        fmpz_poly_fit_length(out, deg + 1); 
+        
+        for (i = 0; i < fmpz_spoly_terms(in); ++i)
+        {
+            fmpz_set(out->coeffs + fmpz_get_si(in->expons + i), in->coeffs + i);
+        }
 
-      _fmpz_poly_set_length(out, j+1);
+        _fmpz_poly_set_length(out, deg + 1);
     }
 }
