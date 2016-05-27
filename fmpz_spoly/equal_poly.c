@@ -20,6 +20,7 @@
 /******************************************************************************
 
     Authored 2015 by A. Whitman Groves; US Government work in the public domain. 
+    Authored 2016 by Daniel S. Roche; US Government work in the public domain. 
 
 ******************************************************************************/
 
@@ -31,56 +32,41 @@
 #include "fmpz_spoly.h"
 
 int
-fmpz_spoly_equal_fmpz_poly(const fmpz_spoly_t spoly,
-                          const fmpz_poly_t dpoly)
+fmpz_spoly_equal_fmpz_poly(const fmpz_spoly_t spoly, const fmpz_poly_t dpoly)
 {
-    fmpz_t i, j, temp, foo;
-    slong terms;
-
-    fmpz_init(i);
-    fmpz_init(j);
-    fmpz_init(temp);
-    fmpz_init(foo);
-
-    fmpz_zero(j);
-
-    if (fmpz_spoly_is_zero(spoly) ^ (fmpz_poly_length(dpoly) == 0))
+    if (fmpz_spoly_is_zero(spoly) && fmpz_poly_is_zero(dpoly))
+    {
+        return 1;
+    }
+    else if (! fmpz_equal_si(fmpz_spoly_degree_ptr(spoly), fmpz_poly_degree(dpoly)))
     {
         return 0;
     }
-
-    fmpz_set_si(i, fmpz_poly_degree(dpoly));
-    fmpz_spoly_degree(temp, spoly);
-
-    if(fmpz_cmp(temp, i) != 0)
+    else
     {
-        return 0;
-    }
-
-    terms = fmpz_spoly_terms(spoly);
-
-    while(fmpz_cmp_si(i, 0) >= 0)
-    {
-        fmpz_poly_get_coeff_fmpz(temp, dpoly, fmpz_get_si(i));
-
-        if(!fmpz_is_zero(temp))
+        slong si = 0, di = fmpz_poly_degree(dpoly);
+        while (1)
         {
-            if(fmpz_cmp_si(j, terms) > 0)
+            if (! fmpz_equal_si(fmpz_spoly_get_term_expon_ptr(spoly, si), di))
             {
                 return 0;
             }
 
-            fmpz_spoly_get_coeff(foo, spoly, i);
-
-            if(fmpz_cmp(foo, temp) != 0)
+            if (! fmpz_equal(fmpz_spoly_get_term_coeff_ptr(spoly, si), 
+                             fmpz_poly_get_coeff_ptr(dpoly, di)))
             {
                 return 0;
             }
 
-            fmpz_add_ui(j, j, 1);
+            ++si;
+            do
+            {
+                --di;
+            }
+            while (di >= 0 && fmpz_is_zero(fmpz_poly_get_coeff_ptr(dpoly, di)));
+
+            if (di < 0 && si == fmpz_spoly_terms(spoly)) return 1;
+            else if (di < 0 || si == fmpz_spoly_terms(spoly)) return 0;
         }
-
-        fmpz_sub_ui(i, i, 1);
     }
-    return 1;
 }

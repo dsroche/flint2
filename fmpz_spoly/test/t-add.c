@@ -49,8 +49,10 @@ main(void)
 
         fmpz_init(d);
         fmpz_init(e);
+        fmpz_init(ax);
+        fmpz_init(bx);
+        fmpz_init(cx);
         fmpz_randtest(d, state, 100);
-        fmpz_randtest(e, state, 100);
 
         fmpz_spoly_init(a);
         fmpz_spoly_init(b);
@@ -91,7 +93,6 @@ main(void)
         fmpz_spoly_clear(c);
         fmpz_spoly_clear(c2);
         fmpz_clear(d);
-        fmpz_clear(e);
         fmpz_clear(p);
         fmpz_clear(x);
         fmpz_clear(ax);

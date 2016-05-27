@@ -27,14 +27,21 @@
 
 void _fmpz_spoly_reserve(fmpz_spoly_t poly, slong terms)
 {
-    if (terms > poly->alloc) {
-        if (terms < 2*poly->alloc) terms = 2*poly->alloc;
+    if (! poly->coeffs && terms > 0)
+    {
+        poly->coeffs = (fmpz*) flint_calloc(terms, sizeof(fmpz));
+        poly->expons = (fmpz*) flint_calloc(terms, sizeof(fmpz));
+        poly->alloc = terms;
+    }
+    else if (terms > poly->alloc) 
+    {
+        if (terms < 2 * poly->alloc) terms = 2 * poly->alloc;
 
-        poly->coeffs = (fmpz*) flint_realloc(poly->coeffs, terms*sizeof(fmpz));
+        poly->coeffs = (fmpz*) flint_realloc(poly->coeffs, terms * sizeof(fmpz));
         flint_mpn_zero((mp_ptr) (poly->coeffs + poly->alloc), 
                 terms - poly->alloc);
 
-        poly->expons = (fmpz*) flint_realloc(poly->expons, terms*sizeof(fmpz));
+        poly->expons = (fmpz*) flint_realloc(poly->expons, terms * sizeof(fmpz));
         flint_mpn_zero((mp_ptr) (poly->expons + poly->alloc), 
                 terms - poly->alloc);
 

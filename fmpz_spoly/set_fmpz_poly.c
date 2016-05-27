@@ -29,19 +29,15 @@
 void fmpz_spoly_set_fmpz_poly(fmpz_spoly_t poly1, const fmpz_poly_t poly2)
 {
     slong i, j = 0;
-    fmpz_spoly_zero(poly1);
     _fmpz_spoly_reserve(poly1, poly2->length);
-    for (i = fmpz_poly_degree(poly2); i>=0; --i) 
+    for (i = fmpz_poly_degree(poly2); i >= 0; --i) 
     {
-      if (!fmpz_is_zero(poly2->coeffs + i)) 
-      {
-        fmpz_init(poly1->expons + j);
-        fmpz_init(poly1->coeffs + j);
-        fmpz_set_si(poly1->expons + j, i);
-        fmpz_set(poly1->coeffs + j, poly2->coeffs + i);
-        j += 1;
-      }
+        if (!fmpz_is_zero(poly2->coeffs + i)) 
+        {
+            fmpz_set_si(poly1->expons + j, i);
+            fmpz_set(poly1->coeffs + j, poly2->coeffs + i);
+            j += 1;
+        }
     }
-    poly1->length = j;
-    _fmpz_spoly_normalise(poly1);
+    _fmpz_spoly_set_length(poly1, j);
 }

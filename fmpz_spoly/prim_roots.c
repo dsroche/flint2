@@ -49,6 +49,12 @@ slong _fmpz_spoly_prim_roots(fmpz_t p, fmpz * qq, fmpz * ww, flint_rand_t state,
     mp_bitcnt_t qpbits;
 
     fmpz_randprime(p, state, p_bits, 0);
+
+    if (len == 0) 
+    {
+        return (q_prod_bits > 0) ? -1 : 0;
+    }
+
     fmpz_init_set_si(qprod, 1);
     fmpz_set_si(qq+0, 1);
 
