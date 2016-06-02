@@ -19,17 +19,23 @@
 =============================================================================*/
 /******************************************************************************
 
-    Authored 2015 by Daniel S. Roche; US Government work in the public domain. 
+    Authored 2016 by Daniel S. Roche; US Government work in the public domain. 
 
 ******************************************************************************/
 
-#include "fmpz.h"
-#include "fmpz_vec.h"
 #include "fmpz_spoly.h"
 
-void fmpz_spoly_bp_interp_clear(fmpz_spoly_bp_interp_t res)
+void fmpz_spoly_bp_interp_pow(fmpz_spoly_bp_interp_eval_t res,
+    const fmpz_spoly_bp_interp_eval_t poly, ulong pow,
+    const fmpz_spoly_bp_interp_basis_t basis)
 {
-  fmpz_clear(res->q);
-  _fmpz_vec_clear(res->sample_points, res->length);
-  _fmpz_vec_clear(res->evaluations, res->length);
+    slong i;
+
+    FLINT_ASSERT(res->length == basis->length);
+    FLINT_ASSERT(poly->length == basis->length);
+
+    for (i = 0; i < res->length; ++i)
+    {
+        fmpz_powm_ui(res->evals + i, poly->evals + i, pow, basis->q);
+    }
 }

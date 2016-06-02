@@ -28,8 +28,8 @@
 #include "fmpz_vec.h"
 #include "fmpz_spoly.h"
 
-void fmpz_spoly_bp_interp_init(fmpz_spoly_bp_interp_t res, flint_rand_t state,
-        slong terms, const fmpz_t height, const fmpz_t degree)
+void fmpz_spoly_bp_interp_basis_init(fmpz_spoly_bp_interp_basis_t res, flint_rand_t state,
+        slong terms, mp_bitcnt_t d, mp_bitcnt_t h)
 {
     fmpz_t k; /* we will have q = order*k + 1 */
     fmpz_t w;
@@ -39,11 +39,11 @@ void fmpz_spoly_bp_interp_init(fmpz_spoly_bp_interp_t res, flint_rand_t state,
 
     FLINT_ASSERT(terms >= 0);
 
-    if (terms == 0) {
+    if (terms == 0) 
+    {
         fmpz_init_set_ui(res->q, UWORD(2));
         res->log2_order = UWORD(0);
-        res->sample_points = NULL;
-        res->evaluations = NULL;
+        res->points = NULL;
         res->length = WORD(0);
         return;
     }
@@ -53,23 +53,12 @@ void fmpz_spoly_bp_interp_init(fmpz_spoly_bp_interp_t res, flint_rand_t state,
     fmpz_init(k);
 
     /* order = next higher power of 2 from degree */
-    res->log2_order = FLINT_MAX(1, fmpz_bits(degree));
-
-    if (fmpz_cmp_si(degree, WORD(0)) >= 0)
-    {
-        res->laurent = 0;
-    }
-    else
-    {
-        /* negative degree means Laurent polynomial */
-        res->log2_order += 1;
-        res->laurent = 1;
-    }
+    res->log2_order = FLINT_MAX(1, d);
 
     fmpz_mul_2exp(order, order, res->log2_order);
 
     /* Starting point for q = ceil(2*height/order)*order + 1 */
-    fmpz_mul_2exp(k, height, UWORD(1));
+    fmpz_setbit(k, h + 1);
     fmpz_cdiv_q(k, k, order);
     fmpz_addmul(res->q, k, order);
 
@@ -97,14 +86,13 @@ void fmpz_spoly_bp_interp_init(fmpz_spoly_bp_interp_t res, flint_rand_t state,
 
     /* Need 2*terms evaluation points. */
     res->length = 2*terms;
-    res->sample_points = _fmpz_vec_init(res->length);
-    res->evaluations = _fmpz_vec_init(res->length);
+    res->points = _fmpz_vec_init(res->length);
 
     /* Sample point i = w^i mod q */
-    fmpz_set_ui (res->sample_points+0, UWORD(1));
+    fmpz_set_ui (res->points + 0, UWORD(1));
     for (i = 1; i < res->length; ++i) {
-        fmpz_mul(res->sample_points+i, res->sample_points+(i-1), w);
-        fmpz_mod(res->sample_points+i, res->sample_points+i, res->q);
+        fmpz_mul(res->points + i, res->points + (i - 1), w);
+        fmpz_mod(res->points + i, res->points + i, res->q);
     }
 
     fmpz_clear(w);

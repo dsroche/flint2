@@ -40,56 +40,54 @@ main(void)
     flint_printf("interp....");
     fflush(stdout);
 
-    
-
-    for (i = 0; i < 1000 * flint_test_multiplier(); i++)
+    for (i = 0; i < 100 * flint_test_multiplier(); i++)
     {
-      fmpz_spoly_bp_interp_t f;
-      fmpz_spoly_t a, b, c;
-      fmpz_t d, h;
+        fmpz_spoly_bp_interp_basis_t basis;
+        fmpz_spoly_bp_interp_eval_t eval;
+        fmpz_spoly_t a, b, c;
+        fmpz_t d, h;
 
-      /*random fmpz*/
-      fmpz_init(d);
-      fmpz_init(h);
-      fmpz_randtest(d, state, 20);
+        /*random fmpz*/
+        fmpz_init(d);
+        fmpz_init(h);
+        fmpz_randtest(d, state, 20);
 
-      /*random fmpz_spoly*/
-      fmpz_spoly_init(a);
-      fmpz_spoly_init(b);
-      fmpz_spoly_init(c);
-      fmpz_spoly_randtest(a, state, n_randint(state, 10), d, 20);
+        /*random fmpz_spoly*/
+        fmpz_spoly_init(a);
+        fmpz_spoly_init(b);
+        fmpz_spoly_init(c);
+        fmpz_spoly_randtest(a, state, n_randint(state, 100), d, 20);
 
-      /*calculate height of coefficients*/
-      fmpz_spoly_height(h, a);
-      fmpz_mul_ui(h, h, UWORD(2));
-      
-      /*initialize interpolation struct and eval random fmpz_spoly*/
-      fmpz_spoly_bp_interp_init(f, state, a->length, h, d);
-      fmpz_spoly_bp_interp_eval(f, a);
-      
-      /*b gets result*/
-      fmpz_spoly_bp_interp(b, f);
+        /*initialize interpolation struct and eval random fmpz_spoly*/
+        fmpz_spoly_bp_interp_basis_init(basis, state, a->length, 
+                fmpz_bits(fmpz_spoly_degree_ptr(a)), fmpz_spoly_height_bits(a));
+        fmpz_spoly_bp_interp_eval_init(eval, basis);
+        fmpz_spoly_bp_interp_eval(eval, a, basis);
+        
+        /*b gets result*/
+        fmpz_spoly_bp_interp(b, eval, basis);
 
-      /*c gets result*/
-      fmpz_spoly_bp_interp(c, f);
+        /*c gets result*/
+        fmpz_spoly_bp_interp(c, eval, basis);
 
-      /*check that a == b and b == c*/
-      result = (fmpz_spoly_equal(a, b) && fmpz_spoly_equal(b,c));
-      if (!result)
-      {
-          flint_printf("FAIL:\n");
-          fmpz_spoly_print(a), flint_printf("\n\n");
-          fmpz_spoly_print(b), flint_printf("\n\n");
-          fmpz_spoly_print(c), flint_printf("\n\n");
-          abort();
-      }
+        /*check that a == b and b == c*/
+        result = (fmpz_spoly_equal(a, b) && fmpz_spoly_equal(b,c));
+        if (!result)
+        {
+            flint_printf("FAIL:\n");
+            fmpz_spoly_print(a), flint_printf("\n\n");
+            fmpz_spoly_print(b), flint_printf("\n\n");
+            fmpz_spoly_print(c), flint_printf("\n\n");
+            abort();
+        }
 
-      fmpz_clear(d);
-      fmpz_clear(h);
-      fmpz_spoly_clear(a);
-      fmpz_spoly_clear(b);
-      fmpz_spoly_clear(c);
-      fmpz_spoly_bp_interp_clear(f);
+        fmpz_clear(d);
+        fmpz_clear(h);
+        fmpz_spoly_clear(a);
+        fmpz_spoly_clear(b);
+        fmpz_spoly_clear(c);
+        fmpz_spoly_bp_interp_eval_clear(eval);
+        fmpz_spoly_bp_interp_basis_clear(basis);
     }
 
     FLINT_TEST_CLEANUP(state);

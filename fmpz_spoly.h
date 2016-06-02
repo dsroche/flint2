@@ -72,13 +72,19 @@ typedef struct
 {
     fmpz_t q;
     ulong log2_order;
-    int laurent;
-    fmpz * sample_points;
-    fmpz * evaluations;
+    fmpz* points;
     slong length;
-} fmpz_spoly_bp_interp_struct;
+} fmpz_spoly_bp_interp_basis_struct;
 
-typedef fmpz_spoly_bp_interp_struct fmpz_spoly_bp_interp_t[1];
+typedef fmpz_spoly_bp_interp_basis_struct fmpz_spoly_bp_interp_basis_t[1];
+
+typedef struct
+{
+    fmpz* evals;
+    slong length;
+} fmpz_spoly_bp_interp_eval_struct;
+
+typedef fmpz_spoly_bp_interp_eval_struct fmpz_spoly_bp_interp_eval_t[1];
 
 typedef struct
 {
@@ -712,6 +718,12 @@ void fmpz_spoly_height(fmpz_t res, const fmpz_spoly_t poly)
     _fmpz_vec_height(res, poly->coeffs, poly->length);
 }
 
+FMPZ_SPOLY_INLINE
+mp_bitcnt_t fmpz_spoly_height_bits(const fmpz_spoly_t poly)
+{
+    return FLINT_ABS(_fmpz_vec_max_bits(poly->coeffs, poly->length));
+}
+
 /*  Euclidean division  ******************************************************/
 
 FMPZ_SPOLY_INLINE
@@ -839,24 +851,63 @@ FLINT_DLL void fmpz_spoly_primitive_part(fmpz_spoly_t res, const fmpz_spoly_t po
 
 /*  Sparse interpolation ****************************************************/
 
-FLINT_DLL void fmpz_spoly_bp_interp_init(fmpz_spoly_bp_interp_t res, 
-    flint_rand_t state, slong terms, const fmpz_t height, const fmpz_t degree);
+FLINT_DLL void fmpz_spoly_bp_interp_basis_init(fmpz_spoly_bp_interp_basis_t res, 
+    flint_rand_t state, slong terms, mp_bitcnt_t d, mp_bitcnt_t h);
 
-FLINT_DLL void fmpz_spoly_bp_interp_clear(fmpz_spoly_bp_interp_t res);
+FMPZ_SPOLY_INLINE
+void fmpz_spoly_bp_interp_basis_clear(fmpz_spoly_bp_interp_basis_t res)
+{
+    fmpz_clear(res->q);
+    if (res->length) _fmpz_vec_clear(res->points, res->length);
+}
 
-FLINT_DLL void fmpz_spoly_bp_interp_eval(fmpz_spoly_bp_interp_t res,
-    const fmpz_spoly_t poly);
 
-FLINT_DLL void fmpz_spoly_bp_interp_mul(fmpz_spoly_bp_interp_t res,
-    const fmpz_spoly_t poly);
+FMPZ_SPOLY_INLINE
+void fmpz_spoly_bp_interp_eval_init(fmpz_spoly_bp_interp_eval_t res,
+    const fmpz_spoly_bp_interp_basis_t basis)
+{
+    res->length = basis->length;
+    if (res->length) res->evals = _fmpz_vec_init(res->length);
+    else res->evals = NULL;
+}
 
-FLINT_DLL void fmpz_spoly_bp_interp_add(fmpz_spoly_bp_interp_t res,
-    const fmpz_t c, const fmpz_spoly_t poly);
+FMPZ_SPOLY_INLINE
+void fmpz_spoly_bp_interp_eval_clear(fmpz_spoly_bp_interp_eval_t res)
+{
+    if (res->length) _fmpz_vec_clear(res->evals, res->length);
+}
 
-FLINT_DLL void fmpz_spoly_bp_interp_pow(fmpz_spoly_bp_interp_t res, ulong pow);
+/* (redundant forward declaration) */
+FLINT_DLL void fmpz_spoly_evaluate_powers(fmpz* res, slong len,
+    const fmpz_spoly_t poly, const fmpz_t w, const fmpz_t p);
+
+FMPZ_SPOLY_INLINE
+void fmpz_spoly_bp_interp_eval(fmpz_spoly_bp_interp_eval_t res,
+    const fmpz_spoly_t poly, const fmpz_spoly_bp_interp_basis_t basis)
+{
+    FLINT_ASSERT(res->length == basis->length);
+    fmpz_spoly_evaluate_powers(res->evals,
+        basis->length, poly, basis->points + 1, basis->q);
+}
+
+FLINT_DLL void fmpz_spoly_bp_interp_mul(fmpz_spoly_bp_interp_eval_t res,
+    const fmpz_spoly_bp_interp_eval_t poly1,
+    const fmpz_spoly_bp_interp_eval_t poly2,
+    const fmpz_spoly_bp_interp_basis_t basis);
+
+FLINT_DLL void fmpz_spoly_bp_interp_addmul_si(fmpz_spoly_bp_interp_eval_t res,
+    const fmpz_spoly_bp_interp_eval_t poly1,
+    slong c,
+    const fmpz_spoly_bp_interp_eval_t poly2,
+    const fmpz_spoly_bp_interp_basis_t basis);
+
+FLINT_DLL void fmpz_spoly_bp_interp_pow(fmpz_spoly_bp_interp_eval_t res,
+    const fmpz_spoly_bp_interp_eval_t poly, ulong pow,
+    const fmpz_spoly_bp_interp_basis_t basis);
 
 FLINT_DLL int fmpz_spoly_bp_interp(fmpz_spoly_t res,
-    const fmpz_spoly_bp_interp_t evals);
+    const fmpz_spoly_bp_interp_eval_t eval,
+    const fmpz_spoly_bp_interp_basis_t basis);
 
 FLINT_DLL void _fmpz_spoly_sp_interp_init(fmpz_spoly_sp_interp_t res,
     flint_rand_t state, slong terms, const fmpz_t height, const fmpz_t degree,

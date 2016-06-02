@@ -462,6 +462,8 @@ ulong fmpz_spoly_max_elimbs(const fmpz_spoly_t poly)
 
 void fmpz_spoly_height(fmpz_t res, const fmpz_spoly_t poly)
 
+mp_bitcnt_t fmpz_spoly_height_bits(const fmpz_spoly_t poly)
+
 *******************************************************************************
 
     Euclidean division

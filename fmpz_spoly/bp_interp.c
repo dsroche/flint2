@@ -219,7 +219,8 @@ slong _fmpz_mod_poly_binary_roots(fmpz* roots, fmpz* expons,
 }
 
 int fmpz_spoly_bp_interp(fmpz_spoly_t res,
-        const fmpz_spoly_bp_interp_t evals)
+    const fmpz_spoly_bp_interp_eval_t eval,
+    const fmpz_spoly_bp_interp_basis_t basis)
 {
     /* Berlekamp-Massey to find the Prony polynomial
       * Compute roots of Prony poly, along with discrete logs
@@ -229,22 +230,24 @@ int fmpz_spoly_bp_interp(fmpz_spoly_t res,
     fmpz_mod_poly_t G;
     fmpz * roots;
     slong i, t;
-    const fmpz * w = evals->sample_points + 1;
+    const fmpz * w = basis->points + 1;
+
+    FLINT_ASSERT(eval->length == basis->length);
 
     fmpz_spoly_zero(res);
 
-    if (evals->length == 0) 
+    if (basis->length == 0) 
     {
         return 1;
     }
 
     /* Berlekamp-Massey to discover Prony polynomial */
 
-    fmpz_mod_poly_init(G, evals->q);
-    fmpz_mod_poly_minpoly(G, evals->evaluations, evals->length);
+    fmpz_mod_poly_init(G, basis->q);
+    fmpz_mod_poly_minpoly(G, eval->evals, eval->length);
 
     t = fmpz_mod_poly_degree(G);
-    if (t > evals->length / 2)
+    if (t > basis->length / 2)
     {
         /* sparsity estimate was too low */
         fmpz_mod_poly_clear(G);
@@ -263,13 +266,13 @@ int fmpz_spoly_bp_interp(fmpz_spoly_t res,
 
     roots = _fmpz_vec_init(t);
     _fmpz_mod_poly_binary_roots(roots, res->expons, 
-            G->coeffs, G->length, w, evals->log2_order, evals->q);
+            G->coeffs, G->length, w, basis->log2_order, basis->q);
 
     /* solve transposed Vandermode to get coeffs */
     /* Varndermonde(roots)^T * x = evals, truncated to length t */
 
     _fmpz_spoly_transp_vandermonde_inv(res->coeffs,
-            roots, evals->evaluations, t, evals->q);
+            roots, eval->evals, t, basis->q);
 
     /* sort terms and remove zero coeffs */
     _fmpz_spoly_normalise(res);
