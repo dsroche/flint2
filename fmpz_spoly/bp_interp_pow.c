@@ -26,16 +26,14 @@
 #include "fmpz_spoly.h"
 
 void fmpz_spoly_bp_interp_pow(fmpz_spoly_bp_interp_eval_t res,
-    const fmpz_spoly_bp_interp_eval_t poly, ulong pow,
-    const fmpz_spoly_bp_interp_basis_t basis)
+    const fmpz_spoly_bp_interp_eval_t poly, ulong pow)
 {
     slong i;
 
-    FLINT_ASSERT(res->length == basis->length);
-    FLINT_ASSERT(poly->length == basis->length);
+    FLINT_ASSERT(res->basis == poly->basis);
 
-    for (i = 0; i < res->length; ++i)
+    for (i = 0; i < res->basis->length; ++i)
     {
-        fmpz_powm_ui(res->evals + i, poly->evals + i, pow, basis->q);
+        fmpz_powm_ui(res->evals + i, poly->evals + i, pow, res->basis->q);
     }
 }
