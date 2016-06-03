@@ -62,13 +62,13 @@ main(void)
         fmpz_spoly_bp_interp_basis_init(basis, state, a->length, 
                 fmpz_bits(fmpz_spoly_degree_ptr(a)), fmpz_spoly_height_bits(a));
         fmpz_spoly_bp_interp_eval_init(eval, basis);
-        fmpz_spoly_bp_interp_eval(eval, a, basis);
+        fmpz_spoly_bp_interp_eval(eval, a);
         
         /*b gets result*/
-        fmpz_spoly_bp_interp(b, eval, basis);
+        fmpz_spoly_bp_interp(b, eval);
 
         /*c gets result*/
-        fmpz_spoly_bp_interp(c, eval, basis);
+        fmpz_spoly_bp_interp(c, eval);
 
         /*check that a == b and b == c*/
         result = (fmpz_spoly_equal(a, b) && fmpz_spoly_equal(b,c));

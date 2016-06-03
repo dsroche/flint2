@@ -28,28 +28,26 @@
 void fmpz_spoly_bp_interp_addmul_si(fmpz_spoly_bp_interp_eval_t res,
     const fmpz_spoly_bp_interp_eval_t poly1,
     slong c,
-    const fmpz_spoly_bp_interp_eval_t poly2,
-    const fmpz_spoly_bp_interp_basis_t basis)
+    const fmpz_spoly_bp_interp_eval_t poly2)
 {
-    FLINT_ASSERT(res->length == basis->length);
-    FLINT_ASSERT(poly1->length == basis->length);
-    FLINT_ASSERT(poly2->length == basis->length);
+    if (res->basis->length == 0) return;
 
-    if (res->length == 0) return;
+    FLINT_ASSERT(res->basis == poly1->basis);
+    FLINT_ASSERT(res->basis == poly2->basis);
 
     if (res == poly2)
     {
         fmpz_spoly_bp_interp_eval_t temp;
-        temp->length = poly2->length;
-        temp->evals = _fmpz_vec_init(temp->length);
-        _fmpz_vec_set(temp->evals, poly2->evals, temp->length);
-        fmpz_spoly_bp_interp_addmul_si(res, poly1, c, temp, basis);
-        _fmpz_vec_clear(temp->evals, temp->length);
+        temp->basis = poly2->basis;
+        temp->evals = _fmpz_vec_init(temp->basis->length);
+        _fmpz_vec_set(temp->evals, poly2->evals, temp->basis->length);
+        fmpz_spoly_bp_interp_addmul_si(res, poly1, c, temp);
+        _fmpz_vec_clear(temp->evals, temp->basis->length);
         return;
     }
 
-    if (res != poly1) _fmpz_vec_set(res->evals, poly1->evals, res->length);
+    if (res != poly1) _fmpz_vec_set(res->evals, poly1->evals, res->basis->length);
 
-    _fmpz_vec_scalar_addmul_si(res->evals, poly2->evals, res->length, c);
-    _fmpz_vec_scalar_mod_fmpz(res->evals, res->evals, res->length, basis->q);
+    _fmpz_vec_scalar_addmul_si(res->evals, poly2->evals, res->basis->length, c);
+    _fmpz_vec_scalar_mod_fmpz(res->evals, res->evals, res->basis->length, res->basis->q);
 }

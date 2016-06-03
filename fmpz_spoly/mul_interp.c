@@ -42,13 +42,13 @@ fmpz_spoly_mul_interp(fmpz_spoly_t res, flint_rand_t state,
     fmpz_spoly_bp_interp_basis_init(basis, state, terms, d, h);
 
     fmpz_spoly_bp_interp_eval_init(p1e, basis);
-    fmpz_spoly_bp_interp_eval(p1e, poly1, basis);
+    fmpz_spoly_bp_interp_eval(p1e, poly1);
 
     fmpz_spoly_bp_interp_eval_init(p2e, basis);
-    fmpz_spoly_bp_interp_eval(p2e, poly2, basis);
+    fmpz_spoly_bp_interp_eval(p2e, poly2);
 
-    fmpz_spoly_bp_interp_mul(p1e, p1e, p2e, basis);
-    fmpz_spoly_bp_interp(res, p1e, basis);
+    fmpz_spoly_bp_interp_mul(p1e, p1e, p2e);
+    fmpz_spoly_bp_interp(res, p1e);
 
     fmpz_spoly_bp_interp_eval_clear(p1e);
     fmpz_spoly_bp_interp_eval_clear(p2e);

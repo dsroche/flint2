@@ -27,18 +27,16 @@
 
 void fmpz_spoly_bp_interp_mul(fmpz_spoly_bp_interp_eval_t res,
     const fmpz_spoly_bp_interp_eval_t poly1,
-    const fmpz_spoly_bp_interp_eval_t poly2,
-    const fmpz_spoly_bp_interp_basis_t basis)
+    const fmpz_spoly_bp_interp_eval_t poly2)
 {
     slong i;
 
-    FLINT_ASSERT(res->length == basis->length);
-    FLINT_ASSERT(poly1->length == basis->length);
-    FLINT_ASSERT(poly2->length == basis->length);
+    FLINT_ASSERT(res->basis == poly1->basis);
+    FLINT_ASSERT(poly1->basis == poly2->basis);
 
-    for (i = 0; i < res->length; ++i)
+    for (i = 0; i < res->basis->length; ++i)
     {
         fmpz_mul(res->evals + i, poly1->evals + i, poly2->evals + i);
-        fmpz_mod(res->evals + i, res->evals + i, basis->q);
+        fmpz_mod(res->evals + i, res->evals + i, res->basis->q);
     }
 }
