@@ -23,16 +23,21 @@
 
 ******************************************************************************/
 
+#include "nmod_poly.h"
 #include "fmpz_spoly.h"
 
-void fmpz_spoly_bp_interp_addmul_si(fmpz_spoly_bp_interp_eval_t res,
-    slong c,
-    const fmpz_spoly_bp_interp_eval_t poly2)
+void fmpz_spoly_sp_interp_mul(fmpz_spoly_sp_interp_eval_t res,
+    const fmpz_spoly_sp_interp_eval_t poly1,
+    const fmpz_spoly_sp_interp_eval_t poly2)
 {
-    if (res->basis->length == 0) return;
+    slong i;
 
-    FLINT_ASSERT(res->basis == poly2->basis);
+    FLINT_ASSERT(res->basis == poly1->basis);
+    FLINT_ASSERT(poly1->basis == poly2->basis);
 
-    _fmpz_vec_scalar_addmul_si(res->evals, poly2->evals, res->basis->length, c);
-    _fmpz_vec_scalar_mod_fmpz(res->evals, res->evals, res->basis->length, res->basis->q);
+    for (i = 0; i < res->basis->length; ++i)
+    {
+        nmod_poly_mul(res->evals + i, poly1->evals + i, poly2->evals + i);
+        nmod_poly_rem_cyc(res->evals + i, res->evals + i, res->basis->emods[i].n);
+    }
 }

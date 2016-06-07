@@ -19,13 +19,22 @@
 =============================================================================*/
 /******************************************************************************
 
-        Authored 2015 by Daniel S. Roche; US Government work in the public domain. 
+        Authored 2016 by Daniel S. Roche; US Government work in the public domain. 
 
 ******************************************************************************/
 
 #include "flint.h"
-#include "fmpz.h"
-#include "fmpz_vec.h"
+#include "nmod_poly.h"
 #include "fmpz_spoly.h"
 
-/* TODO FIXME */
+void fmpz_spoly_sp_interp_eval_clear(fmpz_spoly_sp_interp_eval_t res)
+{
+    slong i;
+
+    for (i = 0; i < res->basis->length; ++i) 
+    {
+        nmod_poly_clear(res->evals + i);
+    }
+
+    if (res->basis->length) flint_free(res->evals);
+}
