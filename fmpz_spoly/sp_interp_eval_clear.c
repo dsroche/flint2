@@ -19,24 +19,22 @@
 =============================================================================*/
 /******************************************************************************
 
-        Authored 2015 by Daniel S. Roche; US Government work in the public domain. 
+        Authored 2016 by Daniel S. Roche; US Government work in the public domain. 
 
 ******************************************************************************/
 
 #include "flint.h"
-#include "fmpz.h"
-#include "fmpz_vec.h"
+#include "nmod_poly.h"
 #include "fmpz_spoly.h"
 
-void _fmpz_spoly_sp_interp_init(fmpz_spoly_sp_interp_t res, flint_rand_t state,
-        slong terms, const fmpz_t height, const fmpz_t degree, slong factor)
+void fmpz_spoly_sp_interp_eval_clear(fmpz_spoly_sp_interp_eval_t res)
 {
-    slong remain = terms;
-    
-    for (res->len = 0; remain * remain > FLINT_MAX(terms, WORD(64)); ++ res->len)
+    slong i;
+
+    for (i = 0; i < res->basis->length; ++i) 
     {
-        remain /= 2;
+        nmod_poly_clear(res->evals + i);
     }
 
-/* TODO FIXME */
+    if (res->basis->length) flint_free(res->evals);
 }

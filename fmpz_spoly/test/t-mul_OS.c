@@ -34,17 +34,14 @@
 int
 main(void)
 {
-    int i, result, count, total;
+    int i, result;
     FLINT_TEST_INIT(state);
 
     flint_printf("mul_OS....");
     fflush(stdout);
 
-    count = 0;
-    total = 0;
-
     /* Check aliasing of a and b */
-    for (i = 0; i < 30 * flint_test_multiplier(); i++)
+    for (i = 0; i < 10 * flint_test_multiplier(); i++)
     {
         fmpz_spoly_t a, b, c, f;
         fmpz_t d, e;
@@ -52,15 +49,15 @@ main(void)
         fmpz_init(d);
         fmpz_init(e);
 
-        fmpz_randtest(d, state, 30);
-        fmpz_randtest(e, state, 30);
+        fmpz_randtest(d, state, 20);
+        fmpz_randtest(e, state, 20);
 
         fmpz_spoly_init(a);
         fmpz_spoly_init(b);
         fmpz_spoly_init(c);
         fmpz_spoly_init(f);
-        fmpz_spoly_randtest(b, state, n_randint(state, 30), d, 30);
-        fmpz_spoly_randtest(c, state, n_randint(state, 30), e, 30);
+        fmpz_spoly_randtest(b, state, n_randint(state, 30), d, 100);
+        fmpz_spoly_randtest(c, state, n_randint(state, 30), e, 100);
         
         fmpz_spoly_mul_OS(a, state, b, c);
         fmpz_spoly_mul_classical(f, b, c);
@@ -72,7 +69,7 @@ main(void)
           flint_printf("\non the %w try\n", i);
           fmpz_spoly_print(a), flint_printf("\n\n");
           fmpz_spoly_print(f), flint_printf("\n\n");
-          count++;
+          abort();
         }
 
         fmpz_spoly_clear(a);
@@ -83,24 +80,22 @@ main(void)
         fmpz_clear(e);
     }
 
-    total += i;
-
     /* Check aliasing of a and c */
-    for (i = 0; i < 30 * flint_test_multiplier(); i++)
+    for (i = 0; i < 10 * flint_test_multiplier(); i++)
     {
         fmpz_spoly_t a, b, c;
         fmpz_t d, e;
 
         fmpz_init(d);
         fmpz_init(e);
-        fmpz_randtest(d, state, 30);
-        fmpz_randtest(e, state, 30);
+        fmpz_randtest(d, state, 20);
+        fmpz_randtest(e, state, 20);
 
         fmpz_spoly_init(a);
         fmpz_spoly_init(b);
         fmpz_spoly_init(c);
-        fmpz_spoly_randtest(b, state, n_randint(state, 30), d, 30);
-        fmpz_spoly_randtest(c, state, n_randint(state, 30), e, 30);
+        fmpz_spoly_randtest(b, state, n_randint(state, 30), d, 100);
+        fmpz_spoly_randtest(c, state, n_randint(state, 30), e, 100);
 
         fmpz_spoly_mul_classical(a, b, c);
         fmpz_spoly_mul_OS(b, state, b, c);
@@ -109,10 +104,10 @@ main(void)
         if (!result)
         {
           flint_printf("FAIL PHASE 2:\n");
-          flint_printf("\non the %w try\n", i + total);
+          flint_printf("\non the %w try\n", i);
           fmpz_spoly_print(a), flint_printf("\n\n");
           fmpz_spoly_print(c), flint_printf("\n\n");
-          count++;
+          abort();
         }
 
         fmpz_spoly_clear(a);
@@ -122,10 +117,8 @@ main(void)
         fmpz_clear(e);
     }
 
-    total += i;
-
     /* Check (b*c)+(b*d) = b*(c+d) */
-    for (i = 0; i < 30 * flint_test_multiplier(); i++)
+    for (i = 0; i < 10 * flint_test_multiplier(); i++)
     {
         fmpz_spoly_t a1, a2, b, c, d;
         fmpz_t e, f, g;
@@ -133,18 +126,18 @@ main(void)
         fmpz_init(e);
         fmpz_init(f);
         fmpz_init(g);
-        fmpz_randtest(e, state, 30);
-        fmpz_randtest(f, state, 30);
-        fmpz_randtest(g, state, 30);
+        fmpz_randtest(e, state, 20);
+        fmpz_randtest(f, state, 20);
+        fmpz_randtest(g, state, 20);
 
         fmpz_spoly_init(a1);
         fmpz_spoly_init(a2);
         fmpz_spoly_init(b);
         fmpz_spoly_init(c);
         fmpz_spoly_init(d);
-        fmpz_spoly_randtest(b, state, n_randint(state, 30), e, 30);
-        fmpz_spoly_randtest(c, state, n_randint(state, 30), f, 30);
-        fmpz_spoly_randtest(d, state, n_randint(state, 30), g, 30);
+        fmpz_spoly_randtest(b, state, n_randint(state, 30), e, 100);
+        fmpz_spoly_randtest(c, state, n_randint(state, 30), f, 100);
+        fmpz_spoly_randtest(d, state, n_randint(state, 30), g, 100);
 
         fmpz_spoly_mul_OS(a1, state, b, c);
         fmpz_spoly_mul_classical(a2, b, d);
@@ -157,10 +150,10 @@ main(void)
         if (!result)
         {
           flint_printf("FAIL PHASE 3:\n");
-          flint_printf("\non the %w try\n", i + total);
+          flint_printf("\non the %w try\n", i);
           fmpz_spoly_print(a1), flint_printf("\n\n");
           fmpz_spoly_print(a2), flint_printf("\n\n");
-          count++;
+          abort();
         }
 
         fmpz_spoly_clear(a1);
@@ -173,11 +166,8 @@ main(void)
         fmpz_clear(g);
     }
 
-    total += i;
-
     FLINT_TEST_CLEANUP(state);
     
     flint_printf("PASS\n");
-    flint_printf("failed %w times out of %w\n", count, total);
     return 0;
 }

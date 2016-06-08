@@ -33,7 +33,7 @@ void fmpz_spoly_evaluate_powers(fmpz* res, slong len,
     if (len == 0)
     {
     }
-    else if (fmpz_spoly_terms(poly) < 32)
+    else if (fmpz_spoly_terms(poly) < EVAL_XOVER)
     {
         slong i;
         fmpz_t wpow;

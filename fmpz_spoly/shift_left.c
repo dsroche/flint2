@@ -23,13 +23,23 @@
 
 ******************************************************************************/
 
-#include "fmpz.h"
-#include "fmpz_vec.h"
 #include "fmpz_spoly.h"
 
-void fmpz_spoly_bp_interp_clear(fmpz_spoly_bp_interp_t res)
+void fmpz_spoly_shift_left(fmpz_spoly_t res,
+    const fmpz_spoly_t poly, const fmpz_t n)
 {
-  fmpz_clear(res->q);
-  _fmpz_vec_clear(res->sample_points, res->length);
-  _fmpz_vec_clear(res->evaluations, res->length);
+    int i;
+    slong newlen = poly->length;
+    
+    if (res != poly)
+    {
+        _fmpz_spoly_reserve(res, newlen);
+        _fmpz_vec_set(res->coeffs, poly->coeffs, newlen);
+        _fmpz_spoly_set_length(res, newlen);
+    }
+
+    for (i = 0; i < newlen; ++i)
+    {
+        fmpz_add(res->expons+i, poly->expons+i, n);
+    }
 }

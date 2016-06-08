@@ -42,7 +42,7 @@ main(void)
 
     
     /* Check aliasing of a and b */
-    for (i = 0; i < 800 * flint_test_multiplier(); i++)
+    for (i = 0; i < 100 * flint_test_multiplier(); i++)
     {
         fmpz_spoly_t a, b, c;
         fmpz_t d, e;
@@ -78,7 +78,7 @@ main(void)
     }
 
     /* Check aliasing of a and c */
-    for (i = 0; i < 800 * flint_test_multiplier(); i++)
+    for (i = 0; i < 100 * flint_test_multiplier(); i++)
     {
         fmpz_spoly_t a, b, c;
         fmpz_t d, e;
@@ -114,7 +114,7 @@ main(void)
     }
 
     /* Check (b*c)+(b*d) = b*(c+d) */
-    for (i = 0; i < 800 * flint_test_multiplier(); i++)
+    for (i = 0; i < 100 * flint_test_multiplier(); i++)
     {
         fmpz_spoly_t a1, a2, b, c, d;
         fmpz_t e, f, g;

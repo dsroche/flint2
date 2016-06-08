@@ -31,7 +31,7 @@
 #include "fmpz_spoly.h"
 #include "ulong_extras.h"
 
-ulong my_randtest(flint_rand_t state, ulong maxbits)
+static ulong my_randtest(flint_rand_t state, ulong maxbits)
 {
     return n_randbits(state, n_randint(state, maxbits+1));
 }

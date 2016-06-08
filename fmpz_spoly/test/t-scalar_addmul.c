@@ -43,7 +43,7 @@ main(void)
     
 
     /* Check aliasing of a and b */
-    for (i = 0; i < 1000 * flint_test_multiplier(); i++)
+    for (i = 0; i < 100 * flint_test_multiplier(); i++)
     {
         fmpz_spoly_t a, b;
         fmpz_t c, n;
@@ -56,6 +56,7 @@ main(void)
         fmpz_spoly_init(a);
         fmpz_spoly_init(b);
         fmpz_spoly_randtest(a, state, n_randint(state, 100), c, 200);
+        fmpz_spoly_set(b, a);
 
         fmpz_spoly_scalar_addmul(b, a, n);
         fmpz_spoly_scalar_addmul(a, a, n);
@@ -76,7 +77,7 @@ main(void)
     }
 
     /* Check that b += x*a equals c = b + x*a */
-    for (i = 0; i < 1000 * flint_test_multiplier(); i++)
+    for (i = 0; i < 100 * flint_test_multiplier(); i++)
     {
         fmpz_spoly_t a, b, c;
         fmpz_t d, e, x;

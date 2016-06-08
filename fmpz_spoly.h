@@ -72,25 +72,39 @@ typedef struct
 {
     fmpz_t q;
     ulong log2_order;
-    int laurent;
-    fmpz * sample_points;
-    fmpz * evaluations;
+    fmpz* points;
     slong length;
-} fmpz_spoly_bp_interp_struct;
+} fmpz_spoly_bp_interp_basis_struct;
 
-typedef fmpz_spoly_bp_interp_struct fmpz_spoly_bp_interp_t[1];
+typedef fmpz_spoly_bp_interp_basis_struct fmpz_spoly_bp_interp_basis_t[1];
 
 typedef struct
 {
-    nmod_t* moduli;
-    ulong* shifts;
-    slong* counts;
-    nmod_t** expmods;
-    nmod_poly_struct** evals;
-    slong len;
-} fmpz_spoly_sp_interp_struct;
+    fmpz* evals;
+    const fmpz_spoly_bp_interp_basis_struct* basis;
+} fmpz_spoly_bp_interp_eval_struct;
 
-typedef fmpz_spoly_sp_interp_struct fmpz_spoly_sp_interp_t[1];
+typedef fmpz_spoly_bp_interp_eval_struct fmpz_spoly_bp_interp_eval_t[1];
+
+typedef struct
+{
+    nmod_t* cmods;
+    ulong* shifts;
+    nmod_t* emods;
+    slong length;
+    slong cimg_per_round, cimg_needed;
+    slong eimg_per_round, eimg_needed;
+} fmpz_spoly_sp_interp_basis_struct;
+
+typedef fmpz_spoly_sp_interp_basis_struct fmpz_spoly_sp_interp_basis_t[1];
+
+typedef struct
+{
+    nmod_poly_struct* evals;
+    const fmpz_spoly_sp_interp_basis_struct* basis;
+} fmpz_spoly_sp_interp_eval_struct;
+
+typedef fmpz_spoly_sp_interp_eval_struct fmpz_spoly_sp_interp_eval_t[1];
 
 extern const fmpz_t FMPZ_SPOLY_NEGATIVE_ONE;
 
@@ -150,24 +164,31 @@ slong fmpz_spoly_degree_si(const fmpz_spoly_t poly)
     else return -1;
 }
 
+FMPZ_SPOLY_INLINE
+const fmpz * fmpz_spoly_lowdeg_ptr(const fmpz_spoly_t poly)
+{
+    if (poly->length == 0) return FMPZ_SPOLY_NEGATIVE_ONE;
+    else return poly->expons + (poly->length - 1);
+}
+
 FMPZ_SPOLY_INLINE 
 void fmpz_spoly_lowdeg(fmpz_t res, const fmpz_spoly_t poly)
 {
-    if (poly->length > 0) fmpz_set(res, poly->expons + (poly->length-1));
+    if (poly->length > 0) fmpz_set(res, poly->expons + (poly->length - 1));
     else fmpz_set_si(res, 1);
 }
 
 FMPZ_SPOLY_INLINE 
 slong fmpz_spoly_lowdeg_si(const fmpz_spoly_t poly)
 {
-    if (poly->length > 0) return fmpz_get_si(poly->expons + (poly->length-1));
+    if (poly->length > 0) return fmpz_get_si(poly->expons + (poly->length - 1));
     else return 1;
 }
 
 FMPZ_SPOLY_INLINE
 int fmpz_spoly_is_poly(const fmpz_spoly_t poly)
 {
-    return poly->length == 0 || fmpz_sgn(poly->expons + (poly->length-1)) >= 0;
+    return poly->length == 0 || fmpz_sgn(poly->expons + (poly->length - 1)) >= 0;
 }
 
 /*  Assignment and basic manipulation  ***************************************/
@@ -258,14 +279,14 @@ void fmpz_spoly_swap(fmpz_spoly_t poly1, fmpz_spoly_t poly2)
     FLINT_GENERIC_SWAP(slong, poly1->alloc, poly2->alloc);
 }
 
-/* FIXME */
+/* FIXME (not yet implemented) */
 FLINT_DLL void fmpz_spoly_truncate(fmpz_spoly_t poly, const fmpz_t deg);
 
-/* FIXME */
+/* FIXME (not yet implemented) */
 FLINT_DLL void fmpz_spoly_set_trunc(fmpz_spoly_t res, 
     const fmpz_spoly_t poly, const fmpz_t deg);
 
-/* FIXME */
+/* FIXME (not yet implemented) */
 FLINT_DLL void fmpz_spoly_set_trunc_fmpz_poly(fmpz_poly_t res, 
     const fmpz_spoly_t poly, slong deg);
 
@@ -277,11 +298,11 @@ FLINT_DLL void fmpz_spoly_randtest(fmpz_spoly_t res, flint_rand_t state,
 FLINT_DLL void fmpz_spoly_laurent_randtest(fmpz_spoly_t res, flint_rand_t state,
      slong terms, const fmpz_t degree, mp_bitcnt_t bits);
 
-/* FIXME */
+/* FIXME (not yet implemented) */
 FLINT_DLL void fmpz_spoly_randtest_unsigned(fmpz_spoly_t res, 
     flint_rand_t state, slong terms, const fmpz_t degree, mp_bitcnt_t bits);
 
-/* FIXME */
+/* FIXME (not yet implemented) */
 FLINT_DLL void fmpz_spoly_randtest_not_zero(fmpz_spoly_t res, 
     flint_rand_t state, slong terms, const fmpz_t degree, mp_bitcnt_t bits);
 
@@ -392,7 +413,7 @@ int fmpz_spoly_equal(const fmpz_spoly_t poly1, const fmpz_spoly_t poly2)
         _fmpz_vec_equal(poly1->coeffs, poly2->coeffs, poly1->length);
 }
 
-/* FIXME */
+/* FIXME (not yet implemented) */
 FLINT_DLL int fmpz_spoly_equal_trunc(const fmpz_spoly_t poly1, 
     const fmpz_spoly_t poly2, const fmpz_t n);
 
@@ -416,8 +437,8 @@ int fmpz_spoly_is_term(const fmpz_spoly_t poly,
 {
     return (poly->length == 0 && fmpz_is_zero(c)) ||
         (poly->length == 1 && 
-         fmpz_equal(poly->coeffs+0, c) && 
-         fmpz_equal(poly->expons+0, e)
+         fmpz_equal(poly->coeffs + 0, c) && 
+         fmpz_equal(poly->expons + 0, e)
         );
 }
 
@@ -427,8 +448,8 @@ int fmpz_spoly_is_term_fmpz_si(const fmpz_spoly_t poly,
 {
     return (poly->length == 0 && fmpz_is_zero(c)) ||
         (poly->length == 1 && 
-         fmpz_equal(poly->coeffs+0, c) && 
-         fmpz_equal_si(poly->expons+0, e)
+         fmpz_equal(poly->coeffs + 0, c) && 
+         fmpz_equal_si(poly->expons + 0, e)
         );
 }
 
@@ -438,8 +459,8 @@ int fmpz_spoly_is_term_si_fmpz(const fmpz_spoly_t poly,
 {
     return (poly->length == 0 && (c == 0)) ||
         (poly->length == 1 && 
-         fmpz_equal_si(poly->coeffs+0, c) && 
-         fmpz_equal(poly->expons+0, e)
+         fmpz_equal_si(poly->coeffs + 0, c) && 
+         fmpz_equal(poly->expons + 0, e)
         );
 }
 
@@ -448,8 +469,8 @@ int fmpz_spoly_is_term_si_si(const fmpz_spoly_t poly, slong c, slong e)
 {
     return (poly->length == 0 && (c == 0)) ||
         (poly->length == 1 && 
-         fmpz_equal_si(poly->coeffs+0, c) && 
-         fmpz_equal_si(poly->expons+0, e)
+         fmpz_equal_si(poly->coeffs + 0, c) && 
+         fmpz_equal_si(poly->expons + 0, e)
         );
 }
 
@@ -459,21 +480,17 @@ int fmpz_spoly_equal_fmpz(const fmpz_spoly_t poly, const fmpz_t c)
     return fmpz_spoly_is_term_fmpz_si(poly, c, 0);
 }
 
+<<<<<<< HEAD
+=======
+/* FIXME (not yet implemented) */
+>>>>>>> 36a94ee67f76035af197043f1b3b7b5e16e4a87f
 FLINT_DLL int fmpz_spoly_equal_fmpz_poly(const fmpz_spoly_t spoly, 
     const fmpz_poly_t dpoly);
 
 /*  Addition and subtraction  ************************************************/
 
-FLINT_DLL void _fmpz_spoly_add(fmpz * res_c, fmpz * res_e, slong * res_len, 
-    const fmpz * poly1_c, const fmpz * poly1_e, slong len1, const fmpz * poly2_c, 
-    const fmpz * poly2_e, slong len2);
-
 FLINT_DLL void fmpz_spoly_add(fmpz_spoly_t res,
     const fmpz_spoly_t poly1, const fmpz_spoly_t poly2);
-
-FLINT_DLL void _fmpz_spoly_sub(fmpz * res_c, fmpz * res_e, slong * res_len,
-    const fmpz * poly1_c, const fmpz * poly1_e, slong len1, const fmpz * poly2_c,
-    const fmpz * poly2_e, slong len2);
 
 FLINT_DLL void fmpz_spoly_sub(fmpz_spoly_t res,
     const fmpz_spoly_t poly1, const fmpz_spoly_t poly2);
@@ -491,57 +508,61 @@ FLINT_DLL void fmpz_spoly_scalar_mul_si(fmpz_spoly_t res,
 FLINT_DLL void fmpz_spoly_scalar_mul(fmpz_spoly_t res,
     const fmpz_spoly_t poly, const fmpz_t c);
 
-/* FIXME */
+/* FIXME (not yet implemented) */
 FLINT_DLL void fmpz_spoly_scalar_addmul(fmpz_spoly_t poly1,
     const fmpz_spoly_t poly2, const fmpz_t c);
 
-/* FIXME */
+/* FIXME (not yet implemented) */
 FLINT_DLL void fmpz_spoly_scalar_submul(fmpz_spoly_t poly1,
     const fmpz_spoly_t poly2, const fmpz_t c);
 
-/* FIXME */
+/* FIXME (not yet implemented) */
 FLINT_DLL void fmpz_spoly_scalar_fdiv_si(fmpz_spoly_t res,
     const fmpz_spoly_t poly, slong c);
 
-/* FIXME */
+/* FIXME (not yet implemented) */
 FLINT_DLL void fmpz_spoly_scalar_fdiv(fmpz_spoly_t res,
     const fmpz_spoly_t poly, const fmpz_t c);
 
-/* FIXME */
+/* FIXME (not yet implemented) */
 FLINT_DLL void fmpz_spoly_scalar_tdiv_si(fmpz_spoly_t res,
     const fmpz_spoly_t poly, slong c);
 
-/* FIXME */
+/* FIXME (not yet implemented) */
 FLINT_DLL void fmpz_spoly_scalar_tdiv(fmpz_spoly_t res,
     const fmpz_spoly_t poly, const fmpz_t c);
 
-/* FIXME */
+/* FIXME (not yet implemented) */
 FLINT_DLL void fmpz_spoly_scalar_mul_2exp(fmpz_spoly_t res,
     const fmpz_spoly_t poly, ulong exp);
 
-/* FIXME */
+/* FIXME (not yet implemented) */
 FLINT_DLL void fmpz_spoly_scalar_fdiv_2exp(fmpz_spoly_t res,
     const fmpz_spoly_t poly, ulong exp);
 
-/* FIXME */
+/* FIXME (not yet implemented) */
 FLINT_DLL void fmpz_spoly_scalar_tdiv_2exp(fmpz_spoly_t res,
     const fmpz_spoly_t poly, ulong exp);
 
+<<<<<<< HEAD
 /* FIXME*/
+=======
+/* FIXME (not yet implemented) */
+>>>>>>> 36a94ee67f76035af197043f1b3b7b5e16e4a87f
 FLINT_DLL void fmpz_spoly_scalar_mod(fmpz_spoly_t res,
     const fmpz_spoly_t poly, const fmpz_t c);
 
-/* FIXME */
+/* FIXME (not yet implemented) */
 FLINT_DLL void fmpz_spoly_scalar_smod(fmpz_spoly_t res,
     const fmpz_spoly_t poly, const fmpz_t c);
 
 /*  Bit packing  *************************************************************/
 
-/* FIXME */
+/* FIXME (not yet implemented) */
 FLINT_DLL void fmpz_spoly_bit_pack(fmpz_t res,
     const fmpz_spoly_t poly, mp_bitcnt_t bit_size);
 
-/* FIXME */
+/* FIXME (not yet implemented) */
 FLINT_DLL void fmpz_spoly_bit_unpack(fmpz_spoly_t res,
     const fmpz_t f, mp_bitcnt_t bit_size);
 
@@ -588,48 +609,40 @@ FLINT_DLL void _fmpz_spoly_mul_coeffs_slow(fmpz_spoly_t res, flint_rand_t state,
 
 /*  Powering  ****************************************************************/
 
-/* FIXME */
+/* FIXME (not yet implemented) */
 FLINT_DLL void fmpz_spoly_pow_recurrence(fmpz_spoly_t res,
     const fmpz_spoly_t poly, ulong e);
 
-/* FIXME */
+/* FIXME (not yet implemented) */
 FLINT_DLL void fmpz_spoly_pow_binomial(fmpz_spoly_t res,
     const fmpz_spoly_t poly, ulong e);
 
-/* FIXME */
+/* FIXME (not yet implemented) */
 FLINT_DLL void fmpz_spoly_pow_binexp(fmpz_spoly_t res,
     const fmpz_spoly_t poly, ulong e);
 
-/* FIXME */
+/* FIXME (not yet implemented) */
 FLINT_DLL void fmpz_spoly_pow(fmpz_spoly_t res,
     const fmpz_spoly_t poly, ulong e);
 
-/* FIXME */
+/* FIXME (not yet implemented) */
 FLINT_DLL void fmpz_spoly_pow_trunc(fmpz_spoly_t res,
     const fmpz_spoly_t poly, ulong e, const fmpz_t n);
 
 /*  Shifting  ****************************************************************/
 
-FMPZ_SPOLY_INLINE
-void fmpz_spoly_shift_left(fmpz_spoly_t res,
-    const fmpz_spoly_t poly, const fmpz_t n)
-{
-    int i;
-    for (i=0; i<poly->length; ++i)
-    {
-        fmpz_add(res->expons+i, poly->expons+i, n);
-    }
-}
+FLINT_DLL void fmpz_spoly_shift_left(fmpz_spoly_t res,
+    const fmpz_spoly_t poly, const fmpz_t n);
 
-/* FIXME */
+/* FIXME (not yet implemented) */
 FLINT_DLL void fmpz_spoly_shift_left_si(fmpz_spoly_t res,
     const fmpz_spoly_t poly, slong n);
 
-/* FIXME */
+/* FIXME (not yet implemented) */
 FLINT_DLL void fmpz_spoly_shift_right(fmpz_spoly_t res,
     const fmpz_spoly_t poly, const fmpz_t n);
 
-/* FIXME */
+/* FIXME (not yet implemented) */
 FLINT_DLL void fmpz_spoly_shift_right_si(fmpz_spoly_t res,
     const fmpz_spoly_t poly, slong n);
 
@@ -644,41 +657,41 @@ FLINT_DLL void _fmpz_spoly_append(fmpz_spoly_t poly1,
 
 /*  Monomial multiplication and division *************************************/
 
-/* FIXME */
+/* FIXME (not yet implemented) */
 FLINT_DLL void fmpz_spoly_mon_mul_si_si(fmpz_spoly_t res,
     const fmpz_spoly_t poly, slong c, slong e);
 
-/* FIXME */
+/* FIXME (not yet implemented) */
 FLINT_DLL void fmpz_spoly_mon_mul_si_fmpz(fmpz_spoly_t res,
     const fmpz_spoly_t poly, slong c, const fmpz_t e);
 
-/* FIXME */
+/* FIXME (not yet implemented) */
 FLINT_DLL void fmpz_spoly_mon_mul_fmpz_si(fmpz_spoly_t res,
     const fmpz_spoly_t poly, const fmpz_t c, slong e);
 
-/* FIXME */
+/* FIXME (not yet implemented) */
 FLINT_DLL void fmpz_spoly_mon_mul_fmpz_fmpz(fmpz_spoly_t res,
     const fmpz_spoly_t poly, const fmpz_t c, const fmpz_t e);
 
-/* FIXME */
+/* FIXME (not yet implemented) */
 FLINT_DLL void fmpz_spoly_mon_fdiv_si_si(fmpz_spoly_t res,
     const fmpz_spoly_t poly, slong c, slong e);
 
-/* FIXME */
+/* FIXME (not yet implemented) */
 FLINT_DLL void fmpz_spoly_mon_fdiv_si_fmpz(fmpz_spoly_t res,
     const fmpz_spoly_t poly, slong c, const fmpz_t e);
 
-/* FIXME */
+/* FIXME (not yet implemented) */
 FLINT_DLL void fmpz_spoly_mon_fdiv_fmpz_si(fmpz_spoly_t res,
     const fmpz_spoly_t poly, const fmpz_t c, slong e);
 
-/* FIXME */
+/* FIXME (not yet implemented) */
 FLINT_DLL void fmpz_spoly_mon_fdiv_fmpz_fmpz(fmpz_spoly_t res,
     const fmpz_spoly_t poly, const fmpz_t c, const fmpz_t e);
 
 /*  Norms  *******************************************************************/
 
-/* FIXME */
+/* FIXME (not yet implemented) */
 FLINT_DLL void fmpz_spoly_2norm(fmpz_t res, const fmpz_spoly_t poly);
 
 FMPZ_SPOLY_INLINE
@@ -697,7 +710,7 @@ FMPZ_SPOLY_INLINE
 slong fmpz_spoly_max_ebits(const fmpz_spoly_t poly)
 {
     fmpz * lead = poly->expons + 0;
-    fmpz * trail = poly->expons + (poly->length-1);
+    fmpz * trail = poly->expons + (poly->length - 1);
     if (poly->length == 0) return 0;
     else if (poly->length == 1 || fmpz_cmpabs(lead, trail) >= 0)
     {
@@ -718,6 +731,12 @@ FMPZ_SPOLY_INLINE
 void fmpz_spoly_height(fmpz_t res, const fmpz_spoly_t poly)
 {
     _fmpz_vec_height(res, poly->coeffs, poly->length);
+}
+
+FMPZ_SPOLY_INLINE
+mp_bitcnt_t fmpz_spoly_height_bits(const fmpz_spoly_t poly)
+{
+    return FLINT_ABS(_fmpz_vec_max_bits(poly->coeffs, poly->length));
 }
 
 /*  Euclidean division  ******************************************************/
@@ -839,58 +858,126 @@ void fmpz_spoly_lcm(fmpz_spoly_t res,
 
 /*  Gaussian content  ********************************************************/
 
-/* FIXME */
+/* FIXME (not yet implemented) */
 FLINT_DLL void fmpz_spoly_content(fmpz_t res, const fmpz_spoly_t poly);
 
-/* FIXME */
+/* FIXME (not yet implemented) */
 FLINT_DLL void fmpz_spoly_primitive_part(fmpz_spoly_t res, const fmpz_spoly_t poly);
 
 /*  Sparse interpolation ****************************************************/
 
-FLINT_DLL void fmpz_spoly_bp_interp_init(fmpz_spoly_bp_interp_t res, 
-    flint_rand_t state, slong terms, const fmpz_t height, const fmpz_t degree);
+FLINT_DLL void fmpz_spoly_bp_interp_basis_init(fmpz_spoly_bp_interp_basis_t res, 
+    flint_rand_t state, slong terms, mp_bitcnt_t d, mp_bitcnt_t h);
 
-FLINT_DLL void fmpz_spoly_bp_interp_clear(fmpz_spoly_bp_interp_t res);
+FMPZ_SPOLY_INLINE
+void fmpz_spoly_bp_interp_basis_clear(fmpz_spoly_bp_interp_basis_t res)
+{
+    fmpz_clear(res->q);
+    if (res->length) _fmpz_vec_clear(res->points, res->length);
+}
 
-FLINT_DLL void fmpz_spoly_bp_interp_eval(fmpz_spoly_bp_interp_t res,
-    const fmpz_spoly_t poly);
 
-FLINT_DLL void fmpz_spoly_bp_interp_mul(fmpz_spoly_bp_interp_t res,
-    const fmpz_spoly_t poly);
+FMPZ_SPOLY_INLINE
+void fmpz_spoly_bp_interp_eval_init(fmpz_spoly_bp_interp_eval_t res,
+    const fmpz_spoly_bp_interp_basis_t basis)
+{
+    res->basis = basis;
+    if (res->basis->length) res->evals = _fmpz_vec_init(res->basis->length);
+    else res->evals = NULL;
+}
 
-FLINT_DLL void fmpz_spoly_bp_interp_add(fmpz_spoly_bp_interp_t res,
-    const fmpz_t c, const fmpz_spoly_t poly);
+FMPZ_SPOLY_INLINE
+void fmpz_spoly_bp_interp_eval_clear(fmpz_spoly_bp_interp_eval_t res)
+{
+    if (res->basis->length) _fmpz_vec_clear(res->evals, res->basis->length);
+}
 
-FLINT_DLL void fmpz_spoly_bp_interp_pow(fmpz_spoly_bp_interp_t res, ulong pow);
+/* (redundant forward declaration) */
+FLINT_DLL void fmpz_spoly_evaluate_powers(fmpz* res, slong len,
+    const fmpz_spoly_t poly, const fmpz_t w, const fmpz_t p);
+
+FMPZ_SPOLY_INLINE
+void fmpz_spoly_bp_interp_eval(fmpz_spoly_bp_interp_eval_t res, const fmpz_spoly_t poly)
+{
+    fmpz_spoly_evaluate_powers(res->evals,
+        res->basis->length, poly, res->basis->points + 1, res->basis->q);
+}
+
+FLINT_DLL void fmpz_spoly_bp_interp_mul(fmpz_spoly_bp_interp_eval_t res,
+    const fmpz_spoly_bp_interp_eval_t poly1,
+    const fmpz_spoly_bp_interp_eval_t poly2);
+
+FLINT_DLL void fmpz_spoly_bp_interp_addmul_si(fmpz_spoly_bp_interp_eval_t res,
+    slong c,
+    const fmpz_spoly_bp_interp_eval_t poly2);
+
+FLINT_DLL void fmpz_spoly_bp_interp_pow(fmpz_spoly_bp_interp_eval_t res,
+    const fmpz_spoly_bp_interp_eval_t poly, ulong pow);
 
 FLINT_DLL int fmpz_spoly_bp_interp(fmpz_spoly_t res,
-    const fmpz_spoly_bp_interp_t evals);
+    const fmpz_spoly_bp_interp_eval_t eval);
 
-FLINT_DLL void _fmpz_spoly_sp_interp_init(fmpz_spoly_sp_interp_t res,
-    flint_rand_t state, slong terms, const fmpz_t height, const fmpz_t degree,
-    slong factor);
+/* FIXME (not yet documented) */
+FLINT_DLL void fmpz_spoly_sp_interp_basis_init(fmpz_spoly_sp_interp_basis_t res, 
+    flint_rand_t state, slong terms, mp_bitcnt_t d, mp_bitcnt_t h);
 
-/* FIXME */
-FLINT_DLL void fmpz_spoly_sp_interp_clear(fmpz_spoly_sp_interp_t res);
+FMPZ_SPOLY_INLINE
+void fmpz_spoly_sp_interp_basis_clear(fmpz_spoly_sp_interp_basis_t res)
+{
+    if (res->length)
+    {
+        flint_free(res->cmods);
+        flint_free(res->shifts);
+        flint_free(res->emods);
+    }
+}
 
-/* FIXME */
-FLINT_DLL void fmpz_spoly_sp_interp_eval(fmpz_spoly_sp_interp_t res,
+FLINT_DLL void fmpz_spoly_sp_interp_eval_init(fmpz_spoly_sp_interp_eval_t res,
+    const fmpz_spoly_sp_interp_basis_t basis);
+
+FLINT_DLL void fmpz_spoly_sp_interp_eval_clear(fmpz_spoly_sp_interp_eval_t res);
+
+FLINT_DLL void fmpz_spoly_sp_interp_eval(fmpz_spoly_sp_interp_eval_t res, 
     const fmpz_spoly_t poly);
 
-/* FIXME */
-FLINT_DLL void fmpz_spoly_sp_interp_mul(fmpz_spoly_sp_interp_t res,
-    const fmpz_spoly_t poly);
+FMPZ_SPOLY_INLINE
+void fmpz_spoly_sp_interp_eval_set(fmpz_spoly_sp_interp_eval_t res,
+        const fmpz_spoly_sp_interp_eval_t eval)
+{
+    slong i;
+    FLINT_ASSERT(res->basis == eval->basis);
+    for (i = 0; i < res->basis->length; ++i)
+    {
+        nmod_poly_set(res->evals + i, eval->evals + i);
+    }
+}
 
-/* FIXME */
-FLINT_DLL void fmpz_spoly_sp_interp_add(fmpz_spoly_sp_interp_t res,
-    const fmpz_t c, const fmpz_spoly_t poly);
+FMPZ_SPOLY_INLINE
+int fmpz_spoly_sp_interp_eval_is_zero(const fmpz_spoly_sp_interp_eval_t eval)
+{
+    slong i;
+    for (i = 0; i < eval->basis->length; ++i)
+    {
+        if (! nmod_poly_is_zero(eval->evals + i)) return 0;
+    }
+    return 1;
+}
 
-/* FIXME */
-FLINT_DLL void fmpz_spoly_sp_interp_pow(fmpz_spoly_sp_interp_t res, ulong pow);
+/* FIXME (not yet implemented) */
+FLINT_DLL void fmpz_spoly_sp_interp_mul(fmpz_spoly_sp_interp_eval_t res,
+    const fmpz_spoly_sp_interp_eval_t poly1,
+    const fmpz_spoly_sp_interp_eval_t poly2);
 
-/* FIXME */
-FLINT_DLL void fmpz_spoly_sp_interp(fmpz_spoly_t res,
-    const fmpz_spoly_sp_interp_t evals);
+FLINT_DLL void fmpz_spoly_sp_interp_addmul_si(fmpz_spoly_sp_interp_eval_t res,
+    slong c,
+    const fmpz_spoly_sp_interp_eval_t poly2);
+
+FLINT_DLL void fmpz_spoly_sp_interp_pow(fmpz_spoly_sp_interp_eval_t res,
+    const fmpz_spoly_sp_interp_eval_t poly, ulong pow);
+/* (end FIXME) */
+
+FLINT_DLL int fmpz_spoly_sp_interp(fmpz_spoly_t res,
+    fmpz_spoly_sp_interp_eval_t eval);
 
 FLINT_DLL slong _fmpz_spoly_prim_roots(fmpz_t p, fmpz * qq, fmpz * ww, flint_rand_t state,
     slong len, mp_bitcnt_t p_bits, mp_bitcnt_t q_prod_bits);
@@ -927,7 +1014,7 @@ int fmpz_spoly_divides_dense(fmpz_spoly_t q,
 
 /*  Derivative  **************************************************************/
 
-/* FIXME */
+/* FIXME (not yet implemented) */
 FLINT_DLL void fmpz_spoly_derivative(fmpz_spoly_t res, const fmpz_spoly_t poly);
 
 /*  Evaluation  **************************************************************/
@@ -946,11 +1033,11 @@ FLINT_DLL void fmpz_spoly_evaluate_powers(fmpz* res, slong len,
 
 /*  Composition  *************************************************************/
 
-/* FIXME */
+/* FIXME (not yet implemented) */
 FLINT_DLL void fmpz_spoly_compose(fmpz_spoly_t res,
     const fmpz_spoly_t poly1, const fmpz_spoly_t poly2);
 
-/* FIXME */
+/* FIXME (not yet implemented) */
 FLINT_DLL void fmpz_spoly_compose_dense(fmpz_spoly_t res,
     const fmpz_poly_t poly1, const fmpz_spoly_t poly2);
 
@@ -1013,9 +1100,6 @@ FLINT_DLL void _fmpz_mod_poly_powmod_x_2exp(fmpz* res,
 
 FLINT_DLL slong _fmpz_mod_poly_binary_roots(fmpz* roots, fmpz* expons,
     const fmpz* poly, slong len, const fmpz_t theta, slong k, const fmpz_t p);
-
-FLINT_DLL void _fmpz_mod_poly_build_roots(fmpz_mod_poly_t res, 
-    const fmpz * roots, slong len);
 
 FLINT_DLL void _fmpz_spoly_transp_vandermonde_precomp(fmpz* bb, slong blen,
     const fmpz* vv_inv, fmpz_poly_struct * const * tree, const fmpz* tree_root,

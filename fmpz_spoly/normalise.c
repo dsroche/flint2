@@ -44,8 +44,8 @@ void _fmpz_spoly_normalise(fmpz_spoly_t poly)
         {
             /* collision */
             fmpz_add(poly->coeffs + i, poly->coeffs + i, poly->coeffs + cur);
-            fmpz_clear(poly->coeffs + cur);
-            fmpz_clear(poly->expons + cur);
+            fmpz_zero(poly->coeffs + cur);
+            fmpz_zero(poly->expons + cur);
             ++nfree;
         }
         else if (i+1 < cur) 

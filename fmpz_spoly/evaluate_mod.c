@@ -28,34 +28,34 @@
 void fmpz_spoly_evaluate_mod(fmpz_t res, const fmpz_spoly_t poly, 
     const fmpz_t a, const fmpz_t m)
 {
-  fmpz_t powdiff;
-  fmpz_t apow;
-  fmpz_t temp;
-  slong i = poly->length - 1;
+    fmpz_t powdiff;
+    fmpz_t apow;
+    fmpz_t temp;
+    slong i = poly->length - 1;
 
-  fmpz_zero(res);
+    fmpz_zero(res);
 
-  if (poly->length == 0) return;
+    if (poly->length == 0) return;
 
-  fmpz_init_set(powdiff, poly->expons+i);
-  fmpz_init_set_ui(apow, UWORD(1));
-  fmpz_init2(temp, fmpz_size(m));
+    fmpz_init_set(powdiff, poly->expons+i);
+    fmpz_init_set_ui(apow, UWORD(1));
+    fmpz_init2(temp, fmpz_size(m));
 
-  while (1) {
-    fmpz_powm(temp, a, powdiff, m);
-    fmpz_mul(apow, apow, temp);
-    fmpz_mod(apow, apow, m);
-    fmpz_addmul(res, poly->coeffs+i, apow);
+    while (1) {
+        fmpz_powm(temp, a, powdiff, m);
+        fmpz_mul(apow, apow, temp);
+        fmpz_mod(apow, apow, m);
+        fmpz_addmul(res, poly->coeffs+i, apow);
 
-    if (i == 0) break;
+        if (i == 0) break;
 
-    --i;
-    fmpz_sub (powdiff, poly->expons+i, poly->expons+(i+1));
-  }
+        --i;
+        fmpz_sub (powdiff, poly->expons+i, poly->expons+(i+1));
+    }
 
-  fmpz_mod(res, res, m);
+    fmpz_mod(res, res, m);
 
-  fmpz_clear(powdiff);
-  fmpz_clear(apow);
-  fmpz_clear(temp);
+    fmpz_clear(powdiff);
+    fmpz_clear(apow);
+    fmpz_clear(temp);
 }

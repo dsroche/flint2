@@ -186,15 +186,14 @@ fmpz_spoly_mul_heaps(fmpz_spoly_t res, const fmpz_spoly_t poly1, const fmpz_spol
     if(poly1->length == 1)
     {
         _fmpz_spoly_reserve(res, poly2->length);
-        res->length = poly2->length;
 
-        for (i=0; i<res->length; ++i)
+        for (i=0; i<poly2->length; ++i)
         {
-            fmpz_init(res->coeffs+i);
             fmpz_mul(res->coeffs+i, poly1->coeffs+0, poly2->coeffs+i);
-            fmpz_init(res->expons+i);
             fmpz_add(res->expons+i, poly1->expons+0, poly2->expons+i);
         }
+
+        _fmpz_spoly_set_length(res, poly2->length);
         return;
     }
     
@@ -224,8 +223,6 @@ fmpz_spoly_mul_heaps(fmpz_spoly_t res, const fmpz_spoly_t poly1, const fmpz_spol
         {
             if(k == 0)
             {
-                fmpz_init(res->expons);
-                fmpz_init(res->coeffs);
                 fmpz_set(res->expons, (heap->nodes)->expons);
                 fmpz_set(res->coeffs, (heap->nodes)->coeffs);
                 k++;
@@ -241,8 +238,6 @@ fmpz_spoly_mul_heaps(fmpz_spoly_t res, const fmpz_spoly_t poly1, const fmpz_spol
             }
             else
             {
-                fmpz_init(res->expons + k);
-                fmpz_init(res->coeffs + k);
                 fmpz_set(res->expons + k, (heap->nodes)->expons);
                 fmpz_set(res->coeffs + k, (heap->nodes)->coeffs);
                 k++;
@@ -261,7 +256,7 @@ fmpz_spoly_mul_heaps(fmpz_spoly_t res, const fmpz_spoly_t poly1, const fmpz_spol
             }
         }
         
-        res->length = k;
+        _fmpz_spoly_set_length(res, k);
         fmpz_heap_free(heap);
     }
 }

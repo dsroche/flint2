@@ -23,30 +23,39 @@
 
 ******************************************************************************/
 
+#include "nmod_poly.h"
 #include "fmpz_spoly.h"
 
+/* CAUTION: Tight coupling with nmod_poly implementation */
 void fmpz_spoly_rem_cyc_mod_diverse(nmod_poly_t res, 
     const fmpz_spoly_t poly, ulong a, ulong e, ulong q)
 {
     slong i;
-    ulong q_inv = n_preinvert_limb(q);
-    FLINT_ASSERT (n_powmod2_preinv(a, q-1, q, q_inv) == 1UL);
-    if (nmod_poly_modulus(res) == q) nmod_poly_zero(res);
-    else {
+
+    if (nmod_poly_modulus(res) == q)
+    {
+        nmod_poly_fit_length(res, e);
+    }
+    else 
+    {
         /* polynomial has the wrong modulus, must be re-initialized */
         nmod_poly_clear(res);
-        nmod_poly_init2(res, q, e+1); /* initializes allocated size */
+        nmod_poly_init2(res, q, e); /* initializes allocated size */
     }
-    nmod_poly_set_coeff_ui(res, e, 1); /* set to x^e, to reserve zeros */
-    for (i=0; i < poly->length; ++i) {
+
+    memset(res->coeffs, 0, e * sizeof *res->coeffs);
+
+    for (i=0; i < poly->length; ++i)
+    {
         ulong rese = fmpz_fdiv_ui(poly->expons + i, e);
         ulong resc = n_powmod2_preinv(
-                a, fmpz_fdiv_ui(poly->expons+i, q-1), q, q_inv);
+                a, fmpz_fdiv_ui(poly->expons+i, q-1), q, res->mod.ninv);
         resc = n_mulmod2_preinv(
-                resc, fmpz_fdiv_ui(poly->coeffs+i, q), q, q_inv);
-        resc = n_addmod(
-                nmod_poly_get_coeff_ui(res, rese), resc, q);
-        nmod_poly_set_coeff_ui(res, rese, resc);
+                resc, fmpz_fdiv_ui(poly->coeffs+i, q), q, res->mod.ninv);
+        resc = n_addmod( nmod_poly_get_coeff_ui(res, rese), resc, q);
+        res->coeffs[rese] = resc;
     }
-    nmod_poly_set_coeff_ui(res, e, 0); /* set x^e coeff back to 0 */
+
+    _nmod_poly_set_length(res, e);
+    _nmod_poly_normalise(res);
 }
