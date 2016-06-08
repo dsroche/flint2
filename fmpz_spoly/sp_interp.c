@@ -297,7 +297,6 @@ int fmpz_spoly_sp_interp(fmpz_spoly_t res, fmpz_spoly_sp_interp_eval_t eval)
             }
 
             /* update evaluations and check if done */
-            flint_printf("  (round complete)\n");
             fmpz_spoly_sp_interp_eval(reseval, res);
             fmpz_spoly_sp_interp_addmul_si(eval, WORD(-1), reseval);
 

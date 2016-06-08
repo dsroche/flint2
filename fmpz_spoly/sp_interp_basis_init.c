@@ -69,6 +69,7 @@ void fmpz_spoly_sp_interp_basis_init(fmpz_spoly_sp_interp_basis_t res, flint_ran
 {
     slong num_rounds, groups_per, coeffs_per, pbits;
     slong i, j, round_start, groups_remain = 0, coeffs_remain = 0;
+    fmpz_t cmprod, emprod;
 
     if (terms == 0 || h == 0)
     {
@@ -113,6 +114,9 @@ void fmpz_spoly_sp_interp_basis_init(fmpz_spoly_sp_interp_basis_t res, flint_ran
     res->shifts = flint_malloc(res->length * sizeof *res->shifts);
     res->emods = flint_malloc(res->length * sizeof *res->emods);
 
+    fmpz_init(cmprod);
+    fmpz_init(emprod);
+
     i = 0;
     while (i < res->length)
     {
@@ -124,6 +128,9 @@ void fmpz_spoly_sp_interp_basis_init(fmpz_spoly_sp_interp_basis_t res, flint_ran
             groups_remain = groups_per;
             coeffs_remain = coeffs_per;
             round_start = i;
+
+            fmpz_set_si(cmprod, WORD(1));
+            fmpz_set_si(emprod, WORD(1));
 
             nmod_init(res->cmods + i, n_randprime(state, COEFF_PBITS, 0));
             do
@@ -139,11 +146,22 @@ void fmpz_spoly_sp_interp_basis_init(fmpz_spoly_sp_interp_basis_t res, flint_ran
         }
 
         /* start new group */
-        nmod_init(res->emods + i, n_randprime(state, pbits, 0));
+        do
+        {
+            nmod_init(res->emods + i, n_randprime(state, pbits, 0));
+        } 
+        while (fmpz_fdiv_ui(emprod, res->emods[i].n) == 0);
+        fmpz_mul_ui(emprod, emprod, res->emods[i].n);
 
         for (j = 1; j <= (coeffs_remain + groups_remain - 1) / groups_remain; ++j)
         {
-            nmod_init(res->cmods + (i + j), n_randprime(state, COEFF_PBITS, 0));
+            do
+            {
+                nmod_init(res->cmods + (i + j), n_randprime(state, COEFF_PBITS, 0));
+            }
+            while (fmpz_fdiv_ui(cmprod, res->cmods[i + j].n) == 0);
+            fmpz_mul_ui(cmprod, cmprod, res->cmods[i + j].n);
+
             res->shifts[i + j] = 1;
             res->emods[i + j] = res->emods[i];
         }
@@ -157,4 +175,7 @@ void fmpz_spoly_sp_interp_basis_init(fmpz_spoly_sp_interp_basis_t res, flint_ran
     FLINT_ASSERT(groups_remain == 0);
     FLINT_ASSERT(coeffs_remain == 0);
     FLINT_ASSERT(i == res->length);
+
+    fmpz_clear(emprod);
+    fmpz_clear(cmprod);
 }

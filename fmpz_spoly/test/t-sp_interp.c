@@ -64,7 +64,6 @@ main(void)
         fmpz_spoly_sp_interp_eval_init(eval, basis);
         fmpz_spoly_sp_interp_eval(eval, a);
         
-        /* TODO FIXME REMOVE */ flint_printf("params: %wd %wd %wd %wd %wd\n", basis->length, basis->cimg_per_round, basis->cimg_needed, basis->eimg_per_round, basis->eimg_needed);
         /*b gets result*/
         ret = fmpz_spoly_sp_interp(b, eval);
 
@@ -79,8 +78,6 @@ main(void)
             fmpz_spoly_print(b), flint_printf("\n\n");
             abort();
         }
-        else flint_printf("pass %wd %wu %wu\n", fmpz_spoly_terms(a), fmpz_bits(fmpz_spoly_degree_ptr(a)), fmpz_spoly_height_bits(a));
-        /* TODO FIXME REMOVE */
 
         fmpz_clear(d);
         fmpz_clear(h);
