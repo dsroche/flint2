@@ -279,7 +279,6 @@ void fmpz_spoly_swap(fmpz_spoly_t poly1, fmpz_spoly_t poly2)
     FLINT_GENERIC_SWAP(slong, poly1->alloc, poly2->alloc);
 }
 
-/* FIXME (not yet implemented) */
 FLINT_DLL void fmpz_spoly_truncate(fmpz_spoly_t poly, const fmpz_t deg);
 
 /* FIXME (not yet implemented) */
