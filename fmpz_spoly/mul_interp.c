@@ -30,8 +30,8 @@ void
 fmpz_spoly_mul_interp(fmpz_spoly_t res, flint_rand_t state, 
         const fmpz_spoly_t poly1, const fmpz_spoly_t poly2, slong terms)
 {
-    fmpz_spoly_bp_interp_basis_t basis;
-    fmpz_spoly_bp_interp_eval_t p1e, p2e;
+    fmpz_spoly_sp_interp_basis_t basis;
+    fmpz_spoly_sp_interp_eval_t p1e, p2e;
     mp_bitcnt_t d, h;
     
     d = FLINT_MAX(fmpz_bits(fmpz_spoly_degree_ptr(poly1)), 
@@ -39,18 +39,18 @@ fmpz_spoly_mul_interp(fmpz_spoly_t res, flint_rand_t state,
     h = fmpz_spoly_height_bits(poly1) + fmpz_spoly_height_bits(poly2) 
         + FLINT_BIT_COUNT(terms);
 
-    fmpz_spoly_bp_interp_basis_init(basis, state, terms, d, h);
+    fmpz_spoly_sp_interp_basis_init(basis, state, terms, d, h);
 
-    fmpz_spoly_bp_interp_eval_init(p1e, basis);
-    fmpz_spoly_bp_interp_eval(p1e, poly1);
+    fmpz_spoly_sp_interp_eval_init(p1e, basis);
+    fmpz_spoly_sp_interp_eval(p1e, poly1);
 
-    fmpz_spoly_bp_interp_eval_init(p2e, basis);
-    fmpz_spoly_bp_interp_eval(p2e, poly2);
+    fmpz_spoly_sp_interp_eval_init(p2e, basis);
+    fmpz_spoly_sp_interp_eval(p2e, poly2);
 
-    fmpz_spoly_bp_interp_mul(p1e, p1e, p2e);
-    fmpz_spoly_bp_interp(res, p1e);
+    fmpz_spoly_sp_interp_mul(p1e, p1e, p2e);
+    fmpz_spoly_sp_interp(res, p1e);
 
-    fmpz_spoly_bp_interp_eval_clear(p1e);
-    fmpz_spoly_bp_interp_eval_clear(p2e);
-    fmpz_spoly_bp_interp_basis_clear(basis);
+    fmpz_spoly_sp_interp_eval_clear(p1e);
+    fmpz_spoly_sp_interp_eval_clear(p2e);
+    fmpz_spoly_sp_interp_basis_clear(basis);
 }

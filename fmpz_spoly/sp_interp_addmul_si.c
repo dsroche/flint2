@@ -36,12 +36,22 @@ void fmpz_spoly_sp_interp_addmul_si(fmpz_spoly_sp_interp_eval_t res,
 
     for (i = 0; i < res->basis->length; ++i)
     {
-        nmod_poly_fit_length(res->evals + i, nmod_poly_length(poly2->evals + i));
+        slong reslen = nmod_poly_length(res->evals + i);
+        slong len2 = nmod_poly_length(poly2->evals + i);
+        if (len2 > reslen)
+        {
+            nmod_poly_fit_length(res->evals + i, len2);
+            memset(res->evals[i].coeffs + reslen, 0, 
+                   (len2 - reslen) * sizeof *res->evals[i].coeffs);
+        }
+
         /* XXX: does this work for any slong value c? */
         NMOD_RED(uc, c + res->basis->cmods[i].n, res->basis->cmods[i]);
         _nmod_vec_scalar_addmul_nmod(res->evals[i].coeffs, 
-                poly2->evals[i].coeffs, nmod_poly_length(poly2->evals + i),
+                poly2->evals[i].coeffs, len2,
                 uc, res->basis->cmods[i]);
-        _nmod_poly_normalise(res->evals + i);
+
+        if (len2 > reslen) _nmod_poly_set_length(res->evals + i, len2);
+        else if (len2 == reslen) _nmod_poly_normalise(res->evals + i);
     }
 }

@@ -33,8 +33,8 @@
 int main(int argc, char** argv)
 {
     fmpz_spoly_struct orig[NUMEX];
-    fmpz_spoly_bp_interp_basis_struct bases[NUMEX];
-    fmpz_spoly_bp_interp_eval_struct evals[NUMEX];
+    fmpz_spoly_sp_interp_basis_struct bases[NUMEX];
+    fmpz_spoly_sp_interp_eval_struct evals[NUMEX];
     fmpz_spoly_t res;
     fmpz_t D, H;
     timeit_t timer;
@@ -65,8 +65,8 @@ int main(int argc, char** argv)
     {
         fmpz_spoly_init(orig+i);
         fmpz_spoly_randtest(orig+i, state, T, D, hbits-1);
-        fmpz_spoly_bp_interp_basis_init(bases + i, state, T, dbits, hbits);
-        fmpz_spoly_bp_interp_eval_init(evals + i, bases + i);
+        fmpz_spoly_sp_interp_basis_init(bases + i, state, T, dbits, hbits);
+        fmpz_spoly_sp_interp_eval_init(evals + i, bases + i);
     }
     fmpz_spoly_init(res);
 
@@ -74,8 +74,8 @@ int main(int argc, char** argv)
     timeit_start(timer);
     for (i=0; i<NUMEX; ++i)
     {
-        fmpz_spoly_bp_interp_eval(evals+i, orig+i);
-        fmpz_spoly_bp_interp(res, evals+i);
+        fmpz_spoly_sp_interp_eval(evals+i, orig+i);
+        fmpz_spoly_sp_interp(res, evals+i);
     }
     timeit_stop(timer);
 
@@ -88,8 +88,8 @@ int main(int argc, char** argv)
         {
             for (i=0; i<NUMEX; ++i)
             {
-                fmpz_spoly_bp_interp_eval(evals+i, orig+i);
-                fmpz_spoly_bp_interp(res, evals+i);
+                fmpz_spoly_sp_interp_eval(evals+i, orig+i);
+                fmpz_spoly_sp_interp(res, evals+i);
             }
         }
         timeit_stop(timer);
@@ -101,8 +101,8 @@ int main(int argc, char** argv)
     /* cool down and check results */
     for (i=0; i<NUMEX; ++i)
     {
-        fmpz_spoly_bp_interp_eval(evals+i, orig+i);
-        fmpz_spoly_bp_interp(res, evals+i);
+        fmpz_spoly_sp_interp_eval(evals+i, orig+i);
+        fmpz_spoly_sp_interp(res, evals+i);
         if (!fmpz_spoly_equal(res, orig+i))
         {
             flint_printf("FAIL\n");
@@ -124,8 +124,8 @@ int main(int argc, char** argv)
     for (i=0; i<NUMEX; ++i)
     {
         fmpz_spoly_clear(orig+i);
-        fmpz_spoly_bp_interp_basis_clear(bases + i);
-        fmpz_spoly_bp_interp_eval_clear(evals + i);
+        fmpz_spoly_sp_interp_eval_clear(evals + i);
+        fmpz_spoly_sp_interp_basis_clear(bases + i);
     }
     fmpz_spoly_clear(res);
     fmpz_clear(H);

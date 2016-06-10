@@ -970,7 +970,7 @@ FLINT_DLL void fmpz_spoly_sp_interp_pow(fmpz_spoly_sp_interp_eval_t res,
 /* (end FIXME) */
 
 FLINT_DLL int fmpz_spoly_sp_interp(fmpz_spoly_t res,
-    fmpz_spoly_sp_interp_eval_t eval);
+    const fmpz_spoly_sp_interp_eval_t eval);
 
 FLINT_DLL slong _fmpz_spoly_prim_roots(fmpz_t p, fmpz * qq, fmpz * ww, flint_rand_t state,
     slong len, mp_bitcnt_t p_bits, mp_bitcnt_t q_prod_bits);

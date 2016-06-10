@@ -79,7 +79,7 @@ void fmpz_spoly_sp_interp_basis_init(fmpz_spoly_sp_interp_basis_t res, flint_ran
         res->cimg_needed = res->eimg_needed = 0;
         return;
     }
-    else if (d <= UWORD(4) * terms)
+    else if (d <= FLINT_BIT_COUNT(terms) + 2)
     {
         /* edge case: dense polynomial */
         num_rounds = 1;

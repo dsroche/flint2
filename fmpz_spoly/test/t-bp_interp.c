@@ -37,14 +37,14 @@ main(void)
     int i, result;
     FLINT_TEST_INIT(state);
 
-    flint_printf("interp....");
+    flint_printf("bp_interp....");
     fflush(stdout);
 
-    for (i = 0; i < 100 * flint_test_multiplier(); i++)
+    for (i = 0; i < 10 * flint_test_multiplier(); i++)
     {
         fmpz_spoly_bp_interp_basis_t basis;
         fmpz_spoly_bp_interp_eval_t eval;
-        fmpz_spoly_t a, b, c;
+        fmpz_spoly_t a, b;
         fmpz_t d, h;
 
         /*random fmpz*/
@@ -55,8 +55,7 @@ main(void)
         /*random fmpz_spoly*/
         fmpz_spoly_init(a);
         fmpz_spoly_init(b);
-        fmpz_spoly_init(c);
-        fmpz_spoly_randtest(a, state, n_randint(state, 100), d, 20);
+        fmpz_spoly_randtest(a, state, n_randint(state, 100), d, 1 + n_randint(state, 100));
 
         /*initialize interpolation struct and eval random fmpz_spoly*/
         fmpz_spoly_bp_interp_basis_init(basis, state, a->length, 
@@ -67,17 +66,13 @@ main(void)
         /*b gets result*/
         fmpz_spoly_bp_interp(b, eval);
 
-        /*c gets result*/
-        fmpz_spoly_bp_interp(c, eval);
-
-        /*check that a == b and b == c*/
-        result = (fmpz_spoly_equal(a, b) && fmpz_spoly_equal(b,c));
+        /*check that a == b*/
+        result = fmpz_spoly_equal(a, b);
         if (!result)
         {
             flint_printf("FAIL:\n");
             fmpz_spoly_print(a), flint_printf("\n\n");
             fmpz_spoly_print(b), flint_printf("\n\n");
-            fmpz_spoly_print(c), flint_printf("\n\n");
             abort();
         }
 
@@ -85,7 +80,6 @@ main(void)
         fmpz_clear(h);
         fmpz_spoly_clear(a);
         fmpz_spoly_clear(b);
-        fmpz_spoly_clear(c);
         fmpz_spoly_bp_interp_eval_clear(eval);
         fmpz_spoly_bp_interp_basis_clear(basis);
     }

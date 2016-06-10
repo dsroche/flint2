@@ -37,10 +37,10 @@ main(void)
     int i, result;
     FLINT_TEST_INIT(state);
 
-    flint_printf("interp....");
+    flint_printf("sp_interp....");
     fflush(stdout);
 
-    for (i = 0; i < 100 * flint_test_multiplier(); i++)
+    for (i = 0; i < 10 * flint_test_multiplier(); i++)
     {
         fmpz_spoly_sp_interp_basis_t basis;
         fmpz_spoly_sp_interp_eval_t eval;
@@ -51,12 +51,12 @@ main(void)
         /*random fmpz*/
         fmpz_init(d);
         fmpz_init(h);
-        fmpz_randtest(d, state, 20);
+        fmpz_randtest(d, state, 100);
 
         /*random fmpz_spoly*/
         fmpz_spoly_init(a);
         fmpz_spoly_init(b);
-        fmpz_spoly_randtest(a, state, n_randint(state, 100), d, 1 + n_randint(state, 200));
+        fmpz_spoly_randtest(a, state, n_randint(state, 100), d, 1 + n_randint(state, 100));
 
         /*initialize interpolation struct and eval random fmpz_spoly*/
         fmpz_spoly_sp_interp_basis_init(basis, state, a->length, 

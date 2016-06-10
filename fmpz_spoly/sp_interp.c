@@ -159,54 +159,60 @@ static void _fmpz_comb_reusable_set(fmpz_comb_t comb, mp_srcptr primes, const im
     }
 }
 
-int fmpz_spoly_sp_interp(fmpz_spoly_t res, fmpz_spoly_sp_interp_eval_t eval)
+int fmpz_spoly_sp_interp(fmpz_spoly_t res, 
+        const fmpz_spoly_sp_interp_eval_t eval)
 {
-    fmpz_spoly_sp_interp_eval_t reseval;
+    fmpz_spoly_sp_interp_eval_t roundeval, remeval;
+    fmpz_spoly_t round_poly;
     image *eimgs, *cimgs;
     fmpz_comb_t ecomb, ccomb;
     fmpz_comb_temp_t ectemp, cctemp;
     fmpz_t full_coeff, full_expon;
-    fmpz* cptr;
     mp_ptr crt_res, crt_primes;
-    slong i, j, k, l, gstart;
+    slong i, j, k, l, gstart = 0;
     slong eimg_len = 0, cimg_len = 0;
     ulong coeff;
-    int result = (eval->basis->length == 0);
+    const fmpz_spoly_sp_interp_basis_struct* basis = eval->basis;
+    int result = (basis->length == 0);
 
     fmpz_spoly_zero(res);
-    fmpz_spoly_sp_interp_eval_init(reseval, eval->basis);
+    fmpz_spoly_sp_interp_eval_init(roundeval, basis);
+    fmpz_spoly_sp_interp_eval_init(remeval, basis);
+    fmpz_spoly_sp_interp_eval_set(remeval, eval);
 
-    eimgs = flint_malloc(eval->basis->eimg_per_round * sizeof *eimgs);
-    cimgs = flint_malloc(eval->basis->cimg_per_round * sizeof *cimgs);
+    fmpz_spoly_init(round_poly);
 
-    _fmpz_comb_reusable_init(ecomb, eval->basis->eimg_needed);
-    _fmpz_comb_reusable_init(ccomb, eval->basis->cimg_needed);
+    eimgs = flint_malloc(basis->eimg_per_round * sizeof *eimgs);
+    cimgs = flint_malloc(basis->cimg_per_round * sizeof *cimgs);
+
+    _fmpz_comb_reusable_init(ecomb, basis->eimg_needed);
+    _fmpz_comb_reusable_init(ccomb, basis->cimg_needed);
     fmpz_comb_temp_init(ectemp, ecomb);
     fmpz_comb_temp_init(cctemp, ccomb);
 
-    l = FLINT_MAX(eval->basis->eimg_needed, eval->basis->cimg_needed);
+    l = FLINT_MAX(basis->eimg_needed, basis->cimg_needed);
     crt_res = flint_malloc(l * sizeof *crt_res);
     crt_primes = flint_malloc(l * sizeof *crt_primes);
 
     fmpz_init(full_coeff);
     fmpz_init(full_expon);
 
-    for (i = 0; i < eval->basis->length; ++i)
+    for (i = 0; i < basis->length; ++i)
     {
-        if (eval->basis->shifts[i] > 1)
+        if (basis->shifts[i] > 1)
         {
             /* start of a group */
             gstart = i;
 
             /* collect exponent images */
-            for (j = 0; j < nmod_poly_length(eval->evals + gstart); ++j)
+            for (j = 0; j < nmod_poly_length(remeval->evals + gstart); ++j)
             {
-                ulong coeff = nmod_poly_get_coeff_ui(eval->evals + gstart, j);
+                ulong coeff = nmod_poly_get_coeff_ui(remeval->evals + gstart, j);
                 if (coeff != 0)
                 {
                     eimgs[eimg_len].dcoeff = coeff;
                     eimgs[eimg_len].res = j;
-                    eimgs[eimg_len].mod = eval->basis->emods[i];
+                    eimgs[eimg_len].mod = basis->emods[i];
                     ++eimg_len;
                 }
             }
@@ -214,32 +220,32 @@ int fmpz_spoly_sp_interp(fmpz_spoly_t res, fmpz_spoly_sp_interp_eval_t eval)
         else
         {
             /* collect coefficient images */
-            for (j = 0; j < nmod_poly_length(eval->evals + gstart); ++j)
+            for (j = 0; j < nmod_poly_length(remeval->evals + gstart); ++j)
             {
-                coeff = nmod_poly_get_coeff_ui(eval->evals + gstart, j);
+                coeff = nmod_poly_get_coeff_ui(remeval->evals + gstart, j);
                 if (coeff != 0)
                 {
                     cimgs[cimg_len].dcoeff = coeff;
                     cimgs[cimg_len].res = 
-                        nmod_poly_get_coeff_ui(eval->evals + i, j);
-                    cimgs[cimg_len].mod = eval->basis->cmods[i];
+                        nmod_poly_get_coeff_ui(remeval->evals + i, j);
+                    cimgs[cimg_len].mod = basis->cmods[i];
                     ++cimg_len;
                 }
             }
         }
 
-        if (i + 1 == eval->basis->length 
-            || (eval->basis->shifts[i + 1] > 1 
-                && (eval->basis->cmods[gstart].n != eval->basis->cmods[i + 1].n
-                    || eval->basis->shifts[gstart] != eval->basis->shifts[i + 1])))
+        if (i + 1 == basis->length 
+            || (basis->shifts[i + 1] > 1 
+                && (basis->cmods[gstart].n != basis->cmods[i + 1].n
+                    || basis->shifts[gstart] != basis->shifts[i + 1])))
         {
             /* end of round */
             qsort(eimgs, eimg_len, sizeof *eimgs, image_cmp);
             qsort(cimgs, cimg_len, sizeof *cimgs, image_cmp);
 
             j = k = 0;
-            while (j + eval->basis->eimg_needed <= eimg_len 
-                   && k + eval->basis->cimg_needed <= cimg_len)
+            while (j + basis->eimg_needed <= eimg_len 
+                   && k + basis->cimg_needed <= cimg_len)
             {
                 if (eimgs[j].dcoeff < cimgs[k].dcoeff)
                 {
@@ -254,11 +260,11 @@ int fmpz_spoly_sp_interp(fmpz_spoly_t res, fmpz_spoly_sp_interp_eval_t eval)
                 else
                 {
                     /* check sufficiently many images for coeff and expon */
-                    if (eimgs[j].dcoeff == eimgs[j + eval->basis->eimg_needed - 1].dcoeff
-                        && cimgs[k].dcoeff == cimgs[k + eval->basis->cimg_needed - 1].dcoeff)
+                    if (eimgs[j].dcoeff == eimgs[j + basis->eimg_needed - 1].dcoeff
+                        && cimgs[k].dcoeff == cimgs[k + basis->cimg_needed - 1].dcoeff)
                     {
                         /* recover a new term */
-                        for (l = 0; l < eval->basis->eimg_needed; ++l) 
+                        for (l = 0; l < basis->eimg_needed; ++l) 
                         {
                             crt_res[l] = eimgs[j + l].res;
                             crt_primes[l] = eimgs[j + l].mod.n;
@@ -266,7 +272,7 @@ int fmpz_spoly_sp_interp(fmpz_spoly_t res, fmpz_spoly_sp_interp_eval_t eval)
                         _fmpz_comb_reusable_set(ecomb, crt_primes, eimgs + j);
                         fmpz_multi_CRT_ui(full_expon, crt_res, ecomb, ectemp, 0);
 
-                        for (l = 0; l < eval->basis->cimg_needed; ++l) 
+                        for (l = 0; l < basis->cimg_needed; ++l) 
                         {
                             crt_res[l] = cimgs[k + l].res;
                             crt_primes[l] = cimgs[k + l].mod.n;
@@ -274,20 +280,8 @@ int fmpz_spoly_sp_interp(fmpz_spoly_t res, fmpz_spoly_sp_interp_eval_t eval)
                         _fmpz_comb_reusable_set(ccomb, crt_primes, cimgs + k);
                         fmpz_multi_CRT_ui(full_coeff, crt_res, ccomb, cctemp, 1);
 
-                        /* add new term to res */
-                        cptr = fmpz_spoly_get_coeff_ptr(res, full_expon);
-                        if (cptr == NULL)
-                        {
-                            fmpz_spoly_set_coeff(res, full_coeff, full_expon);
-                        }
-                        else 
-                        {
-                            fmpz_add(cptr, cptr, full_coeff);
-                            if (fmpz_is_zero(cptr))
-                            {
-                                fmpz_spoly_set_coeff_si_fmpz(res, WORD(0), full_expon);
-                            }
-                        }
+                        /* add new term to round_poly */
+                        fmpz_spoly_set_coeff(round_poly, full_coeff, full_expon);
                     }
 
                     /* skip to next images */
@@ -296,23 +290,34 @@ int fmpz_spoly_sp_interp(fmpz_spoly_t res, fmpz_spoly_sp_interp_eval_t eval)
                 }
             }
 
-            /* update evaluations and check if done */
-            fmpz_spoly_sp_interp_eval(reseval, res);
-            fmpz_spoly_sp_interp_addmul_si(eval, WORD(-1), reseval);
+            /* update evaluations */
+            fmpz_spoly_sp_interp_eval(roundeval, round_poly);
+            fmpz_spoly_sp_interp_addmul_si(remeval, WORD(-1), roundeval);
 
-            if (fmpz_spoly_sp_interp_eval_is_zero(eval))
+            /* update res */
+            if (fmpz_spoly_is_zero(res)) fmpz_spoly_swap(res, round_poly);
+            else
+            {
+                fmpz_spoly_add(res, res, round_poly);
+                fmpz_spoly_zero(round_poly);
+            }
+
+            /* check if done */
+            if (fmpz_spoly_sp_interp_eval_is_zero(remeval))
             {
                 result = 1;
                 break;
             }
-
+            
             eimg_len = cimg_len = 0;
         }
     }
 
     flint_free(eimgs);
     flint_free(cimgs);
-    fmpz_spoly_sp_interp_eval_clear(reseval);
+    fmpz_spoly_clear(round_poly);
+    fmpz_spoly_sp_interp_eval_clear(roundeval);
+    fmpz_spoly_sp_interp_eval_clear(remeval);
     fmpz_comb_temp_clear(ectemp);
     fmpz_comb_temp_clear(cctemp);
     fmpz_comb_clear(ecomb);

@@ -52,7 +52,7 @@ void fmpz_spoly_rem_cyc_mod_diverse(nmod_poly_t res,
                 a, fmpz_fdiv_ui(poly->expons+i, q-1), q, res->mod.ninv);
         resc = n_mulmod2_preinv(
                 resc, fmpz_fdiv_ui(poly->coeffs+i, q), q, res->mod.ninv);
-        resc = n_addmod( nmod_poly_get_coeff_ui(res, rese), resc, q);
+        resc = n_addmod(res->coeffs[rese], resc, q);
         res->coeffs[rese] = resc;
     }
 
