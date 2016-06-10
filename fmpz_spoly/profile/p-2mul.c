@@ -29,7 +29,6 @@
 #include <float.h>
 #include "flint.h"
 #include "fmpz.h"
-#include "fmpz_poly.h"
 #include "fmpz_spoly.h"
 #include "ulong_extras.h"
 #include "profiler.h"
@@ -52,20 +51,20 @@
    imgname  File name for image
  */
 
-#define deg      1000
-#define lenlo    10
-#define lenhi    500
-#define lenh     10
-#define bitslo   32
-#define bitshi   1024
-#define bitsh    32
+#define bits     512
+#define lenlo    60
+#define lenhi    98
+#define lenh     1
+#define deglo    500
+#define deghi    14500
+#define degh     500
 #define rows     ((lenhi + 1 - lenlo + (lenh - 1)) / lenh)
-#define cols     ((bitshi + 1 - bitslo + (bitsh - 1)) / bitsh)
+#define cols     ((deghi + 1 - deglo + (degh - 1)) / degh)
 #define cpumin   10
 #define ncases   1
 #define nalgs    2
 #define img      1
-#define imgname  "mul.ppm"
+#define imgname  "2mul.ppm"
 
 /*
    Write a binary 24-bit ppm image.
@@ -85,7 +84,7 @@ int write_rgb_ppm(const char* file_name, unsigned char* pixels,
 int
 main(void)
 {
-    int i, j, len, bits;
+    int i, j, len, deg;
     int X[rows][cols];
     double T[rows][cols][nalgs];
     fmpz_spoly_t f, g, h;
@@ -103,13 +102,12 @@ main(void)
     fmpz_poly_init(y);
     fmpz_poly_init(z);
 
-    fmpz_init_set_ui(degree, deg);
 
-    for (len = lenhi, i = 0; len >= lenlo; len -= lenh, i++)
+    for (len = lenlo, i = 0; len <= lenhi; len += lenh, i++)
     {
         slong s[nalgs];
         
-        for (bits = bitslo, j = 0; bits <= bitshi; bits += bitsh, j++)
+        for (deg = deglo, j = 0; deg <= deghi; deg += degh, j++)
         {
             int c, n, reps = 0;
             
@@ -121,19 +119,15 @@ main(void)
                 timeit_t t[nalgs];
                 int l, loops = 1;
                 
+                
                 /*
                    Construct random sparse polynomials f and g
                  */
                 {
-                  fmpz_spoly_randtest(f, state, len, degree, bits);
-                  fmpz_spoly_randtest(g, state, len, degree, bits);
+                  fmpz_init_set_ui(degree, deg);
+                  fmpz_spoly_randtest(f, state, deg - (len*deg*5)/deglo, degree, bits);
+                  fmpz_spoly_randtest(g, state, deg - (len*deg*5)/deglo, degree, bits);
                 }
-
-                /*
-                   Construct dense polynomials from f and g
-                 */
-                fmpz_spoly_get_fmpz_poly(x, f);
-                fmpz_spoly_get_fmpz_poly(y, g); 
 
               loop:
 
@@ -144,7 +138,7 @@ main(void)
                 
                 timeit_start(t[1]);
                 for (l = 0; l < loops; l++)
-                    fmpz_poly_mul(z, y, x);
+                    fmpz_spoly_mul_OS(h, state, g, f);
                 timeit_stop(t[1]);
 
                 for (c = 0; c < nalgs; c++)
@@ -166,12 +160,13 @@ main(void)
                 X[i][j] = 0;
             else
                 X[i][j] = 1;
+           flint_printf("len = %d, deg = %d winner = %d\n", deg - (len*deg*5)/deglo, deg, X[i][j]), fflush(stdout);
         }
         {
            slong sum = 0, c;
            for (c = 0; c < nalgs; c++)
               sum += s[c];
-           flint_printf("len = %d, deg = %d, time = %wdms\n", len, deg, sum), fflush(stdout);
+           flint_printf("len = %d, deg = %d, time = %wdms\n", deg - (len*deg*5)/deglo, deg, sum), fflush(stdout);
         }
     }
     
@@ -185,10 +180,6 @@ main(void)
         flint_printf("\n");
     }
 
-    fmpz_poly_clear(x);
-    fmpz_poly_clear(y);
-    fmpz_poly_clear(z);
-    
     fmpz_spoly_clear(f);
     fmpz_spoly_clear(g);
     fmpz_spoly_clear(h);
