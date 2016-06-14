@@ -526,48 +526,204 @@ void fmpz_spoly_primitive_part(fmpz_spoly_t res, const fmpz_spoly_t poly)
 
     Sparse interpolation
 
+    These functions implement evaluation and interpolation of sparse
+    polynomials, and basic arithmetic in evaluated bases.
+    Two families of interpolation algorithm are provided: the ``big
+    primes'' approach of \citep{BenTiw1998,Kaltofen2010} and others; 
+    and the ``small primes'' approach of
+    \citep{GarSch2009,KhoRocTia2015} and others.
+    
+    The routines
+    for interpolation are specialised for sparse polynomials, in that
+    their cost scales according to the number of nonzero terms in the
+    polynomial and the logarithm of the degree. A consequence is that
+    interpolation can only be performed from specially-chosen evaluation
+    points, over specially-constructed domains.
+
 *******************************************************************************
 
-void fmpz_spoly_bp_interp_init(fmpz_spoly_bp_interp_t res,
-    slong terms, const fmpz_t height, const fmpz_t degree, flint_rand_t rs)
+void fmpz_spoly_bp_interp_basis_init(fmpz_spoly_bp_interp_basis_t res,
+    flint_rand_t state, slong terms, mp_bitcnt_t d, mp_bitcnt_t h)
 
-void fmpz_spoly_bp_interp_clear(fmpz_spoly_bp_interp_t res)
+    Sets up the evaluation points for sparse interpolation using the
+    ``big prime'' approach, according to the given upper bounds on the
+    number of terms, exponent bits, and coefficient bits, of the
+    eventual output.
 
-void fmpz_spoly_bp_interp_eval(fmpz_spoly_bp_interp_t res,
-    const fmpz_spoly_t poly)
+    The basis will be initialized with a random prime $q$ and a series
+    of evaluation points in $\mathsf{GF}(q)$ that form consecutive 
+    powers of a high-order root of unity.
 
-void fmpz_spoly_bp_interp_mul(fmpz_spoly_bp_interp_t res,
-    const fmpz_spoly_t poly)
+void fmpz_spoly_bp_interp_basis_clear(fmpz_spoly_bp_interp_basis_t res)
 
-void fmpz_spoly_bp_interp_add(fmpz_spoly_bp_interp_t res,
-    const fmpz_t c, const fmpz_spoly_t poly)
+    Frees memory associated with the given interpolation basis.
 
-void fmpz_spoly_bp_interp_pow(fmpz_spoly_bp_interp_t res, ulong pow)
+void fmpz_spoly_bp_interp_eval_init(fmpz_spoly_bp_interp_eval_t res,
+    const fmpz_spoly_bp_interp_basis_t basis)
+
+    Sets up the structure to hold the evaluations of a sparse polynomial
+    under the given interpolation basis.
+
+void fmpz_spoly_bp_interp_eval_clear(fmpz_spoly_bp_interp_eval_t res)
+
+    Frees memory associated with the given evaluation structure.
+    \textbf{Note}: must be performed \emph{prior} to freeing the
+    underlying \code{fmpz_spoly_bp_interp_basis_t} object.
+
+void fmpz_spoly_bp_interp_eval(fmpz_spoly_bp_interp_eval_t res, const fmpz_spoly_t poly)
+    
+    Evaluates the given polynomial according to the underlying
+    interpolation basis. The evaluation structure must have already been
+    initialized with some interpolation basis.
+
+void fmpz_spoly_bp_interp_eval_set(fmpz_spoly_bp_interp_eval_t res,
+        const fmpz_spoly_bp_interp_eval_t eval)
+
+    Copies the evaluations from \code{eval} to \code{res}. Both
+    structures are assumed to have the same underlying interpolation
+    basis.
+
+int fmpz_spoly_bp_interp_eval_is_zero(const fmpz_spoly_bp_interp_eval_t eval)
+
+    Returns nonzero iff the given evaluations are consistent with the
+    zero polynomial.
+
+void fmpz_spoly_bp_interp_mul(fmpz_spoly_bp_interp_eval_t res,
+    const fmpz_spoly_bp_interp_eval_t poly1,
+    const fmpz_spoly_bp_interp_eval_t poly2)
+
+    Given evaluations of two sparse polynomials $f$ and $g$, computes the
+    evaluations of their product $fg$ according to the underlying
+    interpolation basis.
+
+void fmpz_spoly_bp_interp_addmul_si(fmpz_spoly_bp_interp_eval_t res,
+    slong c,
+    const fmpz_spoly_bp_interp_eval_t poly2)
+
+    Given evaluations of a polynomial $f$ in the
+    structure \code{res}, a scalar $c$, and evaluations of a polynomial
+    $g$ in the structure \code{poly2}, computes evaluations of
+    $f + cg$ and stores them back in \code{res}.
+
+void fmpz_spoly_bp_interp_pow(fmpz_spoly_bp_interp_eval_t res,
+    const fmpz_spoly_bp_interp_eval_t poly, ulong pow)
+
+    Given a set of evaluations of a sparse polynomial, computes
+    evaluations of that polynomial raised to the power \code{pow},
+    according to the underlying interpolation basis, and stores them
+    in \code{res}.
 
 int fmpz_spoly_bp_interp(fmpz_spoly_t res,
-    const fmpz_spoly_bp_interp_t evals)
+    const fmpz_spoly_bp_interp_eval_t eval)
 
-void fmpz_spoly_sp_interp_init(fmpz_spoly_sp_interp_t res,
-    slong terms, const fmpz_t height, const fmpz_t degree)
+    Performs sparse interpolation to determine a sparse polynomial
+    \code{res} whose evaluations match those given in \code{eval}.
 
-void fmpz_spoly_sp_interp_clear(fmpz_spoly_sp_interp_t res)
+    Upon success, a positive value is returned. Otherwise, a
+    non-positive value is returned and the resulting value of \code{res}
+    is undefined.
 
-void fmpz_spoly_sp_interp_eval(fmpz_spoly_sp_interp_t res,
+    Success or failure is based on the ability of the underlying
+    interpolation structure to effectively capture the unknown
+    polynomial, and is guaranteed with high probability of the
+    parameters to the original \code{fmpz_spoly_bp_basis_init} call were
+    correct. 
+
+void fmpz_spoly_sp_interp_basis_init(fmpz_spoly_sp_interp_basis_t res,
+    flint_rand_t state, slong terms, mp_bitcnt_t d, mp_bitcnt_t h)
+
+    Sets up the evaluation points for sparse interpolation using the
+    ``small primes'' approach, according to the given upper bounds on the
+    number of terms, exponent bits, and coefficient bits, of the
+    eventual output.
+
+    The basis consists of three arrays of the same length, containing
+    (respectively) the moduli to be applied to the coefficients in each
+    evaluation, the \emph{shift} by which to multiply the coefficients
+    in evaluation, and the moduli to be applied to the exponents in each
+    evaluation.
+
+    For example, given the coefficient modulus $q$, shift $\alpha$, and
+    exponent modulus $p$, that evaluation of a sparse polynomial $f$
+    would be equal to 
+    
+    $f(\alpha x) \bmod (x^p - 1) \bmod q \in \textsf{GF}(q)[x].$
+
+void fmpz_spoly_sp_interp_basis_clear(fmpz_spoly_sp_interp_basis_t res)
+
+    Frees memory associated with the given interpolation basis.
+
+void fmpz_spoly_sp_interp_eval_init(fmpz_spoly_sp_interp_eval_t res,
+    const fmpz_spoly_sp_interp_basis_t basis)
+
+    Sets up the structure to hold the evaluations of a sparse polynomial
+    under the given interpolation basis.
+
+void fmpz_spoly_sp_interp_eval_clear(fmpz_spoly_sp_interp_eval_t res)
+
+    Frees memory associated with the given evaluation structure.
+    \textbf{Note}: must be performed \emph{prior} to freeing the
+    underlying \code{fmpz_spoly_sp_interp_basis_t} object.
+
+void fmpz_spoly_sp_interp_eval(fmpz_spoly_sp_interp_eval_t res,
     const fmpz_spoly_t poly)
 
-void fmpz_spoly_sp_interp_mul(fmpz_spoly_sp_interp_t res,
-    const fmpz_spoly_t poly)
+    Evaluates the given polynomial according to the underlying
+    interpolation basis. The evaluation structure must have already been
+    initialized with some interpolation basis.
 
-void fmpz_spoly_sp_interp_add(fmpz_spoly_sp_interp_t res,
-    const fmpz_t c, const fmpz_spoly_t poly)
+void fmpz_spoly_sp_interp_eval_set(fmpz_spoly_sp_interp_eval_t res,
+        const fmpz_spoly_sp_interp_eval_t eval)
 
-void fmpz_spoly_sp_interp_pow(fmpz_spoly_sp_interp_t res, ulong pow)
+    Copies the evaluations from \code{eval} to \code{res}. Both
+    structures are assumed to have the same underlying interpolation
+    basis.
 
-void fmpz_spoly_sp_interp(fmpz_spoly_t res,
-    const fmpz_spoly_sp_interp_t evals)
+int fmpz_spoly_sp_interp_eval_is_zero(const fmpz_spoly_sp_interp_eval_t eval)
 
-slong _fmpz_spoly_prim_roots(fmpz_t p, fmpz * qq, fmpz * ww, flint_rand_t state,
-    slong len, mp_bitcnt_t p_bits, mp_bitcnt_t q_prod_bits)
+    Returns nonzero iff the given evaluations are consistent with the
+    zero polynomial.
+
+void fmpz_spoly_sp_interp_mul(fmpz_spoly_sp_interp_eval_t res,
+    const fmpz_spoly_sp_interp_eval_t poly1,
+    const fmpz_spoly_sp_interp_eval_t poly2)
+
+    Given evaluations of two sparse polynomials $f$ and $g$, computes the
+    evaluations of their product $fg$ according to the underlying
+    interpolation basis.
+
+void fmpz_spoly_sp_interp_addmul_si(fmpz_spoly_sp_interp_eval_t res,
+    slong c,
+    const fmpz_spoly_sp_interp_eval_t poly2)
+
+    Given evaluations of a polynomial $f$ in the
+    structure \code{res}, a scalar $c$, and evaluations of a polynomial
+    $g$ in the structure \code{poly2}, computes evaluations of
+    $f + cg$ and stores them back in \code{res}.
+
+void fmpz_spoly_sp_interp_pow(fmpz_spoly_sp_interp_eval_t res,
+    const fmpz_spoly_sp_interp_eval_t poly, ulong pow)
+
+    Given a set of evaluations of a sparse polynomial, computes
+    evaluations of that polynomial raised to the power \code{pow},
+    according to the underlying interpolation basis, and stores them
+    in \code{res}.
+
+int fmpz_spoly_sp_interp(fmpz_spoly_t res,
+    const fmpz_spoly_sp_interp_eval_t eval)
+
+    Performs sparse interpolation to determine a sparse polynomial
+    \code{res} whose evaluations match those given in \code{eval}.
+
+    Upon success, a positive value is returned. Otherwise, a
+    non-positive value is returned and the resulting value of \code{res}
+    is undefined.
+
+    Success or failure is based on the ability of the underlying
+    interpolation structure to effectively capture the unknown
+    polynomial, and is guaranteed with high probability of the
+    parameters to the original \code{fmpz_spoly_sp_basis_init} call were
+    correct. 
 
 *******************************************************************************
 

@@ -1646,6 +1646,58 @@ x^2-3*x-1
 \input{input/fmpz_poly_mat.tex}
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% Sparse polynomials over the integers                                         %
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\chapter{fmpz\_spoly: Sparse polynomials with arbitrary-precision
+coefficients and exponents}
+\epigraph{Sparse polynomials over $\Z[x]$}{}
+
+The \code{fmpz_spoly_t} data type represents polynomials whose
+coefficients and exponents are arbitrary-precision integers. The
+polynomials are stored in a sparse representation, so that only the
+coefficients with nonzero terms are stored. This allows for very large
+degrees using relatively little memory.
+
+The \code{fmpz_spoly_t} type is defined as an array of
+\code{fmpz_spoly_struct}'s of length one.
+This  permits passing parameters of type \code{fmpz_spoly_t}
+by reference.
+
+Internally, a \code{fmpz_spoly_struct} stores two lists of
+\code{fmpz}s of equal length: one for the exponents, and one for the
+coefficients. The exponents are all greater than or equal to
+zero, and are sorted in decreasing order. The coefficients are all
+nonzero.
+
+\section{Simple example}
+
+The following example constructs the polynomial
+$5x^3 - 1$ and computes its square.
+
+\begin{lstlisting}[language=c]
+#include "fmpz_spoly.h"
+...
+fmpz_spoly_t f, h;
+fmpz_spoly_init(f);
+fmpz_spoly_init(h);
+fmpz_spoly_set_coeff_si_si(f, 5, 3);
+fmpz_spoly_set_coeff_si_si(f, 0, -1);
+fmpz_spoly_mul(h, f, f);
+fmpz_spoly_print(f); flint_printf("\n");
+fmpz_spoly_print(h); flint_printf("\n");
+fmpz_spoly_clear(f);
+fmpz_spoly_clear(h);
+\end{lstlisting}
+
+The output is:
+\begin{lstlisting}[language=c]
+x^2-3*x-1
+\end{lstlisting}
+
+\input{input/fmpz_spoly.tex}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % Vectors over Z / nZ for word-sized moduli                                    %
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 

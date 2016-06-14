@@ -895,6 +895,20 @@ void fmpz_spoly_bp_interp_eval(fmpz_spoly_bp_interp_eval_t res, const fmpz_spoly
         res->basis->length, poly, res->basis->points + 1, res->basis->q);
 }
 
+FMPZ_SPOLY_INLINE
+void fmpz_spoly_bp_interp_eval_set(fmpz_spoly_bp_interp_eval_t res,
+    const fmpz_spoly_bp_interp_eval_t eval)
+{
+    FLINT_ASSERT(res->basis->length == eval->basis->length);
+    _fmpz_vec_set(res->evals, eval->evals, res->basis->length);
+}
+
+FMPZ_SPOLY_INLINE
+int fmpz_spoly_bp_interp_eval_is_zero(const fmpz_spoly_bp_interp_eval_t eval)
+{
+    return _fmpz_vec_is_zero(eval->evals, eval->basis->length);
+}
+
 FLINT_DLL void fmpz_spoly_bp_interp_mul(fmpz_spoly_bp_interp_eval_t res,
     const fmpz_spoly_bp_interp_eval_t poly1,
     const fmpz_spoly_bp_interp_eval_t poly2);
@@ -909,7 +923,6 @@ FLINT_DLL void fmpz_spoly_bp_interp_pow(fmpz_spoly_bp_interp_eval_t res,
 FLINT_DLL int fmpz_spoly_bp_interp(fmpz_spoly_t res,
     const fmpz_spoly_bp_interp_eval_t eval);
 
-/* FIXME (not yet documented) */
 FLINT_DLL void fmpz_spoly_sp_interp_basis_init(fmpz_spoly_sp_interp_basis_t res, 
     flint_rand_t state, slong terms, mp_bitcnt_t d, mp_bitcnt_t h);
 
@@ -955,7 +968,6 @@ int fmpz_spoly_sp_interp_eval_is_zero(const fmpz_spoly_sp_interp_eval_t eval)
     return 1;
 }
 
-/* FIXME (not yet implemented) */
 FLINT_DLL void fmpz_spoly_sp_interp_mul(fmpz_spoly_sp_interp_eval_t res,
     const fmpz_spoly_sp_interp_eval_t poly1,
     const fmpz_spoly_sp_interp_eval_t poly2);
@@ -966,13 +978,9 @@ FLINT_DLL void fmpz_spoly_sp_interp_addmul_si(fmpz_spoly_sp_interp_eval_t res,
 
 FLINT_DLL void fmpz_spoly_sp_interp_pow(fmpz_spoly_sp_interp_eval_t res,
     const fmpz_spoly_sp_interp_eval_t poly, ulong pow);
-/* (end FIXME) */
 
 FLINT_DLL int fmpz_spoly_sp_interp(fmpz_spoly_t res,
     const fmpz_spoly_sp_interp_eval_t eval);
-
-FLINT_DLL slong _fmpz_spoly_prim_roots(fmpz_t p, fmpz * qq, fmpz * ww, flint_rand_t state,
-    slong len, mp_bitcnt_t p_bits, mp_bitcnt_t q_prod_bits);
 
 /*  Divisibility testing  ***************************************************/
 

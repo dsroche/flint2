@@ -20,6 +20,7 @@
 /******************************************************************************
 
         Authored 2015 by A. Whitman Groves; US Government work in the public domain. 
+        Authored 2016 by Daniel S. Roche; US Government work in the public domain. 
 
 ******************************************************************************/
 
@@ -27,11 +28,68 @@
 #include "fmpz_vec.h"
 #include "fmpz_mod_poly.h"
 
-/*TODO write t-canned.c from a canned example in Dan's slides*/
 static const double LN_2 = 0.693147180559945309417232121458;
 
-FLINT_DLL void 
-_fmpz_spoly_mul_coeffs_slow(fmpz_spoly_t res, flint_rand_t state,
+slong _fmpz_spoly_prim_roots(fmpz_t p, fmpz * qq, fmpz * ww, flint_rand_t state,
+    slong len, mp_bitcnt_t p_bits, mp_bitcnt_t q_prod_bits)
+{
+    /* This function computes single random prime p, with the proper number
+     * of bits, and corresponding primes qq, as well as an array
+     * ww of elements in GF(q).
+     * For each index i, it holds that p divides (qq[i]-1), and
+     * that ww[i] is a p-th primitive root mod qq[i].
+     * Furthermore, the product of primes in qq has at least q_prod_bits bits.
+     * All arrays must be allocated by the caller, and the fmpz values
+     * initialized beforehand. 
+     * The len parameter is the length of qq and ww.
+     * The returned value gives the actual number of primes q computed, 
+     * which will be at most len.
+     * In case len is too small to compute sufficiently many primes, -1 is
+     * returned.
+     */
+    slong count = 0;
+    fmpz_t qprod;
+    ulong a = 0;
+    mp_bitcnt_t qpbits;
+
+    fmpz_randprime(p, state, p_bits, 0);
+
+    if (len == 0) 
+    {
+        return (q_prod_bits > 0) ? -1 : 0;
+    }
+
+    fmpz_init_set_si(qprod, 1);
+    fmpz_set_si(qq+0, 1);
+
+    while (count < len && fmpz_bits(qprod) < q_prod_bits)
+    {
+        /* qq[count] = a*p + 1 and a is even */
+        fmpz_addmul_ui(qq+count, p, 2); 
+        a += 2;
+
+        if (fmpz_is_prime(qq+count))
+        {
+            do
+            {
+                fmpz_randm(ww+count, state, qq+count);
+                fmpz_powm_ui(ww+count, ww+count, a, qq+count);
+            } while (fmpz_cmp_si(ww+count, 1) <= 0);
+            fmpz_mul(qprod, qprod, qq+count);
+            if (++count < len) {
+                fmpz_set(qq+count, qq+(count-1));
+            }
+        }
+    }
+
+    qpbits = fmpz_bits(qprod);
+    fmpz_clear(qprod);
+
+    if (qpbits >= q_prod_bits) return count;
+    else return -1;
+}
+
+void _fmpz_spoly_mul_coeffs_slow(fmpz_spoly_t res, flint_rand_t state,
     const fmpz_spoly_t poly1, const fmpz_spoly_t poly2, const fmpz * expons,
     slong len)
 {
