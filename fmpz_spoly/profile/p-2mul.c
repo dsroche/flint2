@@ -19,7 +19,7 @@
 =============================================================================*/
 /******************************************************************************
 
-    Authored 2015 by A. Whitman Groves; US Government work in the public domain
+    Authored 2016 by A. Whitman Groves; US Government work in the public domain
 
 ******************************************************************************/
 
@@ -64,7 +64,7 @@
 #define ncases   1
 #define nalgs    2
 #define img      1
-#define imgname  "2mul.ppm"
+#define imgname  "heaps_OS.ppm"
 
 /*
    Write a binary 24-bit ppm image.
