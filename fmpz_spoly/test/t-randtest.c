@@ -57,7 +57,13 @@ main(void)
         height = 200;
 
         fmpz_spoly_init(a);
-        fmpz_spoly_randtest(a, state, terms, abs_degree, height);
+        fmpz_spoly_randtest(a, state, terms, degree, height);
+
+        result = (terms - fmpz_get_si(abs_degree) == 1);
+        if(result)
+        {
+          /*flint_printf("DESIRED A COMPLETELY DENSE POLYNOMIAL\n");*/
+        }
 
         result = (terms == a->length || terms - fmpz_get_si(abs_degree) >= 1);
         if(!result)

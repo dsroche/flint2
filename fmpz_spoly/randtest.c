@@ -32,7 +32,7 @@ void fmpz_spoly_randtest(fmpz_spoly_t res, flint_rand_t state,
 {
     slong i, j, k, length, unique;
     fmpz * rands;
-    fmpz_t half, temp;
+    fmpz_t abs, half, temp;
 
     unique = 0;
 
@@ -40,35 +40,43 @@ void fmpz_spoly_randtest(fmpz_spoly_t res, flint_rand_t state,
 
     /*res is zero if no terms are desired*/
     if(terms == 0)
-        return;
-
-    if(fmpz_cmp_si(degree, terms - 1) < 0)
     {
-        terms = fmpz_get_ui(degree) + 1;
+        return;
     }
 
-    _fmpz_spoly_reserve(res, terms);
+    fmpz_init(abs);
+    fmpz_abs(abs, degree);
+
+    if(fmpz_cmp_si(abs, terms - 1) < 0)
+    {
+        terms = fmpz_get_ui(abs) + 1;
+        if(fmpz_is_zero(abs))
+            terms = 1;
+    }
+
+    _fmpz_spoly_reserve(res,terms);
 
     fmpz_randbits(res->coeffs, state, bits);
-    fmpz_set(res->expons, degree);
+    fmpz_set(res->expons, abs);
 
     /*res is one term of the desired degree if one terms are desired
       * or degree is zero*/
-    if(terms == 1 || fmpz_is_zero(degree))
+    if(terms == 1 || fmpz_is_zero(abs))
     {
         _fmpz_spoly_set_length(res, 1);
+        fmpz_clear(abs);
         return;
     }
 
     fmpz_init(half);
     fmpz_init(temp);
-    fmpz_fdiv_q_ui(half, degree, 2);
+    fmpz_fdiv_q_ui(half, abs, 2);
     fmpz_set_ui(temp, terms);
 
     /*if terms > 1/2 * degree choose D + 1 - T unique exponents*/
     if(fmpz_cmp(temp, half) > 0)
     {
-        length = fmpz_get_ui(degree) + 1 - terms;
+        length = fmpz_get_ui(abs) + 1 - terms ;
     }
     /*if terms <= 1/2 * degree choose T - 1 unique exponents*/
     else
@@ -84,6 +92,9 @@ void fmpz_spoly_randtest(fmpz_spoly_t res, flint_rand_t state,
             fmpz_randbits(res->coeffs + i, state, bits);
             fmpz_set_ui(res->expons + i, terms - i - 1);
         }
+
+        res->length = terms;
+        _fmpz_spoly_normalise(res);
     }
     else
     {
@@ -91,7 +102,7 @@ void fmpz_spoly_randtest(fmpz_spoly_t res, flint_rand_t state,
 
         for(i = 0; i < length; ++i)
         {
-            fmpz_randm(rands + i, state, degree);
+            fmpz_randm(rands + i, state, abs);
         }
 
         /*checks to make sure that all random exponents are unique*/
@@ -106,7 +117,7 @@ void fmpz_spoly_randtest(fmpz_spoly_t res, flint_rand_t state,
             {
                 if(fmpz_equal(rands + i, rands + i + 1))
                 {
-                    fmpz_randm(rands + i, state, degree);
+                    fmpz_randm(rands + i, state, abs);
                     unique = 0;
                 }
             }
@@ -119,7 +130,7 @@ void fmpz_spoly_randtest(fmpz_spoly_t res, flint_rand_t state,
             j = length - 1;
             
             /*fmpz_vec rands is sorted in ascending order*/
-            for(i = fmpz_get_si(degree) - 1; i >= 0; --i)
+            for(i = fmpz_get_si(abs) - 1; i >= 0; --i)
             {
                 if(j >= 0 && fmpz_equal_si(rands + j, i))
                     j--;
@@ -143,7 +154,7 @@ void fmpz_spoly_randtest(fmpz_spoly_t res, flint_rand_t state,
 
         for (i = 1; i < terms; ++i)
         {
-            fmpz_randbits(res->coeffs + i, state, bits);
+            fmpz_randtest_not_zero(res->coeffs + i, state, bits);
         }
 
         _fmpz_vec_clear(rands, length);
@@ -154,30 +165,5 @@ void fmpz_spoly_randtest(fmpz_spoly_t res, flint_rand_t state,
     
     fmpz_clear(half);
     fmpz_clear(temp);
-}
-
-void fmpz_spoly_randtest_kron(fmpz_spoly_t res, flint_rand_t state, slong terms, 
-    const fmpz_t degree, const fmpz_t limit, mp_bitcnt_t bits, slong vars)
-{
-    /*slong i, j, k, length, unique;
-    fmpz * rands;
-    fmpz_t abs, half, temp;
-
-    unique = 0;
-
-    fmpz_spoly_zero(res);
-
-    if(terms == 0)
-        return;
-
-    if(fmpz_cmp_si(degree, terms - 1) < 0)
-    {
-        terms = fmpz_get_ui(degree) + 1;
-    }
-
-    _fmpz_spoly_reserve(res, terms);
-
-    */
-
-    return;
+    fmpz_clear(abs);
 }
