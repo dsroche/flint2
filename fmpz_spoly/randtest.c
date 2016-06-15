@@ -92,9 +92,6 @@ void fmpz_spoly_randtest(fmpz_spoly_t res, flint_rand_t state,
             fmpz_randbits(res->coeffs + i, state, bits);
             fmpz_set_ui(res->expons + i, terms - i - 1);
         }
-
-        res->length = terms;
-        _fmpz_spoly_normalise(res);
     }
     else
     {
@@ -137,8 +134,6 @@ void fmpz_spoly_randtest(fmpz_spoly_t res, flint_rand_t state,
                 else     
                 {
                     fmpz_set_si(res->expons + k, i);
-                    if(fmpz_sgn(res->expons + k) == -1)
-                        fmpz_mul_si(res->expons + k, res->expons + k, -1);
                     k++;
                 }
             }

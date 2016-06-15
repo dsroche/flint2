@@ -294,8 +294,8 @@ FLINT_DLL void fmpz_spoly_set_trunc_fmpz_poly(fmpz_poly_t res,
 FLINT_DLL void fmpz_spoly_randtest(fmpz_spoly_t res, flint_rand_t state, 
      slong terms, const fmpz_t degree, mp_bitcnt_t bits);
 
-FLINT_DLL void fmpz_spoly_laurent_randtest(fmpz_spoly_t res, flint_rand_t state,
-     slong terms, const fmpz_t degree, mp_bitcnt_t bits);
+FLINT_DLL void fmpz_spoly_randtest_kron(fmpz_spoly_t res, flint_rand_t state,
+     slong terms, const fmpz_t degree, slong limit, mp_bitcnt_t bits, slong vars);
 
 /* FIXME (not yet implemented) */
 FLINT_DLL void fmpz_spoly_randtest_unsigned(fmpz_spoly_t res, 

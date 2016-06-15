@@ -19,7 +19,7 @@
 =============================================================================*/
 /******************************************************************************
 
-  Authored 2015 by A. Whitman Groves; US Government work in the public domain.
+    Authored 2016 by A. Whitman Groves; US Government work in the public domain.
 
 ******************************************************************************/
 
@@ -39,8 +39,6 @@ main(void)
 
     flint_printf("scalar_addmul....");
     fflush(stdout);
-
-    
 
     /* Check aliasing of a and b */
     for (i = 0; i < 100 * flint_test_multiplier(); i++)
