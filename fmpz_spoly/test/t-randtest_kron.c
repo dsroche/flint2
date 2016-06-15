@@ -44,11 +44,10 @@ main(void)
     {
         int j;
         fmpz_spoly_t a;
-        fmpz_t degree, lim, h, maxterms;
+        fmpz_t degree, lim, maxterms;
         ulong limit, vars;
         slong height, terms;
 
-        fmpz_init(h);
         fmpz_init(lim);
         fmpz_init(maxterms);
         fmpz_init(degree);
@@ -151,6 +150,8 @@ main(void)
 
         fmpz_spoly_clear(a);
         fmpz_clear(degree);
+        fmpz_clear(lim);
+        fmpz_clear(maxterms);
     }
 
     FLINT_TEST_CLEANUP(state);

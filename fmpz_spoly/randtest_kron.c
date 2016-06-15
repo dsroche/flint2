@@ -149,7 +149,7 @@ void fmpz_spoly_randtest_kron(fmpz_spoly_t res, flint_rand_t state,
         }
     }
 
-    _fmpz_spoly_set_length(res, terms);
+    _fmpz_spoly_set_length(res, i);
     _fmpz_spoly_normalise(res);
 
     fmpz_clear(temp);
