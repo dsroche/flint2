@@ -44,51 +44,85 @@ main(void)
     {
         int j;
         fmpz_spoly_t a;
-        fmpz_t degree, abs_degree, bits, lim, h;
-        slong height, terms, limit, vars;
-                
+        fmpz_t degree, lim, h, maxterms;
+        ulong limit, vars;
+        slong height, terms;
+
         fmpz_init(h);
         fmpz_init(lim);
-        fmpz_init(bits);
+        fmpz_init(maxterms);
         fmpz_init(degree);
-        fmpz_init(abs_degree);
         fmpz_randtest(degree, state, 100);
-        fmpz_abs(abs_degree, degree);
+        fmpz_abs(degree, degree);
         
         terms = n_randint(state, 100);
         height = 200;
-        limit = fmpz_bits(abs_degree) + 1;
+        limit = fmpz_bits(degree) + 1;
         vars = 2;
 
         fmpz_spoly_init(a);
-        fmpz_spoly_randtest_kron(a, state, terms, abs_degree, limit, height, vars);
+        fmpz_spoly_randtest_kron(a, state, terms, degree, height, limit, vars);
 
-        result = (terms == a->length || terms - fmpz_get_si(abs_degree) >= 1);
+        fmpz_set(maxterms, degree);
+        fmpz_add_ui(maxterms, maxterms, UWORD(1));
+        fmpz_pow_ui(maxterms, maxterms, vars);
+
+        if (fmpz_cmp_ui(maxterms, (ulong)terms) < 0)
+        {
+            result = fmpz_cmp_ui(maxterms, fmpz_spoly_terms(a)) == 0;
+        }
+        else
+        {
+            result = terms == fmpz_spoly_terms(a);
+        }
+
         if(!result)
         {
             flint_printf("FAIL (undesired length):\n");
-            flint_printf("DESIRED: %lu RECEIVED: %lu and %d\n", terms, a->length, fmpz_cmp_si(abs_degree, terms));
+            flint_printf("DESIRED: min of %wd and ", terms); fmpz_print(maxterms);
+            flint_printf(" RECEIVED: %wd\n", fmpz_spoly_terms(a));
+            abort();
         }
 
-        /*
-        result = (fmpz_equal(abs_degree, a->expons) || terms == 0);
+        fmpz_set(lim, degree);
+        for (j = 1; (ulong)j < vars; ++j)
+        {
+            fmpz_mul_2exp(lim, lim, limit);
+            fmpz_add(lim, lim, degree);
+        }
+
+        if (terms == 0)
+        {
+            result = fmpz_equal_si(fmpz_spoly_degree_ptr(a), WORD(-1));
+        }
+        else
+        {
+            result = fmpz_equal(lim, fmpz_spoly_degree_ptr(a));
+        }
         if (!result)
         {
             flint_printf("FAIL (undesired degree):\n");
             flint_printf("DESIRED: ");
-            fmpz_print(abs_degree);
+            fmpz_print(lim);
             flint_printf(" RECEIVED: ");
-            fmpz_print(a->expons);
+            fmpz_print(fmpz_spoly_degree_ptr(a));
             flint_printf("\n");
+            abort();
         }
-        */
 
-        _fmpz_vec_height(bits, a->coeffs, a->length);
-        result = (abs(height - fmpz_bits(bits)) < 15 || terms == 0);
+        if (terms == 0)
+        {
+            result = fmpz_spoly_height_bits(a) == 0;
+        }
+        else
+        {
+            result = fmpz_spoly_height_bits(a) == (ulong)height;
+        }
         if(!result)
         {
             flint_printf("FAIL (undesired height):\n");
-            flint_printf("DESIRED: %lu RECEIVED: %lu\n", height, fmpz_bits(bits));
+            flint_printf("DESIRED: %lu RECEIVED: %lu\n", fmpz_spoly_height_bits(a), height);
+            abort();
         }
 
         result = 1;
@@ -115,26 +149,9 @@ main(void)
             abort();
         }
 
-        fmpz_set_si(h, 2);
-        fmpz_set_si(lim, 2);
-        fmpz_pow_ui(h, h, height);
-        fmpz_pow_ui(lim, lim, limit);
-
-        flint_printf("\n");
-        fmpz_spoly_print(a), flint_printf("\n");
-        flint_printf("Degree: "), fmpz_print(degree), flint_printf("\n"); 
-        flint_printf("Height: %w, ", height), fmpz_print(h), flint_printf("\n"); 
-        flint_printf("Limit: %w, ", limit), fmpz_print(lim), flint_printf("\n");
-        flint_printf("Terms: %w", terms), flint_printf("\n"); 
-        flint_printf("Vars: %w", vars), flint_printf("\n"); 
-
         fmpz_spoly_clear(a);
         fmpz_clear(degree);
-        fmpz_clear(abs_degree);
-        fmpz_clear(bits);
     }
-
-
 
     FLINT_TEST_CLEANUP(state);
     
