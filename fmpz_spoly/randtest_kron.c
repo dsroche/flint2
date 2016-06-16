@@ -79,7 +79,7 @@ void fmpz_spoly_randtest_kron(fmpz_spoly_t res, flint_rand_t state,
 
     fmpz_add_ui(temp, degree, 1);
     fmpz_pow_ui(temp, temp, vars);
-    if (fmpz_cmp_ui(temp, ((ulong) terms) * 2) < 0)
+    if (fmpz_cmp_ui(temp, ((ulong) terms) * 2 - 1) < 0)
     {
         /* dense polynomial */
         fmpz_spoly_t tpoly;

@@ -31,7 +31,6 @@ void fmpz_spoly_randtest(fmpz_spoly_t res, flint_rand_t state,
         slong terms, const fmpz_t degree, mp_bitcnt_t bits)
 {
     slong i, j;
-    fmpz_t temp;
 
     if (fmpz_cmp_si(degree, WORD(0)) < 0)
     {
@@ -113,6 +112,4 @@ void fmpz_spoly_randtest(fmpz_spoly_t res, flint_rand_t state,
     }
 
     _fmpz_spoly_normalise(res);
-
-    fmpz_clear(temp);
 }
