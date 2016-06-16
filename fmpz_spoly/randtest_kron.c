@@ -113,7 +113,10 @@ void fmpz_spoly_randtest_kron(fmpz_spoly_t res, flint_rand_t state,
 
             for (j = (slong)vars - 1; j >= 0; --j)
             {
-                if (multideg[j] > 0) break;
+                if (multideg[j] > 0) 
+                {
+                  break;
+                }
             }
 
             if (j < 0) break;
@@ -129,25 +132,34 @@ void fmpz_spoly_randtest_kron(fmpz_spoly_t res, flint_rand_t state,
     }
     else
     {
+        fmpz_t degs;
+        fmpz_init(degs);
+        fmpz_add_ui(degs, degree, 1);
+        
         while (i < terms)
         {
             fmpz_randbits(res->coeffs + i, state, bits);
             
-            fmpz_randm(res->expons + i, state, degree);
+            fmpz_randm(res->expons + i, state, degs);
             for(j = 1; (ulong)j < vars; j++)
             {
                 fmpz_mul_2exp(res->expons + i, res->expons + i, limit);
-                fmpz_randm(temp, state, degree);
+                fmpz_randm(temp, state, degs);
                 fmpz_add(res->expons + i, res->expons + i, temp);
             }
 
             for (j = 0; j < i; ++j)
             {
-                if (fmpz_equal(res->expons + j, res->expons + i)) break;
+                if (fmpz_equal(res->expons + j, res->expons + i)) 
+                {
+                    break;
+                }
             }
 
             if (j == i) ++i;
         }
+
+        fmpz_clear(degs);
     }
 
     _fmpz_spoly_set_length(res, i);

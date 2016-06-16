@@ -48,17 +48,17 @@ main(void)
         fmpz_init(temp);
 
         fmpz_init(c);
-        fmpz_randtest(c, state, 10);
+        fmpz_randtest_unsigned(c, state, 10);
 
         fmpz_spoly_init(a);
         fmpz_spoly_randtest(a, state, n_randint(state, 10), c, 20);
 
         fmpz_init(d);
-        fmpz_randtest(d, state, 8);
+        fmpz_randtest_unsigned(d, state, 8);
 
         while(fmpz_sgn(d) < 0)
         {
-            fmpz_randtest(d, state, 8);
+            fmpz_randtest_unsigned(d, state, 8);
         }
 
         fmpz_spoly_init(b);

@@ -95,7 +95,7 @@ main(void)
             }
             while (fmpz_is_zero(vv + j) || ! check);
 
-            fmpz_randtest_mod_signed(xx + j, state, p);
+            fmpz_randtest_unsigned_mod_signed(xx + j, state, p);
         }
 
         /* quadratic computation of result */

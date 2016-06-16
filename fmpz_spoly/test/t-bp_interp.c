@@ -50,7 +50,7 @@ main(void)
         /*random fmpz*/
         fmpz_init(d);
         fmpz_init(h);
-        fmpz_randtest(d, state, 20);
+        fmpz_randtest_unsigned(d, state, 20);
 
         /*random fmpz_spoly*/
         fmpz_spoly_init(a);

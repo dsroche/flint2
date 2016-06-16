@@ -58,7 +58,7 @@ main(void)
 
         fmpz_init(n);
 
-        fmpz_randtest(n, state, 15);
+        fmpz_randtest_unsigned(n, state, 15);
 
         fmpz_spoly_randtest(a, state, n_randint(state, 50), n, 200);
         fmpz_spoly_get_fmpz_poly(b, a);
@@ -95,14 +95,14 @@ main(void)
 
         fmpz_init(c);
 
-        fmpz_randtest(c, state, 15);
+        fmpz_randtest_unsigned(c, state, 15);
 
         fmpz_spoly_randtest(m, state, n_randint(state, 50), c, 200);
         fmpz_spoly_randtest(n, state, n_randint(state, 50), c, 200);
         while (fmpz_spoly_equal(m, n))
         {
             if(fmpz_is_zero(c))
-              fmpz_randtest(c, state, 15);
+              fmpz_randtest_unsigned(c, state, 15);
             fmpz_spoly_randtest(n, state, n_randint(state, 50), c, 200);
         }
         fmpz_spoly_get_fmpz_poly(a, m);

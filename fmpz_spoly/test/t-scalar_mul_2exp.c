@@ -50,7 +50,7 @@ main(void)
         n = n_randtest_bits(state, 10);
 
         fmpz_init(c);
-        fmpz_randtest(c, state, 200);
+        fmpz_randtest_unsigned(c, state, 200);
         
         fmpz_spoly_init(a);
         fmpz_spoly_init(b);
@@ -84,7 +84,7 @@ main(void)
         n = n_randtest_bits(state, 10);
 
         fmpz_init(c);
-        fmpz_randtest(c, state, 100);
+        fmpz_randtest_unsigned(c, state, 100);
 
         fmpz_spoly_init(a);
         fmpz_spoly_init(b);

@@ -56,8 +56,8 @@ main(void)
 
         limit = fmpz_bits(d) + fmpz_bits(e)+1;
 
-        vars = 2;
-
+        vars = n_randint(state, 6) + 1;
+        
         terms1 = n_randint(state, 50);
         terms2 = n_randint(state, 50);
 

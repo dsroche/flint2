@@ -50,12 +50,12 @@ main(void)
         ulong n;
 
         fmpz_init(n1);
-        fmpz_randtest_not_zero(n1, state, 10);
+        fmpz_randtest_unsigned_not_zero(n1, state, 10);
         
         n = fmpz_get_ui(n1);
 
         fmpz_init(c);
-        fmpz_randtest(c, state, 200);
+        fmpz_randtest_unsigned(c, state, 200);
         
         fmpz_spoly_init(a);
         fmpz_spoly_init(b);
@@ -89,7 +89,7 @@ main(void)
         n = (ulong) n_randbits(state, FLINT_BITS - 1);
 
         fmpz_init(c);
-        fmpz_randtest(c, state, 100);
+        fmpz_randtest_unsigned(c, state, 100);
 
         fmpz_spoly_init(a);
         fmpz_spoly_init(b);

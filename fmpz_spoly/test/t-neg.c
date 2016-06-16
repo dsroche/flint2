@@ -48,7 +48,7 @@ main(void)
         fmpz_t d;
 
         fmpz_init(d);
-        fmpz_randtest(d, state, 100);
+        fmpz_randtest_unsigned(d, state, 100);
 
         fmpz_spoly_init(a);
         fmpz_spoly_init(b);

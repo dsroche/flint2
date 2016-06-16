@@ -51,7 +51,7 @@ main(void)
         fmpz_init(lim);
         fmpz_init(maxterms);
         fmpz_init(degree);
-        fmpz_randtest(degree, state, 100);
+        fmpz_randtest_unsigned(degree, state, 100);
         fmpz_abs(degree, degree);
         
         terms = n_randint(state, 100);
@@ -60,7 +60,11 @@ main(void)
         vars = 2;
 
         fmpz_spoly_init(a);
+
+        flint_printf("\n\nterms: %wd\n", terms);
         fmpz_spoly_randtest_kron(a, state, terms, degree, height, limit, vars);
+
+        fmpz_spoly_print(a);
 
         fmpz_set(maxterms, degree);
         fmpz_add_ui(maxterms, maxterms, UWORD(1));

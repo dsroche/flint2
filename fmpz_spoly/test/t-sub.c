@@ -50,8 +50,8 @@ main(void)
 
         fmpz_init(e);
         fmpz_init(f);
-        fmpz_randtest_not_zero(e, state, 100);
-        fmpz_randtest_not_zero(f, state, 100);
+        fmpz_randtest_unsigned_not_zero(e, state, 100);
+        fmpz_randtest_unsigned_not_zero(f, state, 100);
 
         fmpz_spoly_init(a);
         fmpz_spoly_init(b);
@@ -91,8 +91,8 @@ main(void)
 
         fmpz_init(e);
         fmpz_init(f);
-        fmpz_randtest_not_zero(e, state, 100);
-        fmpz_randtest_not_zero(f, state, 100);
+        fmpz_randtest_unsigned_not_zero(e, state, 100);
+        fmpz_randtest_unsigned_not_zero(f, state, 100);
 
         fmpz_spoly_init(a);
         fmpz_spoly_init(b);
@@ -128,8 +128,8 @@ main(void)
 
         fmpz_init(e);
         fmpz_init(f);
-        fmpz_randtest_not_zero(e, state, 100);
-        fmpz_randtest_not_zero(f, state, 100);
+        fmpz_randtest_unsigned_not_zero(e, state, 100);
+        fmpz_randtest_unsigned_not_zero(f, state, 100);
         
         fmpz_spoly_init(a);
         fmpz_spoly_init(b);

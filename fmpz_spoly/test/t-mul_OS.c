@@ -42,7 +42,7 @@ main(void)
     fflush(stdout);
 
     /* Check aliasing of a and b */
-    for (i = 0; i < 10 * flint_test_multiplier(); i++)
+    for (i = 0; i < 100 * flint_test_multiplier(); i++)
     {
         fmpz_spoly_t a, b, c;
         fmpz_t d, e;
@@ -50,8 +50,8 @@ main(void)
         fmpz_init(d);
         fmpz_init(e);
 
-        fmpz_randtest(d, state, 20);
-        fmpz_randtest(e, state, 20);
+        fmpz_randtest_unsigned(d, state, 20);
+        fmpz_randtest_unsigned(e, state, 20);
 
         fmpz_spoly_init(a);
         fmpz_spoly_init(b);
@@ -81,15 +81,15 @@ main(void)
     }
 
     /* Check aliasing of a and c */
-    for (i = 0; i < 10 * flint_test_multiplier(); i++)
+    for (i = 0; i < 100 * flint_test_multiplier(); i++)
     {
         fmpz_spoly_t a, b, c;
         fmpz_t d, e;
 
         fmpz_init(d);
         fmpz_init(e);
-        fmpz_randtest(d, state, 20);
-        fmpz_randtest(e, state, 20);
+        fmpz_randtest_unsigned(d, state, 20);
+        fmpz_randtest_unsigned(e, state, 20);
 
         fmpz_spoly_init(a);
         fmpz_spoly_init(b);
@@ -118,7 +118,7 @@ main(void)
     }
 
     /* Check (b*c)+(b*d) = b*(c+d) */
-    for (i = 0; i < 10 * flint_test_multiplier(); i++)
+    for (i = 0; i < 100 * flint_test_multiplier(); i++)
     {
         fmpz_spoly_t a1, a2, b, c, d;
         fmpz_t e, f, g;
@@ -126,9 +126,9 @@ main(void)
         fmpz_init(e);
         fmpz_init(f);
         fmpz_init(g);
-        fmpz_randtest(e, state, 20);
-        fmpz_randtest(f, state, 20);
-        fmpz_randtest(g, state, 20);
+        fmpz_randtest_unsigned(e, state, 20);
+        fmpz_randtest_unsigned(f, state, 20);
+        fmpz_randtest_unsigned(g, state, 20);
 
         fmpz_spoly_init(a1);
         fmpz_spoly_init(a2);

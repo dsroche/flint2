@@ -50,7 +50,7 @@ main(void)
         fmpz_init(bits);
         fmpz_init(degree);
         fmpz_init(abs_degree);
-        fmpz_randtest(degree, state, 100);
+        fmpz_randtest_unsigned(degree, state, 100);
         fmpz_abs(abs_degree, degree);
         
         terms = n_randint(state, 100);
