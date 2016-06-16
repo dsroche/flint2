@@ -57,10 +57,9 @@ void fmpz_spoly_randtest_kron(fmpz_spoly_t res, flint_rand_t state,
 
     fmpz_init(temp);
 
-    /*The height is guaranteed by the first term and then bitsize becomes random*/
+    /*Make the first term and include the degree*/
     fmpz_randbits(res->coeffs, state, bits);
    
-    /*Make the first term and include the degree*/
     fmpz_set(res->expons, degree);
     for(i = 1; (ulong)i < vars; i++)
     {
@@ -68,6 +67,8 @@ void fmpz_spoly_randtest_kron(fmpz_spoly_t res, flint_rand_t state,
         fmpz_add(res->expons, res->expons, degree);
     }
 
+    /*res is one term of the desired degree if one terms are desired
+     * or degree is zero*/
     if(terms == 1 || fmpz_is_zero(degree))
     {
         _fmpz_spoly_set_length(res, 1);
