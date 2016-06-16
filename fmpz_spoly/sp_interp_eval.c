@@ -23,18 +23,105 @@
 
 ******************************************************************************/
 
+#include "ulong_extras.h"
+#include "nmod_vec.h"
 #include "nmod_poly.h"
 #include "fmpz_spoly.h"
 
 void fmpz_spoly_sp_interp_eval(fmpz_spoly_sp_interp_eval_t res,
         const fmpz_spoly_t poly)
 {
-    slong i;
+    slong i = 0, j, poly_len;
+    ulong round_cmod = 0, round_shift = 0, group_emod;
+    slong group_len;
+    ulong *round_coeffs, *round_expons;
+    const nmod_t *cmods = res->basis->cmods;
+    const ulong *shifts = res->basis->shifts;
+    const nmod_t *emods = res->basis->emods;
+    mp_ptr eval_coeffs;
 
-    for (i = 0; i < res->basis->length; ++i)
+    poly_len = fmpz_spoly_terms(poly);
+    round_coeffs = flint_malloc(2 * poly_len * sizeof *round_coeffs);
+    round_expons = round_coeffs + poly_len;
+    
+    while (i < res->basis->length)
     {
-        fmpz_spoly_rem_cyc_mod_diverse(res->evals + i, poly,
-                res->basis->shifts[i], res->basis->emods[i].n, 
-                res->basis->cmods[i].n);
+        if (cmods[i].n != round_cmod || shifts[i] != round_shift)
+        {
+            /* start new round */
+            round_cmod = cmods[i].n;
+            round_shift = shifts[i];
+
+            for (j = 0; j < poly_len; ++j)
+            {
+                round_coeffs[j] = n_mulmod2_preinv(
+                    n_powmod2_ui_preinv(shifts[i], 
+                        fmpz_fdiv_ui(poly->expons + j, cmods[i].n - 1),
+                        cmods[i].n, cmods[i].ninv),
+                    fmpz_fdiv_ui(poly->coeffs + j, cmods[i].n),
+                    cmods[i].n, cmods[i].ninv);
+            }
+        }
+
+        /* start new group */
+        group_emod = emods[i].n;
+        group_len = 0;
+
+        for (j = 0; j < poly_len; ++j)
+        {
+            round_expons[j] = fmpz_fdiv_ui(poly->expons + j, group_emod);
+            if (round_expons[j] >= (ulong) group_len) 
+            {
+                group_len = (slong) round_expons[j] + 1;
+            }
+        }
+
+        /* evaluate group leader */
+        nmod_poly_fit_length(res->evals + i, group_len);
+        eval_coeffs = res->evals[i].coeffs;
+        memset(eval_coeffs, 0, group_len * sizeof *eval_coeffs);
+
+        for (j = 0; j < poly_len; ++j)
+        {
+            ulong rese = round_expons[j];
+            if (eval_coeffs[rese])
+            {
+                eval_coeffs[rese] = n_addmod(eval_coeffs[rese], 
+                        round_coeffs[j], round_cmod);
+            }
+            else eval_coeffs[rese] = round_coeffs[j];
+        }
+
+        _nmod_poly_set_length(res->evals + i, group_len);
+        _nmod_poly_normalise(res->evals + i);
+
+        /* evaluate rest of the group */
+        while (++i < res->basis->length 
+               && shifts[i] == UWORD(1) && emods[i].n == group_emod)
+        {
+            nmod_poly_fit_length(res->evals + i, group_len);
+            eval_coeffs = res->evals[i].coeffs;
+            memset(eval_coeffs, 0, group_len * sizeof *eval_coeffs);
+
+            for (j = 0; j < poly_len; ++j)
+            {
+                ulong rese = round_expons[j];
+                if (eval_coeffs[rese])
+                {
+                    eval_coeffs[rese] = n_addmod(eval_coeffs[rese], 
+                        fmpz_fdiv_ui(poly->coeffs + j, cmods[i].n), cmods[i].n);
+                }
+                else 
+                {
+                    eval_coeffs[rese] = 
+                        fmpz_fdiv_ui(poly->coeffs + j, cmods[i].n);
+                }
+            }
+
+            _nmod_poly_set_length(res->evals + i, group_len);
+            _nmod_poly_normalise(res->evals + i);
+        }
     }
+
+    flint_free(round_coeffs);
 }

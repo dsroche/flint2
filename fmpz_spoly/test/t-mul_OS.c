@@ -20,6 +20,7 @@
 /******************************************************************************
 
   Authored 2016 by A. Whitman Groves; US Government work in the public domain.
+  Authored 2016 by Daniel S. Roche; US Government work in the public domain.
 
 ******************************************************************************/
 
@@ -43,7 +44,7 @@ main(void)
     /* Check aliasing of a and b */
     for (i = 0; i < 10 * flint_test_multiplier(); i++)
     {
-        fmpz_spoly_t a, b, c, f;
+        fmpz_spoly_t a, b, c;
         fmpz_t d, e;
 
         fmpz_init(d);
@@ -55,27 +56,26 @@ main(void)
         fmpz_spoly_init(a);
         fmpz_spoly_init(b);
         fmpz_spoly_init(c);
-        fmpz_spoly_init(f);
+
         fmpz_spoly_randtest(b, state, n_randint(state, 30), d, 100);
         fmpz_spoly_randtest(c, state, n_randint(state, 30), e, 100);
         
-        fmpz_spoly_mul_OS(a, state, b, c);
-        fmpz_spoly_mul_classical(f, b, c);
+        fmpz_spoly_mul_heaps(a, b, c);
+        fmpz_spoly_mul_OS(b, state, b, c);
 
-        result = (fmpz_spoly_equal(a, f));
+        result = (fmpz_spoly_equal(a, b));
         if (!result)
         {
-          flint_printf("FAIL PHASE 1:\n");
-          flint_printf("\non the %w try\n", i);
-          fmpz_spoly_print(a), flint_printf("\n\n");
-          fmpz_spoly_print(f), flint_printf("\n\n");
-          abort();
+            flint_printf("FAIL PHASE 1:\n");
+            flint_printf("\non the %w try\n", i);
+            fmpz_spoly_print(a), flint_printf("\n\n");
+            fmpz_spoly_print(b), flint_printf("\n\n");
+            abort();
         }
 
         fmpz_spoly_clear(a);
         fmpz_spoly_clear(b);
         fmpz_spoly_clear(c);
-        fmpz_spoly_clear(f);
         fmpz_clear(d);
         fmpz_clear(e);
     }
@@ -97,10 +97,10 @@ main(void)
         fmpz_spoly_randtest(b, state, n_randint(state, 30), d, 100);
         fmpz_spoly_randtest(c, state, n_randint(state, 30), e, 100);
 
-        fmpz_spoly_mul_classical(a, b, c);
-        fmpz_spoly_mul_OS(b, state, b, c);
+        fmpz_spoly_mul_heaps(a, b, c);
+        fmpz_spoly_mul_OS(c, state, b, c);
 
-        result = (fmpz_spoly_equal(a, b));
+        result = (fmpz_spoly_equal(a, c));
         if (!result)
         {
           flint_printf("FAIL PHASE 2:\n");
@@ -140,13 +140,13 @@ main(void)
         fmpz_spoly_randtest(d, state, n_randint(state, 30), g, 100);
 
         fmpz_spoly_mul_OS(a1, state, b, c);
-        fmpz_spoly_mul_classical(a2, b, d);
+        fmpz_spoly_mul_OS(a2, state, b, d);
         fmpz_spoly_add(a1, a1, a2);
 
         fmpz_spoly_add(c, c, d);
         fmpz_spoly_mul_OS(a2, state, b, c);
 
-        result = (fmpz_spoly_equal(a1, a2));
+        result = fmpz_spoly_equal(a1, a2);
         if (!result)
         {
           flint_printf("FAIL PHASE 3:\n");
