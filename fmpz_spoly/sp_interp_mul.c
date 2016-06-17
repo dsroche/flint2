@@ -26,6 +26,10 @@
 #include "nmod_poly.h"
 #include "fmpz_spoly.h"
 
+#ifdef _OPENMP
+#include "omp.h"
+#endif
+
 void fmpz_spoly_sp_interp_mul(fmpz_spoly_sp_interp_eval_t res,
     const fmpz_spoly_sp_interp_eval_t poly1,
     const fmpz_spoly_sp_interp_eval_t poly2)
@@ -35,9 +39,18 @@ void fmpz_spoly_sp_interp_mul(fmpz_spoly_sp_interp_eval_t res,
     FLINT_ASSERT(res->basis == poly1->basis);
     FLINT_ASSERT(poly1->basis == poly2->basis);
 
+#ifdef _OPENMP
+#pragma omp parallel 
+{
+#pragma omp for
+#endif
     for (i = 0; i < res->basis->length; ++i)
     {
         nmod_poly_mul(res->evals + i, poly1->evals + i, poly2->evals + i);
         nmod_poly_rem_cyc(res->evals + i, res->evals + i, res->basis->emods[i].n);
     }
+#ifdef _OPENMP
+if (omp_get_thread_num()) flint_cleanup();
+}
+#endif
 }

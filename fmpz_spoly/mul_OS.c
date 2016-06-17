@@ -1,25 +1,26 @@
 /*=============================================================================
 
-        This file is part of FLINT.
+    This file is part of FLINT.
 
-        FLINT is free software; you can redistribute it and/or modify
-        it under the terms of the GNU General Public License as published by
-        the Free Software Foundation; either version 2 of the License, or
-        (at your option) any later version.
-          
-        FLINT is distributed in the hope that it will be useful,
-        but WITHOUT ANY WARRANTY; without even the implied warranty of
-        MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-        GNU General Public License for more details.
+    FLINT is free software; you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation; either version 2 of the License, or
+    (at your option) any later version.
+      
+    FLINT is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
 
-        You should have received a copy of the GNU General Public License
-        along with FLINT; if not, write to the Free Software
-        Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301 USA
+    You should have received a copy of the GNU General Public License
+    along with FLINT; if not, write to the Free Software
+    Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301 USA
 
 =============================================================================*/
 /******************************************************************************
 
-        Authored 2015 by A. Whitman Groves; US Government work in the public domain. 
+    Authored 2015 by A. Whitman Groves; US Government work in the public domain. 
+    Authored 2016 by Daniel S. Roche; US Government work in the public domain. 
 
 ******************************************************************************/
 
@@ -34,12 +35,13 @@ fmpz_spoly_mul_OS(fmpz_spoly_t res, flint_rand_t state, const fmpz_spoly_t poly1
     slong length;
     ulong p, pinv, x, eval_actual, eval_check;
 
-    if(fmpz_spoly_is_zero(poly1) || fmpz_spoly_is_zero(poly2))
+    if (fmpz_spoly_is_zero(poly1) || fmpz_spoly_is_zero(poly2))
     {
         fmpz_spoly_zero(res);
         return;
     }
-    else if(poly1->length == 1 && poly2->length == 1)
+
+    if (poly1->length == 1 && poly2->length == 1)
     {
         fmpz_add(res->expons, poly1->expons + 0, poly2->expons + 0);
         fmpz_mul(res->coeffs, poly1->coeffs + 0, poly2->coeffs + 0);

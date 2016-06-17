@@ -39,17 +39,12 @@ fmpz_spoly_init(fmpz_spoly_t poly)
 void
 fmpz_spoly_init2(fmpz_spoly_t poly, slong alloc)
 {
-  if(alloc)
-  {
-    poly->coeffs = (fmpz*) flint_calloc(alloc, sizeof(fmpz));
-    poly->expons = (fmpz*) flint_calloc(alloc, sizeof(fmpz));
-  }
-  else
-  {
-    poly->coeffs = NULL;
-    poly->expons = NULL;
-  }
-
-  poly->alloc = alloc;
-  poly->length = 0;
+    if(alloc > 0)
+    {
+        poly->coeffs = (fmpz*) flint_calloc(alloc, sizeof(fmpz));
+        poly->expons = (fmpz*) flint_calloc(alloc, sizeof(fmpz));
+        poly->alloc = alloc;
+        poly->length = 0;
+    }
+    else fmpz_spoly_init(poly);
 }

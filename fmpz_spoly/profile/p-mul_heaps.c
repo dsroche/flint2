@@ -38,23 +38,26 @@ int main(int argc, char** argv)
     fmpz_spoly_t check;
     fmpz_t D, H;
     timeit_t timer;
-    ulong T, hbits, dbits;
+    ulong T, hbits, dbits, nvars;
     slong i, l, loops;
     double ctime, wtime;
     int retval = 0;
+    slong minterms = 0, maxterms = 0;
+    mp_bitcnt_t mindbits = 0, maxdbits = 0, minhbits = 0, maxhbits = 0;
 
     FLINT_TEST_INIT(state);
 
-    if (argc != 4)
+    if (argc != 5)
     {
-        flint_printf("usage: %s terms log2_degree log2_height\n", argv[0]);
+        flint_printf("usage: %s terms log2_degree nvars log2_height\n", argv[0]);
         FLINT_TEST_CLEANUP(state);
         return 2;
     }
 
     T = strtoul(argv[1], NULL, 10);
     dbits = strtoul(argv[2], NULL, 10);
-    hbits = strtoul(argv[3], NULL, 10);
+    nvars = strtoul(argv[3], NULL, 10);
+    hbits = strtoul(argv[4], NULL, 10);
     fmpz_init(D);
     fmpz_randbits(D, state, dbits);
     fmpz_abs(D, D);
@@ -63,10 +66,15 @@ int main(int argc, char** argv)
 
     for (i=0; i<NUMEX; ++i)
     {
-        fmpz_spoly_init(f+i);
-        fmpz_spoly_randtest(f+i, state, T, D, hbits-1);
-        fmpz_spoly_init(g+i);
-        fmpz_spoly_randtest(g+i, state, T, D, hbits-1);
+        fmpz_spoly_init(f + i);
+        fmpz_spoly_randtest_kron(f + i, state, T, D, hbits - 1, dbits + 1, nvars);
+        fmpz_spoly_init(g + i);
+        fmpz_spoly_randtest_kron(g + i, state, T, D, hbits - 1, dbits + 1, nvars);
+        if ((ulong)FLINT_MIN(fmpz_spoly_terms(f + i), fmpz_spoly_terms(g + i)) < T)
+        {
+            flint_printf("WARNING: only got %wd and %wd terms\n",
+                    fmpz_spoly_terms(f + i), fmpz_spoly_terms(g + i));
+        }
     }
     fmpz_spoly_init(res);
     fmpz_spoly_init(check);
@@ -79,7 +87,7 @@ int main(int argc, char** argv)
     }
     timeit_stop(timer);
 
-    loops = 2*MINCPU / timer->cpu + 1;
+    loops = 2 * MINCPU / timer->cpu + 1;
 
     while (1)
     {
@@ -101,7 +109,7 @@ int main(int argc, char** argv)
     for (i=0; i<NUMEX; ++i)
     {
         fmpz_spoly_mul_heaps(res, f + i, g + i);
-        fmpz_spoly_mul_heaps(check, f + i, g + i);
+        fmpz_spoly_mul_classical(check, f + i, g + i);
         if (!fmpz_spoly_equal(res, check))
         {
             flint_printf("FAIL\n");
@@ -111,7 +119,28 @@ int main(int argc, char** argv)
             fmpz_spoly_print(check); flint_printf("\n\n");
             retval = 1;
         }
+        if (i == 0)
+        {
+            minterms = maxterms = fmpz_spoly_terms(res);
+            mindbits = maxdbits = fmpz_bits(fmpz_spoly_degree_ptr(res));
+            minhbits = maxhbits = fmpz_spoly_height_bits(res);
+        }
+        else
+        {
+            minterms = FLINT_MIN(minterms, fmpz_spoly_terms(res));
+            maxterms = FLINT_MAX(maxterms, fmpz_spoly_terms(res));
+            mindbits = FLINT_MIN(mindbits, fmpz_bits(fmpz_spoly_degree_ptr(res)));
+            maxdbits = FLINT_MAX(maxdbits, fmpz_bits(fmpz_spoly_degree_ptr(res)));
+            minhbits = FLINT_MIN(minhbits, fmpz_spoly_height_bits(res));
+            maxhbits = FLINT_MAX(maxhbits, fmpz_spoly_height_bits(res));
+        }
     }
+
+    /* show params */
+    flint_printf("terms: %wd - %wd\n", minterms, maxterms);
+    flint_printf("degree bits: %wu - %wu\n", mindbits, maxdbits);
+    flint_printf("height bits: %wu - %wu\n", minhbits, maxhbits);
+    flint_printf("\n");
 
     /* show time */
     flint_printf("loops: %wd\n", loops);

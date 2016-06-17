@@ -569,7 +569,7 @@ FLINT_DLL void fmpz_spoly_mul_heaps(fmpz_spoly_t res,
 FLINT_DLL void fmpz_spoly_mul_OS(fmpz_spoly_t res, flint_rand_t state, 
     const fmpz_spoly_t poly1, const fmpz_spoly_t poly2);
 
-FLINT_DLL void fmpz_spoly_mul_interp(fmpz_spoly_t res, flint_rand_t state, 
+FLINT_DLL int fmpz_spoly_mul_interp(fmpz_spoly_t res, flint_rand_t state, 
     const fmpz_spoly_t poly1, const fmpz_spoly_t poly2, slong terms);
 
 FLINT_DLL void fmpz_spoly_mul_classical(fmpz_spoly_t res,

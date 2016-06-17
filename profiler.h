@@ -68,7 +68,8 @@ typedef struct
 {
     slong cpu;
     slong wall;
-} timeit_t[1];
+} timeit_struct;
+typedef timeit_struct timeit_t[1];
 
 static __inline__
 void timeit_start(timeit_t t)

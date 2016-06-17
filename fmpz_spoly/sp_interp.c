@@ -208,7 +208,7 @@ int fmpz_spoly_sp_interp(fmpz_spoly_t res,
             for (j = 0; j < nmod_poly_length(remeval->evals + gstart); ++j)
             {
                 ulong coeff = nmod_poly_get_coeff_ui(remeval->evals + gstart, j);
-                if (coeff != 0)
+                if (coeff != 0 && eimg_len < basis->eimg_per_round)
                 {
                     eimgs[eimg_len].dcoeff = coeff;
                     eimgs[eimg_len].res = j;
@@ -223,7 +223,7 @@ int fmpz_spoly_sp_interp(fmpz_spoly_t res,
             for (j = 0; j < nmod_poly_length(remeval->evals + gstart); ++j)
             {
                 coeff = nmod_poly_get_coeff_ui(remeval->evals + gstart, j);
-                if (coeff != 0)
+                if (coeff != 0 && cimg_len < basis->cimg_per_round)
                 {
                     cimgs[cimg_len].dcoeff = coeff;
                     cimgs[cimg_len].res = 
