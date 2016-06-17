@@ -25,18 +25,19 @@
 
 #include "flint.h"
 #include "fmpz_spoly.h"
+#include "fmpz_poly.h"
 #include "profiler.h"
 
 #define NUMEX (10)
 #define MINCPU (1000)
 
-#include "fmpz_spoly/ptimer.h"
-PTIMER_EXTERN(MITIME)
-
 int main(int argc, char** argv)
 {
     fmpz_spoly_struct f[NUMEX];
     fmpz_spoly_struct g[NUMEX];
+    fmpz_poly_struct fdense[NUMEX];
+    fmpz_poly_struct gdense[NUMEX];
+    fmpz_poly_t resdense;
     fmpz_spoly_t res;
     fmpz_spoly_t check;
     fmpz_t D, H;
@@ -49,8 +50,6 @@ int main(int argc, char** argv)
     mp_bitcnt_t mindbits = 0, maxdbits = 0, minhbits = 0, maxhbits = 0;
 
     FLINT_TEST_INIT(state);
-
-    PTIMER_ENABLE(MITIME);
 
     if (argc != 5)
     {
@@ -73,9 +72,14 @@ int main(int argc, char** argv)
     {
         fmpz_spoly_init(f + i);
         fmpz_spoly_randtest_kron(f + i, state, T, D, hbits - 1, dbits + 1, nvars);
+        fmpz_poly_init(fdense + i);
+        fmpz_spoly_get_fmpz_poly(fdense + i, f + i);
         fmpz_spoly_init(g + i);
         fmpz_spoly_randtest_kron(g + i, state, T, D, hbits - 1, dbits + 1, nvars);
+        fmpz_poly_init(gdense + i);
+        fmpz_spoly_get_fmpz_poly(gdense + i, g + i);
     }
+    fmpz_poly_init(resdense);
     fmpz_spoly_init(res);
     fmpz_spoly_init(check);
 
@@ -83,7 +87,7 @@ int main(int argc, char** argv)
     timeit_start(timer);
     for (i=0; i<NUMEX; ++i)
     {
-        fmpz_spoly_mul_OS(res, state, f + i, g + i);
+        fmpz_poly_mul(resdense, fdense + i, gdense + i);
     }
     timeit_stop(timer);
 
@@ -91,13 +95,12 @@ int main(int argc, char** argv)
 
     while (1)
     {
-        PTIMER_CLEAR(MITIME);
         timeit_start(timer);
         for (l=0; l<loops; ++l)
         {
             for (i=0; i<NUMEX; ++i)
             {
-                fmpz_spoly_mul_OS(res, state, f + i, g + i);
+                fmpz_poly_mul(resdense, fdense + i, gdense + i);
             }
         }
         timeit_stop(timer);
@@ -105,12 +108,12 @@ int main(int argc, char** argv)
         if (timer->cpu >= MINCPU) break;
         else loops *= 2;
     }
-    PTIMER_DISABLE(MITIME);
 
     /* cool down and check results */
     for (i=0; i<NUMEX; ++i)
     {
-        fmpz_spoly_mul_OS(res, state, f + i, g + i);
+        fmpz_poly_mul(resdense, fdense + i, gdense + i);
+        fmpz_spoly_set_fmpz_poly(res, resdense);
         fmpz_spoly_mul_heaps(check, f + i, g + i);
         if (!fmpz_spoly_equal(res, check))
         {
@@ -150,8 +153,6 @@ int main(int argc, char** argv)
     flint_printf("  cpu: %lf ms avg\n", ctime);
     wtime = ((double)timer->wall) / (NUMEX * loops);
     flint_printf(" wall: %lf ms avg\n", wtime);
-
-    PTIMER_PRINT(MITIME, NUMEX * loops);
 
     /* clean up */
     FLINT_TEST_CLEANUP(state);

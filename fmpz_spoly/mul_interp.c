@@ -26,31 +26,45 @@
 #include "fmpz_spoly.h"
 #include "fmpz_vec.h"
 
-void 
-fmpz_spoly_mul_interp(fmpz_spoly_t res, flint_rand_t state, 
+#include "ptimer.h"
+PTIMER_DECLARE(MITIME, 10)
+
+int fmpz_spoly_mul_interp(fmpz_spoly_t res, flint_rand_t state, 
         const fmpz_spoly_t poly1, const fmpz_spoly_t poly2, slong terms)
 {
     fmpz_spoly_sp_interp_basis_t basis;
     fmpz_spoly_sp_interp_eval_t p1e, p2e;
     mp_bitcnt_t d, h;
+    int result;
+
+    PTIMER_BEGIN(MITIME, "initial");
     
     d = FLINT_MAX(fmpz_bits(fmpz_spoly_degree_ptr(poly1)), 
                   fmpz_bits(fmpz_spoly_degree_ptr(poly2))) + 1;
     h = fmpz_spoly_height_bits(poly1) + fmpz_spoly_height_bits(poly2) 
-        + FLINT_BIT_COUNT(terms);
+        + FLINT_BIT_COUNT(FLINT_MIN(fmpz_spoly_terms(poly1), 
+                                    fmpz_spoly_terms(poly2)));
 
+    PTIMER_NEXT(MITIME, "basis_init");
     fmpz_spoly_sp_interp_basis_init(basis, state, terms, d, h);
 
+    PTIMER_NEXT(MITIME, "eval");
     fmpz_spoly_sp_interp_eval_init(p1e, basis);
     fmpz_spoly_sp_interp_eval(p1e, poly1);
 
     fmpz_spoly_sp_interp_eval_init(p2e, basis);
     fmpz_spoly_sp_interp_eval(p2e, poly2);
 
+    PTIMER_NEXT(MITIME, "mul");
     fmpz_spoly_sp_interp_mul(p1e, p1e, p2e);
-    fmpz_spoly_sp_interp(res, p1e);
+    PTIMER_NEXT(MITIME, "interp");
+    result = fmpz_spoly_sp_interp(res, p1e);
 
+    PTIMER_NEXT(MITIME, "end");
     fmpz_spoly_sp_interp_eval_clear(p1e);
     fmpz_spoly_sp_interp_eval_clear(p2e);
     fmpz_spoly_sp_interp_basis_clear(basis);
+
+    PTIMER_END(MITIME);
+    return result;
 }
