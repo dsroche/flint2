@@ -49,7 +49,7 @@ main(void)
 
         fmpz_init(m);
         fmpz_init(n);
-        fmpz_randtest_unsigned_not_zero(m, state, 20);
+        fmpz_randtest_not_zero(m, state, 20);
         fmpz_randtest_unsigned(n, state, 20);
 
         j = fmpz_get_si(m);
@@ -91,7 +91,7 @@ main(void)
         fmpz_init(d);
         fmpz_init(e);
         fmpz_randtest_unsigned(c, state, 10);
-        fmpz_randtest_unsigned_not_zero(d, state, 10);
+        fmpz_randtest_not_zero(d, state, 10);
         fmpz_randtest_unsigned(e, state, 10);
 
         f = fmpz_get_si(e);

@@ -50,7 +50,7 @@ main(void)
         ulong n;
 
         fmpz_init(n1);
-        fmpz_randtest_unsigned_not_zero(n1, state, 10);
+        fmpz_randtest_not_zero(n1, state, 10);
         
         n = fmpz_get_ui(n1);
 

@@ -61,10 +61,7 @@ main(void)
 
         fmpz_spoly_init(a);
 
-        flint_printf("\n\nterms: %wd\n", terms);
         fmpz_spoly_randtest_kron(a, state, terms, degree, height, limit, vars);
-
-        fmpz_spoly_print(a);
 
         fmpz_set(maxterms, degree);
         fmpz_add_ui(maxterms, maxterms, UWORD(1));

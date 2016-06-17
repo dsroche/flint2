@@ -49,7 +49,7 @@ main(void)
         fmpz_t c, n;
 
         fmpz_init(n);
-        fmpz_randtest_unsigned_not_zero(n, state, 200);
+        fmpz_randtest_not_zero(n, state, 200);
         
         fmpz_init(c);
         fmpz_randtest_unsigned(c, state, 200);

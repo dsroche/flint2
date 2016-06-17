@@ -50,7 +50,7 @@ main(void)
         slong n1;
 
         fmpz_init(n);
-        fmpz_randtest_unsigned_not_zero(n, state, 200);
+        fmpz_randtest_not_zero(n, state, 200);
         
         n1 = fmpz_get_si(n);
 
