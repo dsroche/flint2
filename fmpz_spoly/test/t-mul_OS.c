@@ -57,8 +57,8 @@ main(void)
         fmpz_spoly_init(b);
         fmpz_spoly_init(c);
 
-        fmpz_spoly_randtest(b, state, n_randint(state, 30), d, 100);
-        fmpz_spoly_randtest(c, state, n_randint(state, 30), e, 100);
+        fmpz_spoly_randtest(b, state, n_randint(state, 30), d, 50);
+        fmpz_spoly_randtest(c, state, n_randint(state, 30), e, 50);
         
         fmpz_spoly_mul_heaps(a, b, c);
         fmpz_spoly_mul_OS(b, state, b, c);
@@ -94,8 +94,8 @@ main(void)
         fmpz_spoly_init(a);
         fmpz_spoly_init(b);
         fmpz_spoly_init(c);
-        fmpz_spoly_randtest(b, state, n_randint(state, 30), d, 100);
-        fmpz_spoly_randtest(c, state, n_randint(state, 30), e, 100);
+        fmpz_spoly_randtest(b, state, n_randint(state, 30), d, 50);
+        fmpz_spoly_randtest(c, state, n_randint(state, 30), e, 50);
 
         fmpz_spoly_mul_heaps(a, b, c);
         fmpz_spoly_mul_OS(c, state, b, c);
@@ -135,9 +135,9 @@ main(void)
         fmpz_spoly_init(b);
         fmpz_spoly_init(c);
         fmpz_spoly_init(d);
-        fmpz_spoly_randtest(b, state, n_randint(state, 30), e, 100);
-        fmpz_spoly_randtest(c, state, n_randint(state, 30), f, 100);
-        fmpz_spoly_randtest(d, state, n_randint(state, 30), g, 100);
+        fmpz_spoly_randtest(b, state, n_randint(state, 30), e, 50);
+        fmpz_spoly_randtest(c, state, n_randint(state, 30), f, 50);
+        fmpz_spoly_randtest(d, state, n_randint(state, 30), g, 50);
 
         fmpz_spoly_mul_OS(a1, state, b, c);
         fmpz_spoly_mul_OS(a2, state, b, d);
