@@ -25,9 +25,9 @@
 
 #include "fmpz_spoly.h"
 
-const slong FMPZ_SPOLY_QSORT_XOVER = 128;
+const slong FMPZ_SPOLY_QSORT_XOVER = 32;
 
-#define FMPZ_SPOLY_NORM_SWAP(coeffs, expons, pos1, pos2) do { \
+#define FMPZ_SPOLY_TERM_SWAP(coeffs, expons, pos1, pos2) do { \
     if ((pos1) != (pos2)) \
     { \
         fmpz t = (coeffs)[pos1]; \
@@ -78,7 +78,7 @@ slong _fmpz_spoly_normalise_rec(fmpz* coeffs, fmpz* expons, slong len)
                 else 
                 {
                     _fmpz_spoly_vec_shift_arr(coeffs, expons, i + 1, cur - free1, 1);
-                    FMPZ_SPOLY_NORM_SWAP(coeffs, expons, i + 1, cur);
+                    FMPZ_SPOLY_TERM_SWAP(coeffs, expons, i + 1, cur);
                 }
             }
         }
@@ -111,7 +111,7 @@ slong _fmpz_spoly_normalise_rec(fmpz* coeffs, fmpz* expons, slong len)
         if ((frontCpiv ^ rearCpiv) < 0)
         {
             /* make midpoint the pivot */
-            FMPZ_SPOLY_NORM_SWAP(coeffs, expons, b, c);
+            FMPZ_SPOLY_TERM_SWAP(coeffs, expons, b, c);
         }
         else
         {
@@ -119,7 +119,7 @@ slong _fmpz_spoly_normalise_rec(fmpz* coeffs, fmpz* expons, slong len)
             if ((frontCpiv ^ frontCrear) < 0)
             {
                 /* make front the pivot */
-                FMPZ_SPOLY_NORM_SWAP(coeffs, expons, a, c);
+                FMPZ_SPOLY_TERM_SWAP(coeffs, expons, a, c);
                 rearCpiv = -frontCpiv;
                 frontCpiv = -frontCrear;
             }
@@ -131,7 +131,7 @@ slong _fmpz_spoly_normalise_rec(fmpz* coeffs, fmpz* expons, slong len)
             }
         }
 
-        FMPZ_SPOLY_NORM_SWAP(coeffs, expons, b, c - 1);
+        FMPZ_SPOLY_TERM_SWAP(coeffs, expons, b, c - 1);
         b = c - 1;
         /* now c is the pivot, a is the front, b is the rear,
          * and frontCpiv and rearCpiv are correct */
@@ -146,10 +146,10 @@ slong _fmpz_spoly_normalise_rec(fmpz* coeffs, fmpz* expons, slong len)
                 {
                     /* add front coeff to pivot and move bubble to end */
                     fmpz_add(coeffs + c, coeffs + c, coeffs + a);
-                    FMPZ_SPOLY_NORM_SWAP(coeffs, expons, a, b);
+                    FMPZ_SPOLY_TERM_SWAP(coeffs, expons, a, b);
                     frontCpiv = rearCpiv;
                     --len;
-                    FMPZ_SPOLY_NORM_SWAP(coeffs, expons, b, len - 1);
+                    FMPZ_SPOLY_TERM_SWAP(coeffs, expons, b, len - 1);
                     if (--b == a)
                         goto abequal;
                     rearCpiv = fmpz_cmp(expons + b, expons + c);
@@ -172,7 +172,7 @@ slong _fmpz_spoly_normalise_rec(fmpz* coeffs, fmpz* expons, slong len)
                     /* add rear coeff to pivot and move bubble to end */
                     fmpz_add(coeffs + c, coeffs + c, coeffs + b);
                     --len;
-                    FMPZ_SPOLY_NORM_SWAP(coeffs, expons, b, len - 1);
+                    FMPZ_SPOLY_TERM_SWAP(coeffs, expons, b, len - 1);
                 }
                 if (--b == a)
                     goto abequal;
@@ -180,13 +180,16 @@ slong _fmpz_spoly_normalise_rec(fmpz* coeffs, fmpz* expons, slong len)
             }
 
             /* swap front and rear */
-            FMPZ_SPOLY_NORM_SWAP(coeffs, expons, a, b);
-            if (++a == --b)
-                goto abequal;
-            else if (a > b)
+            FMPZ_SPOLY_TERM_SWAP(coeffs, expons, a, b);
+            if (++a < b)
+            {
+                frontCpiv = fmpz_cmp(expons + a, expons + c);
+                if (--b == a)
+                    goto abequal;
+            }
+            else
                 goto finish;
 
-            frontCpiv = fmpz_cmp(expons + a, expons + c);
             rearCpiv = fmpz_cmp(expons + b, expons + c);
         }
 
@@ -197,7 +200,7 @@ abequal:
         {
             fmpz_add(coeffs + c, coeffs + c, coeffs + a);
             --len;
-            FMPZ_SPOLY_NORM_SWAP(coeffs, expons, a, len - 1);
+            FMPZ_SPOLY_TERM_SWAP(coeffs, expons, a, len - 1);
         }
 
 finish:
@@ -209,8 +212,9 @@ finish:
         }
         else
         {
-            FMPZ_SPOLY_NORM_SWAP(coeffs, expons, a, len - 1);
-            FMPZ_SPOLY_NORM_SWAP(coeffs, expons, a, c);
+            if (c != len - 1)
+                FMPZ_SPOLY_TERM_SWAP(coeffs, expons, a, len - 1);
+            FMPZ_SPOLY_TERM_SWAP(coeffs, expons, a, c);
             b = a + 1;
         }
 
@@ -219,12 +223,13 @@ finish:
         if (c < a)
         {
             /* size shrank in first recursive call */
-            _fmpz_spoly_vec_shift_arr(coeffs, expons, b, len, c - a);
-            len -= a - c;
-            b -= a - c;
+            c -= a;
+            _fmpz_spoly_vec_shift_arr(coeffs, expons, a, len, c);
+            len += c;
+            b += c;
         }
 
-        return c + _fmpz_spoly_normalise_rec(coeffs + b, expons + b, len - b);
+        return b + _fmpz_spoly_normalise_rec(coeffs + b, expons + b, len - b);
     }
 }
 
