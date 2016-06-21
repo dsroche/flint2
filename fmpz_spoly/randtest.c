@@ -68,7 +68,15 @@ void fmpz_spoly_randtest(fmpz_spoly_t res, flint_rand_t state,
 
     i = 1;
 
-    if(fmpz_cmp_ui(degree, ((ulong) terms) * 2) < 0)
+    if(fmpz_cmp_si(degree, terms) == 0)
+    {
+        for(;i < terms; i++)
+        {
+            fmpz_randbits(fmpz_spoly_get_term_coeff_ptr(res, i), state, bits);
+            fmpz_set_si(fmpz_spoly_get_term_expon_ptr(res, i), i);
+        }
+    }
+    else if(fmpz_cmp_ui(degree, ((ulong) terms) * 2) < 0)
     {
         fmpz_spoly_t tpoly;
         slong deg;
