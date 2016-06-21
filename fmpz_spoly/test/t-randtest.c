@@ -63,7 +63,9 @@ main(void)
         if(!result)
         {
             flint_printf("FAIL (undesired length):\n");
-            flint_printf("DESIRED: %lu RECEIVED: %lu and %d\n", terms, a->length, fmpz_cmp_si(abs_degree, terms));
+            flint_printf("DESIRED: %lu RECEIVED: %lu and %d, DEGREE: ", terms, a->length, fmpz_cmp_si(abs_degree, terms));
+            fmpz_print(abs_degree);
+            flint_printf("\n");
         }
 
         result = (fmpz_equal(abs_degree, a->expons) || terms == 0);
