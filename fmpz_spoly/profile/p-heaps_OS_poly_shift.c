@@ -54,11 +54,11 @@
 #define bits     100
 #define lenlo    100
 #define lenhi    10000
-#define lenh     4950
+#define lenh     10000
 #define deg      100
 #define shiftlo  7
 #define shifthi  20
-#define shifth   6
+#define shifth   1
 #define nvars    2
 #define rows     ((lenhi + 1 - lenlo + (lenh - 1)) / lenh)
 #define cols     ((shifthi + 1 - shiftlo + (shifth - 1)) / shifth)
@@ -204,19 +204,15 @@ main(void)
             for (c = 0; c < nalgs; c++)
                 T[i][j][c] = times[c] / (double) reps[c];
             
-            if (times[1] <= FLINT_MIN(times[0], times[2]))
+            if (T[i][j][1] <= FLINT_MIN(T[i][j][0], T[i][j][2]))
                 X[i][j] = 1;
-            else if (times[0] <= times[2])
+            else if (T[i][j][0] <= T[i][j][2])
                 X[i][j] = 0;
             else
                 X[i][j] = 2;
            flint_printf("len = %wd, shift = %wu, winner = %d\n", len, shift, X[i][j]), fflush(stdout);
-        }
-        {
-           slong sum = 0, c;
-           for (c = 0; c < nalgs; c++)
-              sum += times[c];
-           flint_printf("len = %wd, shift = %wu, time = %wdms\n", len, shift, sum), fflush(stdout);
+           flint_printf("heaptime: %lf, ostime: %lf, polytime: %lf\n",
+                   T[i][j][0], T[i][j][1], T[i][j][2]);
         }
     }
     
