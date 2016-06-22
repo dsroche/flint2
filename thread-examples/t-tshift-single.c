@@ -14,7 +14,7 @@
 #include "profiler.h"
 
 #define BITS (1000)
-#define LEN (100)
+#define LEN (400)
 
 int main(void)
 {

@@ -15,7 +15,7 @@
 #include "profiler.h"
 
 #define BITS (1000)
-#define LEN (100)
+#define LEN (400)
 
 void fmpz_poly_taylor_shift_multi_mod_openmp(fmpz_poly_t g, const fmpz_poly_t f, const fmpz_t c);
 

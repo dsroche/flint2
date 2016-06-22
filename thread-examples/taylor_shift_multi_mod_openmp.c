@@ -78,7 +78,6 @@ _fmpz_poly_taylor_shift_multi_mod_openmp(fmpz * poly, const fmpz_t c, slong len)
         }
 
         /* _fmpz_poly_multi_taylor_shift_threaded(residues, len, c, primes, num_primes); */
-#pragma omp barrier
 #pragma omp for
         for (i = 0; i < num_primes; i++)
         {
@@ -92,7 +91,6 @@ _fmpz_poly_taylor_shift_multi_mod_openmp(fmpz * poly, const fmpz_t c, slong len)
         }
 
         /* _fmpz_vec_multi_mod_ui_threaded(residues, poly, len, primes, num_primes, 1); */
-#pragma omp barrier
 #pragma omp for schedule(static)
         for (i = 0; i < len; i++)
         {
