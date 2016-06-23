@@ -25,30 +25,28 @@
 
 #include "flint.h"
 #include "fmpz_spoly.h"
+#include "fmpz_poly.h"
 #include "profiler.h"
 
 #define NUMEX (10)
 #define MINWALL (1000)
 
-#include "fmpz_spoly/ptimer.h"
-PTIMER_EXTERN(BPITIME)
-
 int main(int argc, char** argv)
 {
     fmpz_spoly_struct orig[NUMEX];
-    fmpz_spoly_bp_interp_basis_struct bases[NUMEX];
-    fmpz_spoly_bp_interp_eval_struct evals[NUMEX];
-    fmpz_spoly_t res;
+    fmpz_poly_struct dense[NUMEX];
+    fmpz_poly_t res;
+    fmpz *basis, *eval;
     fmpz_t D;
+    slong wD;
     ulong dbits, hbits;
     timeit_t timer;
     slong T, i, l, loops;
+    slong epoint, blen;
     double ctime, wtime;
     int retval = 0;
 
     FLINT_TEST_INIT(state);
-
-    PTIMER_ENABLE(BPITIME);
 
     if (argc != 4)
     {
@@ -61,11 +59,15 @@ int main(int argc, char** argv)
     dbits = strtoul(argv[2], NULL, 10);
     hbits = strtoul(argv[3], NULL, 10);
 
-    fmpz_init(D);
-    fmpz_setbit(D, dbits);
-    fmpz_sub_ui(D, D, UWORD(1));
+    if (dbits > FLINT_BITS - 2)
+    {
+        flint_printf("ERROR: degree is way too big for dense.\n");
+        abort();
+    }
+    wD = (WORD(1) << dbits) - 1;
+    fmpz_init_set_si(D, wD);
 
-    flint_printf("Testing time for bp_interp with %wd terms, degree ", T);
+    flint_printf("Testing time for sp_interp with %wd terms, degree ", T);
     fmpz_print(D);
     flint_printf(" (%wu bits), and %wd-bit coefficients.\n", dbits, hbits);
 
@@ -75,8 +77,8 @@ int main(int argc, char** argv)
     {
         fmpz_spoly_init(orig + i);
         fmpz_spoly_randtest(orig + i, state, T, D, hbits);
-        fmpz_spoly_bp_interp_basis_init(bases + i, state, T, dbits, hbits);
-        fmpz_spoly_bp_interp_eval_init(evals + i, bases + i);
+        fmpz_poly_init(dense + i);
+        fmpz_spoly_get_fmpz_poly(dense + i, orig + i);
         if (fmpz_spoly_terms(orig + i) != T)
         {
             flint_printf("\nERROR: only room for %wd terms\n",
@@ -85,7 +87,14 @@ int main(int argc, char** argv)
         }
         putchar('.'); fflush(stdout);
     }
-    fmpz_spoly_init(res);
+    blen = wD + 1;
+    fmpz_poly_init(res);
+    basis = _fmpz_vec_init(blen);
+    for (i = 0, epoint = -blen / 2; i < blen; ++i, ++epoint)
+    {
+        fmpz_set_si(basis + i, epoint);
+    }
+    eval = _fmpz_vec_init(blen);
     putchar('\n'); fflush(stdout);
 
     /* warm up and check time */
@@ -95,8 +104,8 @@ int main(int argc, char** argv)
     for (i = 0; i < NUMEX; ++i)
     {
         putchar('.'); fflush(stdout);
-        fmpz_spoly_bp_interp_eval(evals + i, orig + i);
-        fmpz_spoly_bp_interp(res, evals + i);
+        fmpz_poly_evaluate_fmpz_vec(eval, dense + i, basis, blen);
+        fmpz_poly_interpolate_fmpz_vec(res, basis, eval, blen);
     }
     timeit_stop(timer);
     flint_printf(" %lf ms cpu, %lf ms wall\n",
@@ -108,14 +117,13 @@ int main(int argc, char** argv)
     while (1)
     {
         putchar('.'); fflush(stdout);
-        PTIMER_CLEAR(BPITIME);
         timeit_start(timer);
         for (l = 0; l < loops; ++l)
         {
             for (i = 0; i < NUMEX; ++i)
             {
-                fmpz_spoly_bp_interp_eval(evals + i, orig + i);
-                fmpz_spoly_bp_interp(res, evals + i);
+                fmpz_poly_evaluate_fmpz_vec(eval, dense + i, basis, blen);
+                fmpz_poly_interpolate_fmpz_vec(res, basis, eval, blen);
             }
         }
         timeit_stop(timer);
@@ -123,7 +131,6 @@ int main(int argc, char** argv)
         if (timer->wall >= MINWALL) break;
         else loops *= 2;
     }
-    PTIMER_DISABLE(BPITIME);
     putchar('\n'); fflush(stdout);
 
     /* show time */
@@ -134,10 +141,6 @@ int main(int argc, char** argv)
     wtime = ((double)timer->wall) / (NUMEX * loops);
     flint_printf(" wall: %lf ms avg\n", wtime);
 
-    /* 
-    PTIMER_PRINT(BPITIME, NUMEX * loops);
-    */
-
     /* cool down and check results */
     flint_printf("\n");
     flint_printf("Final checks"); fflush(stdout);
@@ -145,9 +148,9 @@ int main(int argc, char** argv)
     for (i = 0; i < NUMEX; ++i)
     {
         putchar('.'); fflush(stdout);
-        fmpz_spoly_bp_interp_eval(evals + i, orig + i);
-        fmpz_spoly_bp_interp(res, evals + i);
-        if (!fmpz_spoly_equal(res, orig + i))
+        fmpz_poly_evaluate_fmpz_vec(eval, dense + i, basis, blen);
+        fmpz_poly_interpolate_fmpz_vec(res, basis, eval, blen);
+        if (!fmpz_poly_equal(res, dense + i))
         {
             flint_printf("FAIL (iteration %wd)\n", i);
             retval = 1;
@@ -159,12 +162,13 @@ int main(int argc, char** argv)
     FLINT_TEST_CLEANUP(state);
     for (i = 0; i < NUMEX; ++i)
     {
-        fmpz_spoly_clear(orig+i);
-        fmpz_spoly_bp_interp_basis_clear(bases + i);
-        fmpz_spoly_bp_interp_eval_clear(evals + i);
+        fmpz_spoly_clear(orig + i);
+        fmpz_poly_clear(dense + i);
     }
-    fmpz_spoly_clear(res);
+    fmpz_poly_clear(res);
     fmpz_clear(D);
+    _fmpz_vec_clear(eval, blen);
+    _fmpz_vec_clear(basis, blen);
 
     return retval;
 }

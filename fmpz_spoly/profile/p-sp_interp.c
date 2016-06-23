@@ -28,7 +28,10 @@
 #include "profiler.h"
 
 #define NUMEX (10)
-#define MINCPU (1000)
+#define MINWALL (1000)
+
+#include "fmpz_spoly/ptimer.h"
+PTIMER_EXTERN(BPITIME)
 
 int main(int argc, char** argv)
 {
@@ -36,14 +39,16 @@ int main(int argc, char** argv)
     fmpz_spoly_sp_interp_basis_struct bases[NUMEX];
     fmpz_spoly_sp_interp_eval_struct evals[NUMEX];
     fmpz_spoly_t res;
-    fmpz_t D, H;
+    fmpz_t D;
+    ulong dbits, hbits;
     timeit_t timer;
-    ulong T, hbits, dbits;
-    slong i, l, loops;
+    slong T, i, l, loops;
     double ctime, wtime;
     int retval = 0;
 
     FLINT_TEST_INIT(state);
+
+    PTIMER_ENABLE(BPITIME);
 
     if (argc != 4)
     {
@@ -52,83 +57,113 @@ int main(int argc, char** argv)
         return 2;
     }
 
-    T = strtoul(argv[1], NULL, 10);
+    T = (slong) strtoul(argv[1], NULL, 10);
     dbits = strtoul(argv[2], NULL, 10);
     hbits = strtoul(argv[3], NULL, 10);
-    fmpz_init(D);
-    fmpz_randbits(D, state, dbits);
-    fmpz_abs(D, D);
-    fmpz_init(H);
-    fmpz_randbits(H, state, hbits);
 
-    for (i=0; i<NUMEX; ++i)
+    fmpz_init(D);
+    fmpz_setbit(D, dbits);
+    fmpz_sub_ui(D, D, UWORD(1));
+
+    flint_printf("Testing time for sp_interp with %wd terms, degree ", T);
+    fmpz_print(D);
+    flint_printf(" (%wu bits), and %wd-bit coefficients.\n", dbits, hbits);
+
+    flint_printf("Generating examples"); fflush(stdout);
+
+    for (i = 0; i < NUMEX; ++i)
     {
-        fmpz_spoly_init(orig+i);
-        fmpz_spoly_randtest(orig+i, state, T, D, hbits-1);
+        fmpz_spoly_init(orig + i);
+        fmpz_spoly_randtest(orig + i, state, T, D, hbits);
         fmpz_spoly_sp_interp_basis_init(bases + i, state, T, dbits, hbits);
         fmpz_spoly_sp_interp_eval_init(evals + i, bases + i);
+        if (fmpz_spoly_terms(orig + i) != T)
+        {
+            flint_printf("\nERROR: only room for %wd terms\n",
+                fmpz_spoly_terms(orig + i));
+            abort();
+        }
+        putchar('.'); fflush(stdout);
     }
     fmpz_spoly_init(res);
+    putchar('\n'); fflush(stdout);
 
     /* warm up and check time */
+    flint_printf("Initial time estimate"); fflush(stdout);
+
     timeit_start(timer);
-    for (i=0; i<NUMEX; ++i)
+    for (i = 0; i < NUMEX; ++i)
     {
-        fmpz_spoly_sp_interp_eval(evals+i, orig+i);
-        fmpz_spoly_sp_interp(res, evals+i);
+        putchar('.'); fflush(stdout);
+        fmpz_spoly_sp_interp_eval(evals + i, orig + i);
+        fmpz_spoly_sp_interp(res, evals + i);
     }
     timeit_stop(timer);
+    flint_printf(" %lf ms cpu, %lf ms wall\n",
+        ((double) timer->cpu) / NUMEX, ((double) timer->wall) / NUMEX);
 
-    loops = 2*MINCPU / timer->cpu + 1;
+    loops = 2 * MINWALL / timer->wall + 1;
 
+    flint_printf("Critical timing"); fflush(stdout);
     while (1)
     {
+        putchar('.'); fflush(stdout);
+        PTIMER_CLEAR(BPITIME);
         timeit_start(timer);
-        for (l=0; l<loops; ++l)
+        for (l = 0; l < loops; ++l)
         {
-            for (i=0; i<NUMEX; ++i)
+            for (i = 0; i < NUMEX; ++i)
             {
-                fmpz_spoly_sp_interp_eval(evals+i, orig+i);
-                fmpz_spoly_sp_interp(res, evals+i);
+                fmpz_spoly_sp_interp_eval(evals + i, orig + i);
+                fmpz_spoly_sp_interp(res, evals + i);
             }
         }
         timeit_stop(timer);
 
-        if (timer->cpu >= MINCPU) break;
+        if (timer->wall >= MINWALL) break;
         else loops *= 2;
     }
-
-    /* cool down and check results */
-    for (i=0; i<NUMEX; ++i)
-    {
-        fmpz_spoly_sp_interp_eval(evals+i, orig+i);
-        fmpz_spoly_sp_interp(res, evals+i);
-        if (!fmpz_spoly_equal(res, orig+i))
-        {
-            flint_printf("FAIL\n");
-            fmpz_spoly_print(orig+i); flint_printf("\n\n");
-            fmpz_spoly_print(res); flint_printf("\n\n");
-            retval = 1;
-        }
-    }
+    PTIMER_DISABLE(BPITIME);
+    putchar('\n'); fflush(stdout);
 
     /* show time */
+    flint_printf("\n");
     flint_printf("loops: %wd\n", loops);
     ctime = ((double)timer->cpu) / (NUMEX * loops);
     flint_printf("  cpu: %lf ms avg\n", ctime);
     wtime = ((double)timer->wall) / (NUMEX * loops);
     flint_printf(" wall: %lf ms avg\n", wtime);
 
+    /* 
+    PTIMER_PRINT(BPITIME, NUMEX * loops);
+    */
+
+    /* cool down and check results */
+    flint_printf("\n");
+    flint_printf("Final checks"); fflush(stdout);
+
+    for (i = 0; i < NUMEX; ++i)
+    {
+        putchar('.'); fflush(stdout);
+        fmpz_spoly_sp_interp_eval(evals + i, orig + i);
+        fmpz_spoly_sp_interp(res, evals + i);
+        if (!fmpz_spoly_equal(res, orig + i))
+        {
+            flint_printf("FAIL (iteration %wd)\n", i);
+            retval = 1;
+        }
+    }
+    putchar('\n'); fflush(stdout);
+
     /* clean up */
     FLINT_TEST_CLEANUP(state);
-    for (i=0; i<NUMEX; ++i)
+    for (i = 0; i < NUMEX; ++i)
     {
         fmpz_spoly_clear(orig+i);
-        fmpz_spoly_sp_interp_eval_clear(evals + i);
         fmpz_spoly_sp_interp_basis_clear(bases + i);
+        fmpz_spoly_sp_interp_eval_clear(evals + i);
     }
     fmpz_spoly_clear(res);
-    fmpz_clear(H);
     fmpz_clear(D);
 
     return retval;
