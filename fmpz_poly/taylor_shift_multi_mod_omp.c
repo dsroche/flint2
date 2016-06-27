@@ -103,7 +103,7 @@ _fmpz_poly_taylor_shift_multi_mod_omp(fmpz * poly, const fmpz_t c, slong len)
         fmpz_comb_clear(comb);
         fmpz_comb_temp_clear(comb_temp);
 
-        flint_thread_cleanup();
+        flint_parallel_cleanup();
     }
 
     for (i = 0; i < num_primes; i++)

@@ -159,7 +159,7 @@ void flint_set_abort(void (*func)(void));
 
 FLINT_DLL int flint_get_num_threads(void);
 FLINT_DLL void flint_set_num_threads(int num_threads);
-FLINT_DLL void flint_thread_cleanup(void);
+FLINT_DLL void flint_parallel_cleanup(void);
 
 FLINT_DLL int flint_test_multiplier(void);
 

@@ -30,7 +30,7 @@ void flint_set_num_threads(int num_threads)
 #endif
 }
 
-void flint_thread_cleanup()
+void flint_parallel_cleanup()
 {
     int needs_cleanup = 1;
 #pragma omp master

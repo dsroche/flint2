@@ -71,7 +71,7 @@ int main(void)
             for (j = 0; j < iters; ++j)
                 foo();
 
-            flint_thread_cleanup();
+            flint_parallel_cleanup();
         }
 
 #ifdef _OPENMP
