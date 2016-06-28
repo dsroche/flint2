@@ -597,7 +597,7 @@ fi
 
 #get flag for OpenMP
 if [ "$OPENMP" = "1" ]; then
-    OPENMP_FLAG=
+    OPENMP_FLAG="-fopenmp"
 else
     OPENMP_FLAG="-Wno-unknown-pragmas"
 fi
@@ -691,11 +691,6 @@ INCS="-I\$(CURDIR)"
 for INC_DIR in ${INC_DIRS} ${EXTRA_INC_DIRS}; do
    INCS="${INCS} -I${INC_DIR}"
 done
-
-#add OpenMP option to includes
-if [ "$OPENMP" = "1" ]; then
-    INCS="${INCS} -fopenmp"
-fi
 
 #library paths
 
