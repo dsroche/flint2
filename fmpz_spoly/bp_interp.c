@@ -29,6 +29,9 @@
 #include "long_extras.h"
 #include "fmpz_mod_poly.h"
 
+#include "ptimer.h"
+PTIMER_DECLARE(BPITIME, 10)
+
 void _fmpz_mod_poly_powmod_x_2exp(fmpz* res, 
         const fmpz* poly, slong len, ulong k, const fmpz_t p)
 {
@@ -230,6 +233,8 @@ int fmpz_spoly_bp_interp(fmpz_spoly_t res, const fmpz_spoly_bp_interp_eval_t eva
     slong i, t;
     const fmpz * w = eval->basis->points + 1;
 
+    PTIMER_BEGIN(BPITIME, "initial");
+
     fmpz_spoly_zero(res);
 
     if (eval->basis->length == 0) 
@@ -240,7 +245,9 @@ int fmpz_spoly_bp_interp(fmpz_spoly_t res, const fmpz_spoly_bp_interp_eval_t eva
     /* Berlekamp-Massey to discover Prony polynomial */
 
     fmpz_mod_poly_init(G, eval->basis->q);
+    PTIMER_NEXT(BPITIME, "minpoly");
     fmpz_mod_poly_minpoly(G, eval->evals, eval->basis->length);
+    PTIMER_NEXT(BPITIME, "minpoly over");
 
     t = fmpz_mod_poly_degree(G);
     if (t > eval->basis->length / 2)
@@ -261,21 +268,25 @@ int fmpz_spoly_bp_interp(fmpz_spoly_t res, const fmpz_spoly_bp_interp_eval_t eva
     /* find roots of Prony polynomial, and their orders */
 
     roots = _fmpz_vec_init(t);
+    PTIMER_NEXT(BPITIME, "binary roots");
     _fmpz_mod_poly_binary_roots(roots, res->expons, 
             G->coeffs, G->length, w, eval->basis->log2_order, eval->basis->q);
 
     /* solve transposed Vandermode to get coeffs */
     /* Varndermonde(roots)^T * x = evals, truncated to length t */
 
+    PTIMER_NEXT(BPITIME, "transposed vandermonde");
     _fmpz_spoly_transp_vandermonde_inv(res->coeffs,
             roots, eval->evals, t, eval->basis->q);
 
     /* sort terms and remove zero coeffs */
+    PTIMER_NEXT(BPITIME, "end");
     _fmpz_spoly_normalise(res);
 
     /* clean-up */
     _fmpz_vec_clear(roots, t);
     fmpz_mod_poly_clear(G);
 
+    PTIMER_END(BPITIME);
     return 1;
 }

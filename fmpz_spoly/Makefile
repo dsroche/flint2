@@ -41,7 +41,7 @@ tests: $(TEST_RUNS)
 $(TEST_EXES): $(BD)/%: test/%.c $(SOURCES) $(HEADERS) $(TESTS_EXTRA_SRC)
 	@echo
 	@echo -n "COMPILING $@..."
-	$(CC) $(CFLAGS) -I.. $< $(SOURCES) $(TESTS_EXTRA_SRC) -L.. $(LIBS) -o $@
+	@$(CC) $(CFLAGS) -I.. $< $(SOURCES) $(TESTS_EXTRA_SRC) -L.. $(LIBS) -o $@
 	@echo done
 
 $(OURTEST_RUNS): %: build/%

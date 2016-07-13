@@ -638,8 +638,15 @@ FLINT_DLL void fmpz_spoly_shift_right(fmpz_spoly_t res,
 FLINT_DLL void fmpz_spoly_shift_right_si(fmpz_spoly_t res,
     const fmpz_spoly_t poly, slong n);
 
-FLINT_DLL void _fmpz_spoly_vec_shift(fmpz_spoly_t poly, 
+FLINT_DLL void _fmpz_spoly_vec_shift_arr(fmpz* coeffs, fmpz* expons,
     slong start, slong end, slong dist);
+
+FMPZ_SPOLY_INLINE 
+void _fmpz_spoly_vec_shift(fmpz_spoly_t poly, 
+    slong start, slong end, slong dist)
+{
+    _fmpz_spoly_vec_shift_arr(poly->coeffs, poly->expons, start, end, dist);
+}
 
 FLINT_DLL void _fmpz_spoly_append_si(fmpz_spoly_t poly1, 
     const fmpz_spoly_t poly2, slong c, ulong e);

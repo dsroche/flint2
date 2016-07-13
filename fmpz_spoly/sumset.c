@@ -241,17 +241,21 @@ slong fmpz_spoly_sumset(fmpz ** res, flint_rand_t state,
         fmpz_spoly_bp_interp_eval_t bpi_eval1, bpi_eval2;
         fmpz_mod_poly_t G;
 
-        PTIMER_NEXT(SSTIME, "bp_interp");
+        PTIMER_NEXT(SSTIME, "bp_interp 0");
 
         fmpz_spoly_bp_interp_basis_init(bpi_basis, state, Ss, fmpz_bits(p) + 1, 
                 FLINT_BIT_COUNT(FLINT_MIN(p1len, p2len)));
+        PTIMER_NEXT(SSTIME, "bp_interp 1");
         fmpz_spoly_bp_interp_eval_init(bpi_eval1, bpi_basis);
         fmpz_spoly_bp_interp_eval_init(bpi_eval2, bpi_basis);
+        PTIMER_NEXT(SSTIME, "bp_interp 2");
         fmpz_spoly_bp_interp_eval(bpi_eval1, f_1);
         fmpz_spoly_bp_interp_eval(bpi_eval2, g_1);
+        PTIMER_NEXT(SSTIME, "bp_interp 3");
         fmpz_spoly_bp_interp_mul(bpi_eval1, bpi_eval1, bpi_eval2);
 
         fmpz_mod_poly_init(G, bpi_basis->q);
+        PTIMER_NEXT(SSTIME, "bp_interp 4");
         fmpz_mod_poly_minpoly(G, bpi_eval1->evals, bpi_basis->length);
 
         Ss = fmpz_mod_poly_degree(G);
