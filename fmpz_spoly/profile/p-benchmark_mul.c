@@ -61,6 +61,28 @@ void _fmpz_spoly_mvar_rekron(const fmpz_spoly_mvar_t poly, ulong kshift)
     }
 }
 
+void fmpz_spoly_mvar_get_coeff(fmpz_t c, const fmpz_spoly_mvar_t poly, const fmpz* expons)
+{
+    fmpz_t e;
+    slong i;
+
+    i = _fmpz_vec_height_index(expons, poly->vars);
+    if (fmpz_cmp(expons + i, poly->maxdeg) > 0)
+    {
+        fmpz_zero(c);
+        return;
+    }
+    
+    fmpz_init_set(e, expons + 0);
+    for (i = 1; i < poly->vars; ++i)
+    {
+        fmpz_mul_2exp(e, e, poly->kshift);
+        fmpz_add(e, e, expons + i);
+    }
+    fmpz_spoly_get_coeff(c, poly->poly, e);
+    fmpz_clear(e);
+}
+
 void fmpz_spoly_mvar_set_coeff(fmpz_spoly_mvar_t poly, const fmpz_t c, const fmpz* expons)
 {
     fmpz_t e;
@@ -128,10 +150,11 @@ void fmpz_spoly_mvar_set(fmpz_spoly_mvar_t res, const fmpz_spoly_mvar_t poly)
 {
     res->vars = poly->vars;
     res->kshift = poly->kshift;
+    fmpz_set(res->maxdeg, poly->maxdeg);
     fmpz_spoly_set(res->poly, poly->poly);
 }
 
-#define NUMEX 5
+#define NUMEX 6
 #define MINWALL 1000
 
 int main(int argc, char** argv)
@@ -143,6 +166,8 @@ int main(int argc, char** argv)
     fmpz_spoly_mvar_struct res_OS[NUMEX];
     double heapT[NUMEX], OST[NUMEX];
     const char* names[NUMEX];
+    slong interms[NUMEX];
+    slong outerms[NUMEX];
     timeit_t timer;
     slong i, j, l, loops, vars;
     fmpz_t degree, c;
@@ -157,6 +182,48 @@ int main(int argc, char** argv)
     flint_printf("Generating inputs..."); fflush(stdout);
 
     i = 0;
+
+
+    /***************/ names[i] = "$f_6 (f_6 + 1)$";
+    vars = 2;
+    fmpz_set_ui(degree, UWORD(3000));
+    fmpz_spoly_mvar_init2(tpoly, vars, degree);
+    fmpz_spoly_mvar_init2(f + i, vars, degree);
+    fmpz_spoly_mvar_init2(g + i, vars, degree);
+    fmpz_spoly_mvar_init2(res_heaps + i, vars, degree);
+    fmpz_spoly_mvar_init2(res_OS + i, vars, degree);
+
+    _fmpz_vec_zero(expons, vars);
+    fmpz_set_si(c, WORD(3));
+    fmpz_spoly_mvar_set_coeff(tpoly, c, expons);
+
+    _fmpz_vec_zero(expons, vars); fmpz_set_ui(expons + 0, UWORD(11));
+    fmpz_one(c);
+    fmpz_spoly_mvar_set_coeff(tpoly, c, expons);
+
+    _fmpz_vec_zero(expons, vars); fmpz_set_ui(expons + 1, UWORD(13));
+    fmpz_one(c);
+    fmpz_spoly_mvar_set_coeff(tpoly, c, expons);
+
+    fmpz_spoly_mvar_set(f + i, tpoly);
+    for (j = 1; j < 100; ++j)
+    {
+        fmpz_spoly_mvar_mul_heaps(f + i, f + i, tpoly);
+    }
+
+    _fmpz_vec_zero(expons, vars);
+    fmpz_set_ui(c, UWORD(2));
+    fmpz_spoly_mvar_set_coeff(f + i, c, expons);
+
+    fmpz_spoly_mvar_set(g + i, f + i);
+    _fmpz_vec_zero(expons, vars);
+    fmpz_spoly_mvar_get_coeff(c, f + i, expons);
+    fmpz_add_ui(c, c, UWORD(1));
+    fmpz_spoly_mvar_set_coeff(g + i, c, expons);
+
+    fmpz_spoly_mvar_clear(tpoly);
+    ++i;
+
     /***************/ names[i] = "$f_1 (f_1 + 1)$";
     vars = 3;
     fmpz_set_ui(degree, UWORD(40));
@@ -198,9 +265,9 @@ int main(int argc, char** argv)
     fmpz_spoly_mvar_set_coeff(g + i, c, expons);
 
     fmpz_spoly_mvar_clear(tpoly);
+    ++i;
 
 
-    i = 1;
     /***************/ names[i] = "$f_2 (f_2 + 1)$";
     vars = 3;
     fmpz_set_ui(degree, UWORD(80));
@@ -242,9 +309,9 @@ int main(int argc, char** argv)
     fmpz_spoly_mvar_set_coeff(g + i, c, expons);
 
     fmpz_spoly_mvar_clear(tpoly);
+    ++i;
 
 
-    i = 2;
     /***************/ names[i] = "$f_3 (f_3 + 1)$";
     vars = 3;
     fmpz_set_ui(degree, UWORD(60));
@@ -286,9 +353,9 @@ int main(int argc, char** argv)
     fmpz_spoly_mvar_set_coeff(g + i, c, expons);
 
     fmpz_spoly_mvar_clear(tpoly);
+    ++i;
 
 
-    i = 3;
     /***************/ names[i] = "$f_4 (f_4 + 1)$";
     vars = 4;
     fmpz_set_ui(degree, UWORD(40));
@@ -334,9 +401,9 @@ int main(int argc, char** argv)
     fmpz_spoly_mvar_set_coeff(g + i, c, expons);
 
     fmpz_spoly_mvar_clear(tpoly);
+    ++i;
 
 
-    i = 4;
     /***************/ names[i] = "$f_5 g_5$";
     vars = 5;
     fmpz_set_ui(degree, UWORD(40));
@@ -418,6 +485,7 @@ int main(int argc, char** argv)
     fmpz_spoly_mvar_set_coeff(g + i, c, expons);
 
     fmpz_spoly_mvar_clear(tpoly);
+    ++i;
 
 
     flint_printf("\n");
@@ -473,15 +541,17 @@ int main(int argc, char** argv)
         OST[i] = ((double)timer->wall) / loops / 1000;
 
         /* show times */
+        interms[i] = fmpz_spoly_mvar_terms(f + i);
+        outerms[i] = fmpz_spoly_mvar_terms(res_heaps + i);
         flint_printf(" interms: %wd, outerms: %wd, heaps: %.3lf, OS: %.3lf\n", 
-            fmpz_spoly_mvar_terms(f + i), fmpz_spoly_mvar_terms(res_heaps + i), 
-            heapT[i], OST[i]);
+            interms[i], outerms[i], heapT[i], OST[i]);
     }
 
-    flint_printf("\n\\begin{tabular}{l|r|r}\nExample & Heaps & OS \\\\ \\hline\n");
+    flint_printf("\n\\begin{tabular}{l|r|r}\nExample & Input terms & Output terms & Heaps & Output-sensitive \\\\ \\hline\n");
     for (i = 0; i < NUMEX; ++i)
     {
-        flint_printf("  %s & %.3lf & %.3lf \\\\\n");
+        flint_printf("  %s & %wd & %wd & %.3lf & %.3lf \\\\\n",
+            names[i], interms[i], outerms[i], heapT[i], OST[i]);
     }
     flint_printf("\\end{tabular}\n");
 
