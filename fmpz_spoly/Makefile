@@ -3,9 +3,10 @@ LD_PRE=LD_LIBRARY_PATH=..
 
 CC=gcc
 
-WARNS=-ansi -pedantic -Wall -Wextra -Werror -Wno-unused-parameter -fmax-errors=4 #-fopenmp
-CFLAGS=$(WARNS) -DWANT_ASSERT=1 -mpopcnt -ggdb -O0 -gdwarf
-CFLAGS_PROF=$(WARNS) -Wno-unused-parameter -mpopcnt -funroll-loops -O3 -ggdb -gdwarf -fno-omit-frame-pointer
+WARNS=-ansi -pedantic -Wall -Wextra -Werror -Wno-unused-parameter -fmax-errors=4 -fopenmp
+CFLAGS=$(WARNS) -DWANT_ASSERT=1 -mpopcnt -ggdb -O0# -gdwarf
+CFLAGS_PROF=$(WARNS) -Wno-unused-parameter -Wno-unused-but-set-variable -mpopcnt -funroll-loops -fno-omit-frame-pointer -O3
+#CFLAGS_PROF=$(WARNS) -Wno-unused-parameter -mpopcnt -funroll-loops -fno-omit-frame-pointer -ggdb -O0 -DWANT_ASSERT=1 #-O3
 LIBS=-lflint -lmpfr -lgmp -lm
 
 HEADERS=../*.h
