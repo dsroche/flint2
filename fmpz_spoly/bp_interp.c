@@ -233,8 +233,6 @@ int fmpz_spoly_bp_interp(fmpz_spoly_t res, const fmpz_spoly_bp_interp_eval_t eva
     slong i, t;
     const fmpz * w = eval->basis->points + 1;
 
-    PTIMER_BEGIN(BPITIME, "initial");
-
     fmpz_spoly_zero(res);
 
     if (eval->basis->length == 0) 
@@ -245,9 +243,8 @@ int fmpz_spoly_bp_interp(fmpz_spoly_t res, const fmpz_spoly_bp_interp_eval_t eva
     /* Berlekamp-Massey to discover Prony polynomial */
 
     fmpz_mod_poly_init(G, eval->basis->q);
-    PTIMER_NEXT(BPITIME, "minpoly");
+    PTIMER_BEGIN(BPITIME, "minpoly");
     fmpz_mod_poly_minpoly(G, eval->evals, eval->basis->length);
-    PTIMER_NEXT(BPITIME, "minpoly over");
 
     t = fmpz_mod_poly_degree(G);
     if (t > eval->basis->length / 2)
@@ -280,13 +277,12 @@ int fmpz_spoly_bp_interp(fmpz_spoly_t res, const fmpz_spoly_bp_interp_eval_t eva
             roots, eval->evals, t, eval->basis->q);
 
     /* sort terms and remove zero coeffs */
-    PTIMER_NEXT(BPITIME, "end");
+    PTIMER_END(BPITIME);
     _fmpz_spoly_normalise(res);
 
     /* clean-up */
     _fmpz_vec_clear(roots, t);
     fmpz_mod_poly_clear(G);
 
-    PTIMER_END(BPITIME);
     return 1;
 }
