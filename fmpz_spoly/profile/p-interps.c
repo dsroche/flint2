@@ -10,9 +10,10 @@
 
 #define MINWALL (1000)
 #define DO_BOT (0)
-#define DO_BPI (0)
-#define DO_KAL (0)
+#define DO_KAL (1)
+#define DO_BPI (1)
 #define DO_GS (1)
+#define DO_AGR (1)
 #define DO_SPI (1)
 
 #include "fmpz_spoly/ptimer.h"
@@ -648,6 +649,182 @@ void gs(fmpz_spoly_t out, flint_rand_t state, const fmpz_spoly_t in, ulong cbits
 
 /* arnold, giesbrecht, roche */
 
+typedef struct {
+    fmpz* coeffs;
+    ulong expon;
+    ulong p;
+    slong len;
+} agr_image;
+
+int agr_image_cmp(const void* a, const void* b)
+{
+    agr_image* ia = (agr_image*) a;
+    agr_image* ib = (agr_image*) b;
+    slong i;
+    FLINT_ASSERT(ia->len == ib->len);
+    for (i = 0; i < ia->len; ++i)
+    {
+        int res = fmpz_cmp(ia->coeffs + i, ib->coeffs + i);
+        if (res < 0) return -1;
+        else if (res > 0) return 1;
+    }
+    return 0;
+}
+
+void fmpz_spoly_rem_cyc_bigmod_diverse(fmpz_mod_poly_t res, 
+    const fmpz_spoly_t poly, const fmpz_t a, ulong e, const fmpz_t q)
+{
+    slong i;
+    fmpz_t resc;
+    fmpz_init(resc);
+
+    FLINT_ASSERT(fmpz_equal(&res->p, q));
+    fmpz_mod_poly_fit_length(res, e);
+
+    _fmpz_vec_zero(res->coeffs, e);
+
+    for (i=0; i < poly->length; ++i)
+    {
+        ulong rese = fmpz_fdiv_ui(poly->expons + i, e);
+        fmpz_powm(resc, a, poly->expons + i, q);
+        fmpz_mul(resc, resc, poly->coeffs + i);
+        fmpz_add(resc, resc, res->coeffs + rese);
+        fmpz_mod(res->coeffs + rese, resc, q);
+    }
+    fmpz_clear(resc);
+
+    _fmpz_mod_poly_set_length(res, e);
+    _fmpz_mod_poly_normalise(res);
+}
+
+void agr(fmpz_spoly_t out, flint_rand_t state, const fmpz_spoly_t in, ulong cbits)
+{
+    fmpz_t q;
+    fmpz* A;
+    ulong p;
+    ulong pbits;
+    slong m, s;
+    slong T = fmpz_spoly_terms(in);
+    slong i, j, k;
+    agr_image* images;
+    slong imglen, imgalloc;
+    fmpz_mod_poly_struct* evals;
+    int any;
+    mp_ptr primes, eimgs;
+    fmpz_t expon;
+
+    fmpz_init(q);
+    fmpz_randprime(q, state, FLINT_MAX(fmpz_bits(fmpz_spoly_degree_ptr(in)), cbits + 1) + 1, 0);
+
+    m = FLINT_MAX(6, (slong)ceil(2.0*log(2.0)*fmpz_bits(fmpz_spoly_degree_ptr(in))));
+    m = FLINT_MAX(m, (slong)((25.0/8.0) * log(4.0*T)) + 1);
+    s = 2 + (slong)(log(40.0) + 2.0*log(m) + 2.0*log(T));
+    pbits = FLINT_BIT_COUNT(FLINT_MAX(80,
+        1 + FLINT_MAX((slong)((95.0/3.0)*(T-1)*log(2.0)*fmpz_bits(fmpz_spoly_degree_ptr(in))),
+                      (slong)((10.0/3.0)*m*log(m)))));
+
+    A = _fmpz_vec_init(s);
+    fmpz_one(A + 0);
+    for (i = 1; i < s; ++i)
+    {
+        do 
+        {
+            fmpz_randm(A + i, state, q);
+        }
+        while (fmpz_is_zero(A + i));
+    }
+
+    imgalloc = 2 * T * m;
+    images = flint_calloc(imgalloc, sizeof *images);
+    imglen = 0;
+    for (i = 0; i < imgalloc; ++i)
+        images[i].coeffs = _fmpz_vec_init(s);
+
+    evals = flint_malloc(s * sizeof *evals);
+
+    for (i = 0; i < m; ++i)
+    {
+        p = n_randprime(state, pbits, 0);
+        for (j = 0; j < s; ++j)
+        {
+            fmpz_mod_poly_init(evals + j, q);
+            fmpz_spoly_rem_cyc_bigmod_diverse(evals + j,
+                in, A + j, p, q);
+        }
+        for (j = 0; (ulong)j < p; ++j)
+        {
+            FLINT_ASSERT(imglen < imgalloc);
+            any = 0;
+            for (k = 0; k < s; ++k)
+            {
+                fmpz_mod_poly_get_coeff_fmpz(images[imglen].coeffs + k, evals + k, j);
+                if (!fmpz_is_zero(images[imglen].coeffs + k))
+                    any = 1;
+            }
+            if (any)
+            {
+                images[imglen].expon = j;
+                images[imglen].p = p;
+                images[imglen].len = s;
+                ++imglen;
+            }
+        }
+        for (j = 0; j < s; ++j)
+        {
+            fmpz_mod_poly_clear(evals + j);
+        }
+    }
+
+    flint_free(evals);
+
+    qsort(images, imglen, sizeof *images, agr_image_cmp);
+
+    k = 1 + (fmpz_bits(fmpz_spoly_degree_ptr(in)) - 1) / (pbits - 1);
+    primes = flint_malloc(k * sizeof *primes);
+    eimgs = flint_malloc(k * sizeof *eimgs);
+    fmpz_init(expon);
+
+    fmpz_spoly_zero(out);
+    i = 0;
+    while (i + k - 1 < imglen)
+    {
+        slong nexti;
+        for (nexti = i + 1; nexti < imglen && agr_image_cmp(images + i, images + nexti) == 0; ++nexti);
+        if (nexti - i >= k)
+        {
+            fmpz_comb_t comb;
+            fmpz_comb_temp_t tc;
+            for (j = 0; j < k; ++j)
+                primes[j] = images[i + j].p;
+            fmpz_comb_init(comb, primes, k);
+            fmpz_comb_temp_init(tc, comb);
+            for (j = 0; j < k; ++j)
+                eimgs[j] = images[i + j].expon;
+            fmpz_multi_CRT_ui(expon, eimgs, comb, tc, 0);
+            fmpz_spoly_set_coeff(out, images[i].coeffs + 0, expon);
+            fmpz_comb_temp_clear(tc);
+            fmpz_comb_clear(comb);
+        }
+        i = nexti;
+    }
+    flint_free(primes);
+    flint_free(eimgs);
+
+    fmpz_fdiv_q_ui(expon, q, UWORD(2));
+    for (i = 0; i < out->length; ++i)
+    {
+        if (fmpz_cmp(out->coeffs + i, expon) > 0)
+            fmpz_sub(out->coeffs + i, out->coeffs + i, q);
+    }
+
+    fmpz_clear(expon);
+    fmpz_clear(q);
+    for (i = 0; i < imgalloc; ++i)
+        _fmpz_vec_clear(images[i].coeffs, s);
+    flint_free(images);
+    _fmpz_vec_clear(A, s);
+}
+
 /* sp_interp */
 
 void spi(fmpz_spoly_t out, flint_rand_t state, const fmpz_spoly_t in, ulong cbits)
@@ -873,6 +1050,57 @@ int main(int argc, char** argv)
             for (l = 0; l < loops; ++l)
             {
                 gs(res, state, orig, hbits);
+            }
+            timeit_stop(timer);
+
+            if (timer->wall >= MINWALL) 
+                break;
+            else
+                loops *= 2;
+        }
+        PTIMER_DISABLE(BPITIME);
+
+        flint_printf("complete...");
+        fflush(stdout);
+
+        if (fmpz_spoly_equal(res, orig))
+        {
+            flint_printf("check passed.\n");
+        }
+        else
+        {
+            flint_printf("check FAILED.\n");
+            retval = 1;
+        }
+
+        flint_printf("\n");
+        flint_printf("loops: %wd\n", loops);
+        ctime = ((double)timer->cpu) / loops;
+        flint_printf("  cpu: %lf ms avg\n", ctime);
+        wtime = ((double)timer->wall) / loops;
+        flint_printf(" wall: %lf ms avg\n", wtime);
+
+        /* 
+        PTIMER_PRINT(BPITIME, loops);
+        */
+    }
+        
+    if (DO_AGR) {
+        flint_printf("\n========== ARNOLD, GIESBRECHT, ROCHE (SMALL PRIMES) ==============\n");
+        
+        loops = 1;
+        PTIMER_ENABLE(BPITIME);
+
+        flint_printf("\nrunning...");
+        fflush(stdout);
+
+        while (1)
+        {
+            PTIMER_CLEAR(BPITIME);
+            timeit_start(timer);
+            for (l = 0; l < loops; ++l)
+            {
+                agr(res, state, orig, hbits);
             }
             timeit_stop(timer);
 
