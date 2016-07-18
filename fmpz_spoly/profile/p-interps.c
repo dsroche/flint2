@@ -10,13 +10,57 @@
 
 #define MINWALL (1000)
 #define DO_BOT (0)
-#define DO_BPI (1)
+#define DO_BPI (0)
+#define DO_KAL (0)
+#define DO_GS (1)
 #define DO_SPI (1)
 
 #include "fmpz_spoly/ptimer.h"
 PTIMER_DECLARE(BOTTIME, 10)
+PTIMER_DECLARE(KALTIME, 10)
 
 PTIMER_EXTERN(BPITIME)
+
+void fmpz_disclog(fmpz_t res, const fmpz_t a, const fmpz_t w, const fmpz_t winv, ulong k, const fmpz_t p)
+{
+    fmpz_t wpow, apow, arem, wipow;
+    ulong shift;
+    slong i;
+
+    fmpz_init_set(wpow, w);
+    fmpz_init_set(wipow, winv);
+    fmpz_init_set(arem, a);
+    fmpz_init(apow);
+
+    fmpz_zero(res);
+    for (shift = 0; shift < k; ++shift)
+    {
+        fmpz_set(apow, arem);
+        for (i = 1; (ulong)i < k - shift; ++i)
+        {
+            fmpz_mul(apow, apow, apow);
+            fmpz_mod(apow, apow, p);
+        }
+        if (fmpz_is_one(apow))
+        {
+        }
+        else
+        {
+            fmpz_setbit(res, shift);
+            fmpz_mul(arem, arem, wipow);
+            fmpz_mod(arem, arem, p);
+        }
+        fmpz_mul(wpow, wpow, wpow);
+        fmpz_mod(wpow, wpow, p);
+        fmpz_mul(wipow, wipow, wipow);
+        fmpz_mod(wipow, wipow, p);
+    }
+
+    fmpz_clear(wpow);
+    fmpz_clear(wipow);
+    fmpz_clear(arem);
+    fmpz_clear(apow);
+}
 
 void fmpz_poly_simple_roots(fmpz* roots, flint_rand_t state, const fmpz_poly_t poly, const fmpz_t maxroot)
 {
@@ -388,9 +432,109 @@ void bot(fmpz_spoly_t out, flint_rand_t state, const mvp_t in, const fmpz_t deg,
     fmpz_clear(tempint);
 }
 
-/* ky89 */
+/* Kaltofen */
 
-/* kal2010 */
+void kal(fmpz_spoly_t out, flint_rand_t state, const fmpz_spoly_t in, ulong cbits)
+{
+    fmpz_mod_poly_t G;
+    fmpz_mod_poly_factor_t gfac;
+    fmpz * roots;
+    slong i, t;
+    fmpz_t temp, winv;
+
+    fmpz_spoly_bp_interp_basis_t basis;
+    fmpz_spoly_bp_interp_eval_t eval;
+
+    fmpz_spoly_bp_interp_basis_init(basis, state, fmpz_spoly_terms(in), fmpz_bits(fmpz_spoly_degree_ptr(in)), cbits);
+    fmpz_spoly_bp_interp_eval_init(eval, basis);
+    
+    fmpz_spoly_bp_interp_eval(eval, in);
+
+    fmpz_spoly_zero(out);
+
+    if (eval->basis->length == 0) 
+    {
+        return;
+    }
+
+    /* Berlekamp-Massey to discover Prony polynomial */
+
+    fmpz_mod_poly_init(G, eval->basis->q);
+    PTIMER_BEGIN(KALTIME, "minpoly");
+    fmpz_mod_poly_minpoly(G, eval->evals, eval->basis->length);
+
+    t = fmpz_mod_poly_degree(G);
+    if (t > eval->basis->length / 2)
+    {
+        /* sparsity estimate was too low */
+        fmpz_mod_poly_clear(G);
+        return;
+    }
+
+    _fmpz_spoly_reserve(out, t);
+    for (i=out->length; i<t; ++i)
+    {
+        fmpz_init(out->coeffs + i);
+        fmpz_init(out->expons + i);
+    }
+    _fmpz_spoly_set_length(out, t);
+
+    /* find roots of Prony polynomial, and their orders */
+
+    PTIMER_NEXT(KALTIME, "root finding");
+    fmpz_mod_poly_factor_init(gfac);
+    fmpz_mod_poly_factor_fit_length(gfac, t);
+    fmpz_mod_poly_factor_equal_deg(gfac, G, 1);
+
+    FLINT_ASSERT(gfac->num == t);
+    roots = _fmpz_vec_init(t);
+    for (i = 0; i < t; ++i)
+    {
+        FLINT_ASSERT(gfac->exp[i] == 1);
+        FLINT_ASSERT(fmpz_mod_poly_length(gfac->poly + i) == 2);
+        if (fmpz_is_zero(gfac->poly[i].coeffs + 0))
+            fmpz_zero(roots + i);
+        else
+            fmpz_sub(roots + i, &G->p, gfac->poly[i].coeffs + 0);
+    }
+
+    fmpz_mod_poly_factor_clear(gfac);
+
+    PTIMER_NEXT(KALTIME, "discrete logs");
+
+    fmpz_init(temp);
+    fmpz_init(winv);
+    fmpz_setbit(temp, eval->basis->log2_order);
+    fmpz_sub_ui(temp, temp, UWORD(1));
+    fmpz_powm(winv, eval->basis->points + 1, temp, eval->basis->q);
+
+    for (i = 0; i < t; ++i)
+    {
+        fmpz_disclog(out->expons + i, 
+            roots + i, eval->basis->points + 1, winv, eval->basis->log2_order, eval->basis->q);
+    }
+
+    fmpz_clear(temp);
+    fmpz_clear(winv);
+
+    /* solve transposed Vandermode to get coeffs */
+    /* Varndermonde(roots)^T * x = evals, truncated to length t */
+
+    PTIMER_NEXT(KALTIME, "transposed vandermonde");
+    _fmpz_spoly_transp_vandermonde_inv(out->coeffs,
+            roots, eval->evals, t, eval->basis->q);
+
+    /* sort terms and remove zero coeffs */
+    PTIMER_END(KALTIME);
+    _fmpz_spoly_normalise(out);
+
+    /* clean-up */
+    _fmpz_vec_clear(roots, t);
+    fmpz_mod_poly_clear(G);
+
+    fmpz_spoly_bp_interp_eval_clear(eval);
+    fmpz_spoly_bp_interp_basis_clear(basis);
+}
 
 /* bp_interp */
 
@@ -410,6 +554,97 @@ void bpi(fmpz_spoly_t out, flint_rand_t state, const fmpz_spoly_t in, ulong cbit
 }
 
 /* garg & schost */
+
+void gs(fmpz_spoly_t out, flint_rand_t state, const fmpz_spoly_t in, ulong cbits)
+{
+    fmpz_t Q;
+    slong T = fmpz_spoly_terms(in);
+    fmpz_t D;
+    fmpz_t temp;
+    slong i, j;
+    ulong pbits;
+    fmpz_poly_t eval, X;
+    nmod_poly_t Xi;
+    fmpz_t M;
+    ulong p;
+    slong maxt = 0;
+    mp_ptr roots;
+
+    fmpz_init(D);
+    fmpz_spoly_degree(D, in);
+    fmpz_init_set_ui(Q, UWORD(2));
+    fmpz_init(temp);
+
+    for (i = -T + 2; i <= 1; ++i)
+    {
+        fmpz_sub_ui(temp, D, T);
+        fmpz_add_ui(temp, temp, (i + T));
+        fmpz_mul(Q, Q, temp);
+    }
+
+    pbits = FLINT_BIT_COUNT((ulong)((10.0 * log(2) / 6) * (double)T * (double)(T-1) * fmpz_bits(D)));
+
+    fmpz_init_set_ui(M, UWORD(1));
+    fmpz_poly_init(X);
+    fmpz_poly_init(eval);
+    roots = flint_malloc(T * sizeof *roots);
+
+    while (fmpz_cmp(M, Q) <= 0)
+    {
+        do
+        {
+            p = n_randprime(state, pbits, 0);
+        } while (fmpz_divisible_si(M, (slong)p));
+        fmpz_spoly_rem_cyc_dense(eval, in, p);
+        for (i = 0, j = 0; i < fmpz_poly_length(eval); ++i)
+        {
+            if (! fmpz_is_zero(fmpz_poly_get_coeff_ptr(eval, i)))
+            {
+                FLINT_ASSERT(j < T);
+                roots[j] = (ulong) i;
+                ++j;
+            }
+        }
+        if (j < maxt)
+        {
+            continue;
+        }
+        else if (j > maxt)
+        {
+            maxt = j;
+            fmpz_poly_zero(X);
+            fmpz_set_ui(M, UWORD(1));
+        }
+
+        nmod_poly_init(Xi, p);
+        nmod_poly_product_roots_nmod_vec(Xi, roots, j);
+        fmpz_poly_CRT_ui(X, X, M, Xi, 1);
+        fmpz_mul_ui(M, M, p);
+        nmod_poly_clear(Xi);
+    }
+
+    flint_free(roots);
+
+    _fmpz_spoly_reserve(out, maxt);
+    fmpz_poly_simple_roots(out->expons, state, X, D);
+    
+    for (i = 0; i < maxt; ++i)
+    {
+        fmpz_poly_get_coeff_fmpz(out->coeffs + i,
+            eval, fmpz_fdiv_ui(out->expons + i, p));
+        FLINT_ASSERT(! fmpz_is_zero(out->coeffs + i));
+    }
+
+    _fmpz_spoly_set_length(out, maxt);
+    _fmpz_spoly_normalise(out);
+
+    fmpz_poly_clear(X);
+    fmpz_poly_clear(eval);
+    fmpz_clear(M);
+    fmpz_clear(temp);
+    fmpz_clear(Q);
+    fmpz_clear(D);
+}
 
 /* arnold, giesbrecht, roche */
 
@@ -523,6 +758,55 @@ int main(int argc, char** argv)
 
         PTIMER_PRINT(BOTTIME, loops);
     }
+
+    if (DO_KAL) {
+        flint_printf("\n========== BIG PRIME WITH KALTOFEN'S IMPROVEMENTS ================\n");
+        
+        loops = 1;
+        PTIMER_ENABLE(KALTIME);
+
+        flint_printf("\nrunning...");
+        fflush(stdout);
+
+        while (1)
+        {
+            PTIMER_CLEAR(KALTIME);
+            timeit_start(timer);
+            for (l = 0; l < loops; ++l)
+            {
+                kal(res, state, orig, hbits);
+            }
+            timeit_stop(timer);
+
+            if (timer->wall >= MINWALL) 
+                break;
+            else
+                loops *= 2;
+        }
+        PTIMER_DISABLE(KALTIME);
+
+        flint_printf("complete...");
+        fflush(stdout);
+
+        if (fmpz_spoly_equal(res, orig))
+        {
+            flint_printf("check passed.\n");
+        }
+        else
+        {
+            flint_printf("check FAILED.\n");
+            retval = 1;
+        }
+
+        flint_printf("\n");
+        flint_printf("loops: %wd\n", loops);
+        ctime = ((double)timer->cpu) / loops;
+        flint_printf("  cpu: %lf ms avg\n", ctime);
+        wtime = ((double)timer->wall) / loops;
+        flint_printf(" wall: %lf ms avg\n", wtime);
+
+        PTIMER_PRINT(KALTIME, loops);
+    }
         
     if (DO_BPI) {
         flint_printf("\n========== BIG PRIME WITH COMBINED ROOT FINDING AND LOGS =========\n");
@@ -571,6 +855,57 @@ int main(int argc, char** argv)
         flint_printf(" wall: %lf ms avg\n", wtime);
 
         PTIMER_PRINT(BPITIME, loops);
+    }
+        
+    if (DO_GS) {
+        flint_printf("\n========== GARG & SCHOST (SMALL PRIMES) ==========================\n");
+        
+        loops = 1;
+        PTIMER_ENABLE(BPITIME);
+
+        flint_printf("\nrunning...");
+        fflush(stdout);
+
+        while (1)
+        {
+            PTIMER_CLEAR(BPITIME);
+            timeit_start(timer);
+            for (l = 0; l < loops; ++l)
+            {
+                gs(res, state, orig, hbits);
+            }
+            timeit_stop(timer);
+
+            if (timer->wall >= MINWALL) 
+                break;
+            else
+                loops *= 2;
+        }
+        PTIMER_DISABLE(BPITIME);
+
+        flint_printf("complete...");
+        fflush(stdout);
+
+        if (fmpz_spoly_equal(res, orig))
+        {
+            flint_printf("check passed.\n");
+        }
+        else
+        {
+            flint_printf("check FAILED.\n");
+            retval = 1;
+        }
+
+        flint_printf("\n");
+        flint_printf("loops: %wd\n", loops);
+        ctime = ((double)timer->cpu) / loops;
+        flint_printf("  cpu: %lf ms avg\n", ctime);
+        wtime = ((double)timer->wall) / loops;
+        flint_printf(" wall: %lf ms avg\n", wtime);
+
+        /* 
+        PTIMER_PRINT(BPITIME, loops);
+        */
     }
         
     if (DO_SPI) {
