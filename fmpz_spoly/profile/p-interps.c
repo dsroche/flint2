@@ -9,7 +9,7 @@
 #include "profiler.h"
 
 #define MINWALL (1000)
-#define DO_BOT (0)
+#define DO_BOT (1)
 #define DO_KAL (1)
 #define DO_BPI (1)
 #define DO_GS (1)
@@ -19,6 +19,9 @@
 #include "fmpz_spoly/ptimer.h"
 PTIMER_DECLARE(BOTTIME, 10)
 PTIMER_DECLARE(KALTIME, 10)
+PTIMER_DECLARE(GSTIME, 4)
+PTIMER_DECLARE(AGRTIME, 4)
+PTIMER_DECLARE(SPITIME, 5)
 
 PTIMER_EXTERN(BPITIME)
 
@@ -567,7 +570,7 @@ void gs(fmpz_spoly_t out, flint_rand_t state, const fmpz_spoly_t in, ulong cbits
     fmpz_poly_t eval, X;
     nmod_poly_t Xi;
     fmpz_t M;
-    ulong p;
+    ulong p = 0;
     slong maxt = 0;
     mp_ptr roots;
 
@@ -590,6 +593,7 @@ void gs(fmpz_spoly_t out, flint_rand_t state, const fmpz_spoly_t in, ulong cbits
     fmpz_poly_init(eval);
     roots = flint_malloc(T * sizeof *roots);
 
+    PTIMER_BEGIN(GSTIME, "evaluations");
     while (fmpz_cmp(M, Q) <= 0)
     {
         do
@@ -626,6 +630,7 @@ void gs(fmpz_spoly_t out, flint_rand_t state, const fmpz_spoly_t in, ulong cbits
 
     flint_free(roots);
 
+    PTIMER_NEXT(GSTIME, "root finding");
     _fmpz_spoly_reserve(out, maxt);
     fmpz_poly_simple_roots(out->expons, state, X, D);
     
@@ -635,6 +640,8 @@ void gs(fmpz_spoly_t out, flint_rand_t state, const fmpz_spoly_t in, ulong cbits
             eval, fmpz_fdiv_ui(out->expons + i, p));
         FLINT_ASSERT(! fmpz_is_zero(out->coeffs + i));
     }
+
+    PTIMER_END(GSTIME);
 
     _fmpz_spoly_set_length(out, maxt);
     _fmpz_spoly_normalise(out);
@@ -742,6 +749,7 @@ void agr(fmpz_spoly_t out, flint_rand_t state, const fmpz_spoly_t in, ulong cbit
 
     evals = flint_malloc(s * sizeof *evals);
 
+    PTIMER_BEGIN(AGRTIME, "evaluations");
     for (i = 0; i < m; ++i)
     {
         p = n_randprime(state, pbits, 0);
@@ -776,6 +784,8 @@ void agr(fmpz_spoly_t out, flint_rand_t state, const fmpz_spoly_t in, ulong cbit
     }
 
     flint_free(evals);
+
+    PTIMER_NEXT(AGRTIME, "computation");
 
     qsort(images, imglen, sizeof *images, agr_image_cmp);
 
@@ -817,6 +827,8 @@ void agr(fmpz_spoly_t out, flint_rand_t state, const fmpz_spoly_t in, ulong cbit
             fmpz_sub(out->coeffs + i, out->coeffs + i, q);
     }
 
+    PTIMER_END(AGRTIME);
+
     fmpz_clear(expon);
     fmpz_clear(q);
     for (i = 0; i < imgalloc; ++i)
@@ -835,8 +847,11 @@ void spi(fmpz_spoly_t out, flint_rand_t state, const fmpz_spoly_t in, ulong cbit
     fmpz_spoly_sp_interp_basis_init(basis, state, fmpz_spoly_terms(in), fmpz_bits(fmpz_spoly_degree_ptr(in)), cbits);
     fmpz_spoly_sp_interp_eval_init(eval, basis);
     
+    PTIMER_BEGIN(SPITIME, "evaluation");
     fmpz_spoly_sp_interp_eval(eval, in);
+    PTIMER_NEXT(SPITIME, "computation");
     fmpz_spoly_sp_interp(out, eval);
+    PTIMER_END(SPITIME);
 
     fmpz_spoly_sp_interp_eval_clear(eval);
     fmpz_spoly_sp_interp_basis_clear(basis);
@@ -1038,14 +1053,14 @@ int main(int argc, char** argv)
         flint_printf("\n========== GARG & SCHOST (SMALL PRIMES) ==========================\n");
         
         loops = 1;
-        PTIMER_ENABLE(BPITIME);
+        PTIMER_ENABLE(GSTIME);
 
         flint_printf("\nrunning...");
         fflush(stdout);
 
         while (1)
         {
-            PTIMER_CLEAR(BPITIME);
+            PTIMER_CLEAR(GSTIME);
             timeit_start(timer);
             for (l = 0; l < loops; ++l)
             {
@@ -1058,7 +1073,7 @@ int main(int argc, char** argv)
             else
                 loops *= 2;
         }
-        PTIMER_DISABLE(BPITIME);
+        PTIMER_DISABLE(GSTIME);
 
         flint_printf("complete...");
         fflush(stdout);
@@ -1080,23 +1095,21 @@ int main(int argc, char** argv)
         wtime = ((double)timer->wall) / loops;
         flint_printf(" wall: %lf ms avg\n", wtime);
 
-        /* 
-        PTIMER_PRINT(BPITIME, loops);
-        */
+        PTIMER_PRINT(GSTIME, loops);
     }
         
     if (DO_AGR) {
         flint_printf("\n========== ARNOLD, GIESBRECHT, ROCHE (SMALL PRIMES) ==============\n");
         
         loops = 1;
-        PTIMER_ENABLE(BPITIME);
+        PTIMER_ENABLE(AGRTIME);
 
         flint_printf("\nrunning...");
         fflush(stdout);
 
         while (1)
         {
-            PTIMER_CLEAR(BPITIME);
+            PTIMER_CLEAR(AGRTIME);
             timeit_start(timer);
             for (l = 0; l < loops; ++l)
             {
@@ -1109,7 +1122,7 @@ int main(int argc, char** argv)
             else
                 loops *= 2;
         }
-        PTIMER_DISABLE(BPITIME);
+        PTIMER_DISABLE(AGRTIME);
 
         flint_printf("complete...");
         fflush(stdout);
@@ -1131,23 +1144,21 @@ int main(int argc, char** argv)
         wtime = ((double)timer->wall) / loops;
         flint_printf(" wall: %lf ms avg\n", wtime);
 
-        /* 
-        PTIMER_PRINT(BPITIME, loops);
-        */
+        PTIMER_PRINT(AGRTIME, loops);
     }
         
     if (DO_SPI) {
         flint_printf("\n========== DOUBLE SMALL PRIMES WITH CHEATING =====================\n");
         
         loops = 1;
-        PTIMER_ENABLE(BPITIME);
+        PTIMER_ENABLE(SPITIME);
 
         flint_printf("\nrunning...");
         fflush(stdout);
 
         while (1)
         {
-            PTIMER_CLEAR(BPITIME);
+            PTIMER_CLEAR(SPITIME);
             timeit_start(timer);
             for (l = 0; l < loops; ++l)
             {
@@ -1160,7 +1171,7 @@ int main(int argc, char** argv)
             else
                 loops *= 2;
         }
-        PTIMER_DISABLE(BPITIME);
+        PTIMER_DISABLE(SPITIME);
 
         flint_printf("complete...");
         fflush(stdout);
@@ -1182,9 +1193,7 @@ int main(int argc, char** argv)
         wtime = ((double)timer->wall) / loops;
         flint_printf(" wall: %lf ms avg\n", wtime);
 
-        /* 
-        PTIMER_PRINT(BPITIME, loops);
-        */
+        PTIMER_PRINT(SPITIME, loops);
     }
         
     /* clean up */
