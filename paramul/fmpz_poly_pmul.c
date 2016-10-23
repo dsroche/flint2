@@ -74,7 +74,7 @@ void _fmpz_poly_pmul(fmpz* res,
 		mod);
         }
 
-#pragma omp for
+#pragma omp for nowait
         for (i = 0; i < len1 + len2 - 1; ++i)
         {
 	    for (j = 0, k = i; j < numprimes; ++j, k += reslen)
