@@ -2,7 +2,7 @@
    Copyright 1991, 1992, 1993, 1994, 1996, 1997, 1999, 2000, 2001, 2002, 2003,
    2004, 2005 Free Software Foundation, Inc.
 
-   Copyright 2009, 2015 William Hart
+   Copyright 2009, 2015, 2016 William Hart
    Copyright 2011 Fredrik Johansson
 
    This file is free software; you can redistribute it and/or modify
@@ -32,15 +32,27 @@
  extern "C" {
 #endif
 
+/* Undefine to make the ifndef logic below for the fallback 
+   work even if the symbols are already defined (e.g. by givaro).  */
+#undef count_leading_zeros
+#undef count_trailing_zeros
+
 /* x86 : 64 bit */
 #if (GMP_LIMB_BITS == 64 && defined (__amd64__)) 
 
 #define add_sssaaaaaa(sh, sm, sl, ah, am, al, bh, bm, bl)  \
   __asm__ ("addq %8,%q2\n\tadcq %6,%q1\n\tadcq %4,%q0"     \
-       : "=r" (sh), "=r" (sm), "=&r" (sl)                  \
+       : "=r" (sh), "=&r" (sm), "=&r" (sl)                  \
        : "0"  ((mp_limb_t)(ah)), "rme" ((mp_limb_t)(bh)),  \
          "1"  ((mp_limb_t)(am)), "rme" ((mp_limb_t)(bm)),  \
          "2"  ((mp_limb_t)(al)), "rme" ((mp_limb_t)(bl)))  \
+
+#define sub_dddmmmsss(dh, dm, dl, mh, mm, ml, sh, sm, sl)  \
+  __asm__ ("subq %8,%q2\n\tsbbq %6,%q1\n\tsbbq %4,%q0"     \
+       : "=r" (dh), "=&r" (dm), "=&r" (dl)                  \
+       : "0"  ((mp_limb_t)(mh)), "rme" ((mp_limb_t)(sh)),  \
+         "1"  ((mp_limb_t)(mm)), "rme" ((mp_limb_t)(sm)),  \
+         "2"  ((mp_limb_t)(ml)), "rme" ((mp_limb_t)(sl)))  \
 
 #define add_ssaaaa(sh, sl, ah, al, bh, bl)                 \
   __asm__ ("addq %5,%q1\n\tadcq %3,%q0"                    \
@@ -59,13 +71,18 @@
        : "=a" (w0), "=d" (w1)                           \
        : "%0" ((mp_limb_t)(u)), "rm" ((mp_limb_t)(v)))
 
+#define smul_ppmm(w1, w0, u, v)                         \
+  __asm__ ("imulq %3"                                   \
+       : "=a" (w0), "=d" (w1)                           \
+       : "%0" ((mp_limb_t)(u)), "rm" ((mp_limb_t)(v)))
+
 #define udiv_qrnnd(q, r, n1, n0, dx)                                            \
-  __asm__ ("divq %4"                                                            \
+  __asm__ volatile ("divq %4"                                                            \
        : "=a" (q), "=d" (r)                                                     \
        : "0" ((mp_limb_t)(n0)), "1" ((mp_limb_t)(n1)), "rm" ((mp_limb_t)(dx)))
 
 #define sdiv_qrnnd(q, r, n1, n0, dx)                                            \
-  __asm__ ("idivq %4"                                                           \
+  __asm__ volatile ("idivq %4"                                                           \
        : "=a" (q), "=d" (r)                                                     \
        : "0" ((mp_limb_t)(n0)), "1" ((mp_limb_t)(n1)), "rm" ((mp_limb_t)(dx)))
 
@@ -104,6 +121,13 @@
          "1"  ((mp_limb_t)(am)), "g" ((mp_limb_t)(bm)),    \
          "2"  ((mp_limb_t)(al)), "g" ((mp_limb_t)(bl)))    \
 
+#define sub_dddmmmsss(dh, dm, dl, mh, mm, ml, sh, sm, sl)  \
+  __asm__ ("subl %8,%k2\n\tsbbl %6,%k1\n\tsbbl %4,%k0"     \
+       : "=r" (dh), "=r" (dm), "=&r" (dl)                  \
+       : "0"  ((mp_limb_t)(mh)), "g" ((mp_limb_t)(sh)),    \
+         "1"  ((mp_limb_t)(mm)), "g" ((mp_limb_t)(sm)),    \
+         "2"  ((mp_limb_t)(ml)), "g" ((mp_limb_t)(sl)))    \
+
 #define add_ssaaaa(sh, sl, ah, al, bh, bl)               \
   __asm__ ("addl %5,%k1\n\tadcl %3,%k0"                  \
        : "=r" (sh), "=&r" (sl)                           \
@@ -121,13 +145,18 @@
        : "=a" (w0), "=d" (w1)                           \
        : "%0" ((mp_limb_t)(u)), "rm" ((mp_limb_t)(v)))
 
+#define smul_ppmm(w1, w0, u, v)                         \
+  __asm__ ("imull %3"                                   \
+       : "=a" (w0), "=d" (w1)                           \
+       : "%0" ((mp_limb_t)(u)), "rm" ((mp_limb_t)(v)))
+
 #define udiv_qrnnd(q, r, n1, n0, dx)                                            \
-  __asm__ ("divl %4"                                                            \
+  __asm__ volatile ("divl %4"                                                            \
        : "=a" (q), "=d" (r)                                                     \
        : "0" ((mp_limb_t)(n0)), "1" ((mp_limb_t)(n1)), "rm" ((mp_limb_t)(dx)))
 
 #define sdiv_qrnnd(q, r, n1, n0, dx)                                            \
-  __asm__ ("idivl %4"                                                           \
+  __asm__ volatile ("idivl %4"                                                           \
        : "=a" (q), "=d" (r)                                                     \
        : "0" ((mp_limb_t)(n0)), "1" ((mp_limb_t)(n1)), "rm" ((mp_limb_t)(dx)))
 
@@ -334,6 +363,47 @@
 
 #endif
 
+#define sub_dddmmmsss(dh, dm, dl, mh, mm, ml, sh, sm, sl)           \
+  do {                                                              \
+    mp_limb_t __t, __u;                                             \
+    sub_ddmmss(__t, dl, (mp_limb_t) 0, ml, (mp_limb_t) 0, sl);      \
+    sub_ddmmss(__u, dm, (mp_limb_t) 0, mm, (mp_limb_t) 0, sm);      \
+    sub_ddmmss(dh, dm, mh - sh, dm, __u, __t);                      \
+  } while (0)
+
+/* MIPS and ARM - Use clz builtins */
+#if (defined (__mips__) || defined (__arm__))
+
+#ifdef _LONG_LONG_LIMB
+#define count_leading_zeros(count,x)            \
+  do {                                          \
+    FLINT_ASSERT ((x) != 0);                    \
+    (count) = __builtin_clzll (x);              \
+  } while (0)
+#else
+#define count_leading_zeros(count,x)            \
+  do {                                          \
+    FLINT_ASSERT ((x) != 0);                    \
+    (count) = __builtin_clzl (x);               \
+  } while (0)
+#endif
+
+#ifdef _LONG_LONG_LIMB
+#define count_trailing_zeros(count,x)           \
+  do {                                          \
+    FLINT_ASSERT ((x) != 0);                    \
+    (count) = __builtin_ctzll (x);              \
+  } while (0)
+#else
+#define count_trailing_zeros(count,x)           \
+  do {                                          \
+    FLINT_ASSERT ((x) != 0);                    \
+    (count) = __builtin_ctzl (x);               \
+  } while (0)
+#endif
+
+#endif /* MIPS, ARM */
+
 #define udiv_qrnnd_int(q, r, n1, n0, d)                                \
   do {									                                      \
     mp_limb_t __d1, __d0, __q1, __q0, __r1, __r0, __m;			        \
@@ -374,6 +444,7 @@
     (r) = __r0;								                                \
   } while (0)
 
+#ifndef count_leading_zeros
 #define count_leading_zeros(count, x)                        \
   do {									                            \
     mp_limb_t __xr = (x);							                \
@@ -396,9 +467,11 @@
 									                                  \
     (count) = GMP_LIMB_BITS + 1 - __a - __flint_clz_tab[__xr >> __a]; \
   } while (0)
+#endif
 
 #if !(GMP_LIMB_BITS == 64 && defined (__ia64))
 
+#ifndef count_trailing_zeros
 #define count_trailing_zeros(count, x)                 \
   do {									                      \
     mp_limb_t __ctz_x = (x);						          \
@@ -407,6 +480,7 @@
     count_leading_zeros (__ctz_c, __ctz_x & -__ctz_x); \
     (count) = GMP_LIMB_BITS - 1 - __ctz_c;	 \
   } while (0)
+#endif
 
 #endif
 
@@ -486,7 +560,9 @@
 
 #endif /* non x86 fallback code */
 
-#if !(GMP_LIMB_BITS == 32 && defined (__arm__))
+/* smul_ppm is defined previously for 32bit arm and for all x86 */
+#if !( (GMP_LIMB_BITS == 32 && defined (__arm__))                              \
+       || defined (__i386__) || defined (__i486__) || defined(__amd64__))
 
 #define smul_ppmm(w1, w0, u, v)                         \
   do {                                                  \

@@ -121,6 +121,14 @@ FLINT_DLL void TEMPLATE(T, poly_set)(TEMPLATE(T, poly_t) rop, const TEMPLATE(T, 
 FLINT_DLL void TEMPLATE3(T, poly_set, T)(TEMPLATE(T, poly_t) poly, const TEMPLATE(T, t) c,
                           const TEMPLATE(T, ctx_t) ctx);
 
+FLINT_DLL void TEMPLATE(T, poly_set_fmpz_mod_poly)(TEMPLATE(T, poly_t) rop,
+                                                   const fmpz_mod_poly_t op,
+                                                   const TEMPLATE(T, ctx_t) ctx);
+
+FLINT_DLL void TEMPLATE(T, poly_set_nmod_poly)(TEMPLATE(T, poly_t) rop, 
+                                               const nmod_poly_t op,
+                                               const TEMPLATE(T, ctx_t) ctx);
+
 FLINT_DLL void TEMPLATE(T, poly_swap)(TEMPLATE(T, poly_t) op1, TEMPLATE(T, poly_t) op2,
                        const TEMPLATE(T, ctx_t) ctx);
 
@@ -348,6 +356,16 @@ FLINT_DLL void TEMPLATE(T, poly_mul_reorder)(TEMPLATE(T, poly_t) rop,
                               const TEMPLATE(T, poly_t) op2,
                               const TEMPLATE(T, ctx_t) ctx);
 
+FLINT_DLL void _TEMPLATE(T, poly_mul_univariate)(TEMPLATE(T, struct) *rop,
+                          const TEMPLATE(T, struct) *op1, slong len1,
+                          const TEMPLATE(T, struct) *op2, slong len2,
+                          const TEMPLATE(T, ctx_t) ctx);
+
+FLINT_DLL void TEMPLATE(T, poly_mul_univariate)(TEMPLATE(T, poly_t) rop,
+                         const TEMPLATE(T, poly_t) op1,
+                         const TEMPLATE(T, poly_t) op2,
+                         const TEMPLATE(T, ctx_t) ctx);
+
 FLINT_DLL void _TEMPLATE(T, poly_mul_KS)(TEMPLATE(T, struct) *rop,
                           const TEMPLATE(T, struct) *op1, slong len1,
                           const TEMPLATE(T, struct) *op2, slong len2,
@@ -387,6 +405,18 @@ FLINT_DLL void _TEMPLATE(T, poly_mullow_KS)(TEMPLATE(T, struct) *rop,
                              const TEMPLATE(T, ctx_t) ctx);
 
 FLINT_DLL void TEMPLATE(T, poly_mullow_KS)(TEMPLATE(T, poly_t) rop,
+                            const TEMPLATE(T, poly_t) op1,
+                            const TEMPLATE(T, poly_t) op2,
+                            slong n,
+                            const TEMPLATE(T, ctx_t) ctx);
+
+FLINT_DLL void _TEMPLATE(T, poly_mullow_univariate)(TEMPLATE(T, struct) *rop,
+                             const TEMPLATE(T, struct) *op1, slong len1,
+                             const TEMPLATE(T, struct) *op2, slong len2,
+                             slong n,
+                             const TEMPLATE(T, ctx_t) ctx);
+
+FLINT_DLL void TEMPLATE(T, poly_mullow_univariate)(TEMPLATE(T, poly_t) rop,
                             const TEMPLATE(T, poly_t) op1,
                             const TEMPLATE(T, poly_t) op2,
                             slong n,

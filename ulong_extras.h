@@ -114,12 +114,14 @@ n_primes_next(n_primes_t iter)
     }
 }
 
-extern const unsigned int flint_primes_small[];
+FLINT_DLL extern const unsigned int flint_primes_small[];
 
 extern FLINT_TLS_PREFIX ulong * _flint_primes[FLINT_BITS];
 extern FLINT_TLS_PREFIX double * _flint_prime_inverses[FLINT_BITS];
 extern FLINT_TLS_PREFIX int _flint_primes_used;
+#if defined(_OPENMP)
 #pragma omp threadprivate(_flint_primes, _flint_prime_inverses, _flint_primes_used)
+#endif
 
 FLINT_DLL void n_compute_primes(ulong num_primes);
 
@@ -131,6 +133,8 @@ FLINT_DLL const double * n_prime_inverses_arr_readonly(ulong n);
 FLINT_DLL ulong n_randlimb(flint_rand_t state);
 
 FLINT_DLL ulong n_randint(flint_rand_t state, ulong limit);
+
+FLINT_DLL ulong n_urandint(flint_rand_t state, ulong limit);
 
 FLINT_DLL ulong n_randbits(flint_rand_t state, unsigned int bits);
 
@@ -329,6 +333,8 @@ FLINT_DLL ulong n_cbrt_chebyshev_approx(ulong n);
 FLINT_DLL ulong n_cbrtrem(ulong* remainder, ulong n);
 
 FLINT_DLL int n_is_perfect_power235(ulong n);
+
+FLINT_DLL int n_is_perfect_power(ulong * root, ulong n);
 
 FLINT_DLL int n_is_oddprime_small(ulong n);
 
