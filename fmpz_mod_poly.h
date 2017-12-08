@@ -1126,6 +1126,16 @@ FLINT_DLL void _fmpz_mod_poly_product_roots_fmpz_vec(fmpz * poly, const fmpz * x
 FLINT_DLL void fmpz_mod_poly_product_roots_fmpz_vec(fmpz_poly_t poly, const fmpz * xs,
                                                     slong n, const fmpz_t mod);
 
+/*  Structured linear algebra ***********************************************/
+
+FLINT_DLL void _fmpz_mod_poly_transp_vandermonde_precomp(fmpz* bb, slong blen,
+        const fmpz* vv_inv,
+        fmpz_poly_struct * const * tree, const fmpz* tree_root,
+        const fmpz* xx, slong len, const fmpz_t p);
+
+FLINT_DLL void _fmpz_mod_poly_transp_vandermonde(fmpz* bb, slong blen,
+        const fmpz* vv, const fmpz* xx, slong len, const fmpz_t p);
+
 #ifdef __cplusplus
 }
 #endif
