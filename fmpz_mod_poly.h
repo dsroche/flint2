@@ -1136,6 +1136,13 @@ FLINT_DLL void _fmpz_mod_poly_transp_vandermonde_precomp(fmpz* bb, slong blen,
 FLINT_DLL void _fmpz_mod_poly_transp_vandermonde(fmpz* bb, slong blen,
         const fmpz* vv, const fmpz* xx, slong len, const fmpz_t p);
 
+FLINT_DLL void _fmpz_mod_poly_transp_vandermonde_inv_precomp(fmpz* xx,
+        fmpz_poly_struct * const * tree, const fmpz* tree_root,
+        const fmpz* bb, slong len, const fmpz_t p);
+
+FLINT_DLL void _fmpz_mod_poly_transp_vandermonde_inv(fmpz* xx,
+        const fmpz* vv, const fmpz* bb, slong len, const fmpz_t p);
+
 #ifdef __cplusplus
 }
 #endif
