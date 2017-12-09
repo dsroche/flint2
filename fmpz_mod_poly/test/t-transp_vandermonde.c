@@ -83,7 +83,7 @@ main(void)
         for (j = 0; j < len; ++j)
         {
             int check;
-            do 
+            do
             {
                 fmpz_randm(vv + j, state, p);
 
@@ -152,7 +152,7 @@ main(void)
     }
 
     FLINT_TEST_CLEANUP(state);
-    
+
     flint_printf("PASS\n");
     return 0;
 }

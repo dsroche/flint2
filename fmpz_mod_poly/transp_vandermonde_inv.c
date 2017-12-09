@@ -6,7 +6,7 @@
         it under the terms of the GNU General Public License as published by
         the Free Software Foundation; either version 2 of the License, or
         (at your option) any later version.
-          
+
         FLINT is distributed in the hope that it will be useful,
         but WITHOUT ANY WARRANTY; without even the implied warranty of
         MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
@@ -19,7 +19,7 @@
 =============================================================================*/
 /******************************************************************************
 
-        Authored 2015 by Daniel S. Roche; US Government work in the public domain. 
+        Authored 2015 by Daniel S. Roche; US Government work in the public domain.
 
 ******************************************************************************/
 
@@ -56,7 +56,7 @@ void _fmpz_mod_poly_transp_vandermonde_inv_precomp(fmpz* xx,
 
     /* overwrite D with evals of (d poly/dx) at points in vv */
     _fmpz_mod_poly_derivative(Q, tree_root, len+1, p);
-    _fmpz_mod_poly_evaluate_fmpz_vec_fast_precomp(D, 
+    _fmpz_mod_poly_evaluate_fmpz_vec_fast_precomp(D,
             Q, len, tree, len, p);
 
     /* pairwise divide the two sets of evaluations */
@@ -77,8 +77,9 @@ void _fmpz_mod_poly_transp_vandermonde_inv(fmpz* xx,
     fmpz_poly_t root;
     slong ind;
 
-    if (len == 0) return;
-    else if (len == 1) 
+    if (len == 0)
+        return;
+    else if (len == 1)
     {
         fmpz_mods(xx + 0, bb + 0, p);
         return;
